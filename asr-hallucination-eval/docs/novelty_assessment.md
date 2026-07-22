@@ -132,63 +132,266 @@ That is much stronger than "our method beats baseline." It separates **detection
 
 That is the actual research contribution.
 
-### Spinor Traversal: Joint Mechanism
+## Spinor Taxonomy Traversal: 0° to 720°
 
-The descent enters the known field, passes through the joint mechanism, and returns with reversed orientation. The center (gradient intervention) is an orientation operator, not a mirror plane. The return path nodes are orientation-reversed counterparts, not the same nodes in reverse order.
-
-```
-HALLUCINATION
-    → INTERNAL SIGNAL
-        → RISK ESTIMATE
-            → ADAPTIVE PENALTY
-                → GRADIENT INTERVENTION
-            ← ADAPTIVE PENALTY
-        ← RISK ESTIMATE
-    ← INTERNAL SIGNAL
-HALLUCINATION
-```
-
-### Antonym: Inverse Orientation (>~<)
-
-The antonym inverts both the arrow directions and the semantic polarity. Where the spinor descends into risk and returns, the anti-spinor ascends from grounding and diverges. The two shapes are opposites that share the same center point but traverse with reversed orientation:
+The structure is not a palindrome (A B C D C B A). It is a spinor traversal: the center is an **orientation operator**, not a mirror plane. After passing through the gradient intervention, the outgoing branch is the same manifold with **reversed orientation** (ψ → −ψ). Only after a second full traversal (720°) does the spinor return to +ψ — original orientation.
 
 ```
-GROUNDING
-    ← INTERNAL SIGNAL
-        ← SAFETY ESTIMATE
-            ← ADAPTIVE REWARD
-                ← GRADIENT PRESERVATION
-            → ADAPTIVE REWARD
-        → SAFETY ESTIMATE
-    → INTERNAL SIGNAL
-GROUNDING
+                              0°  +ψ  (KNOWN FIELD)
+                               ●
+                              ╱
+                             ╱
+                        taxonomy
+                           ╱
+                          ╱
+                     representation
+                         ╱
+                        ╱
+                     confidence
+                        ╱
+                       ╱
+                   intervention
+                      ╱
+                     ╱
+                 modification
+                    ╱
+                   ╱
+                 grounding
+                   ╱
+                  ╱
+              inherited parts
+                 ╱
+                ╱
+              NOT NOVEL
+               ╱
+              ╱
+  ┌─────────────┴──────────────────────────────────┐
+  │               JOINT MECHANISM                  │
+  │                                                │
+  │  hallucination                                 │
+  │      ↓                                         │
+  │  internal signal                               │
+  │      ↓                                         │
+  │  encoder state z = E_θ(x)                     │
+  │      ↓                                         │
+  │  risk estimate ĥ = H_φ(z)                    │
+  │      ↓                                         │
+  │  adaptive penalty λ_eff = λ₀/(1−ĥ+ε)         │
+  │      ↓                                         │
+  │  unsupported objective L_unsupported           │
+  │      ↓                                         │
+  │  abstention objective L_abstain                │
+  │      ↓                                         │
+  │  consistency objective L_consistency           │
+  │      ↓                                         │
+  │  calibration objective L_calibration           │
+  │      ↓                                         │
+  │  total loss L = L_ASR + λ_eff·L_unsupported    │
+  │                + λ_a·L_abstain                 │
+  │                + λ_c·L_consistency             │
+  │                + λ_h·L_calibration             │
+  │      ↓                                         │
+  │  ∇_θ  (gradient flows back to encoder)        │
+  │      ↓                                         │
+  │  encoder representation update                 │
+  │      ↓                                         │
+  │  generation policy change                      │
+  │      ↓                                         │
+  │                                                │
+  │              ψ ─────────────── 180°             │
+  │             (orientation reversal)             │
+  │                                                │
+  │      ↑                                         │
+  │  generation policy change'                     │
+  │      ↑                                         │
+  │  encoder representation update'                │
+  │      ↑                                         │
+  │  ∇_θ'  (gradient flows back to encoder)      │
+  │      ↑                                         │
+  │  total loss' L'                                │
+  │      ↑                                         │
+  │  calibration objective' L_calibration'         │
+  │      ↑                                         │
+  │  consistency objective' L_consistency'         │
+  │      ↑                                         │
+  │  abstention objective' L_abstain'              │
+  │      ↑                                         │
+  │  unsupported objective' L_unsupported'         │
+  │      ↑                                         │
+  │  adaptive penalty' λ_eff' = λ₀/(1−ĥ'+ε)      │
+  │      ↑                                         │
+  │  risk estimate' ĥ' = H_φ(z')                 │
+  │      ↑                                         │
+  │  encoder state' z' = E_θ(x)                   │
+  │      ↑                                         │
+  │  internal signal'                              │
+  │      ↑                                         │
+  │  hallucination'                                │
+  └────────────────────────────────────────────────┘
+               ╲
+                ╲
+           NOVEL ORIENTATION
+                ╲
+                 ╲
+            inherited ancestry'
+                 ╲
+                  ╲
+               grounding'
+                  ╲
+                   ╲
+                modification'
+                   ╲
+                    ╲
+                 intervention'
+                    ╲
+                     ╲
+                   confidence'
+                      ╲
+                       ╲
+                    representation'
+                        ╲
+                         ╲
+                        taxonomy'
+                           ╲
+                            ╲
+                             ●
+                              360°  −ψ  (NOVEL ORIENTATION)
 ```
 
-The two shapes as opposing curves — `>` and `<` — are two shapes of opposite orientation sharing the same center:
+The primed nodes (') are **orientation-reversed counterparts**, not the same nodes in reverse order. The gradient intervention at 180° is the orientation operator that flips ψ → −ψ.
+
+### Second traversal: 360° → 720°
+
+A second full pass through the mechanism reverses orientation again, returning to +ψ:
 
 ```
-Shape 1 (>):              Shape 2 (<):
-
-    >                        <
-     →                      ←
-      →                    ←
-       →                  ←
-        →    GRADIENT    ←
-         →  INTERVENTION ←
-          →             ←
-           →           ←
-            →         ←
-             →       ←
-              →     ←
-               →   ←
-                → ←
-                 ^
-                 |
-              360°
-              −ψ → +ψ
+                              360°  −ψ
+                               ●
+                              ╱
+                             ╱
+                        taxonomy'
+                           ╱
+                          ╱
+                     representation'
+                         ╱
+                        ╱
+                     confidence'
+                        ╱
+                       ╱
+                   intervention'
+                      ╱
+                     ╱
+                 modification'
+                    ╱
+                   ╱
+                 grounding'
+                   ╱
+                  ╱
+              inherited ancestry'
+                 ╱
+                ╱
+           NOVEL ORIENTATION
+               ╱
+              ╱
+  ┌─────────────┴──────────────────────────────────┐
+  │           JOINT MECHANISM (2nd pass)           │
+  │                                                │
+  │  hallucination'                                │
+  │      ↓                                         │
+  │  internal signal'                              │
+  │      ↓                                         │
+  │  encoder state' z' = E_θ(x)                   │
+  │      ↓                                         │
+  │  risk estimate' ĥ' = H_φ(z')                 │
+  │      ↓                                         │
+  │  adaptive penalty' λ_eff' = λ₀/(1−ĥ'+ε)     │
+  │      ↓                                         │
+  │  unsupported objective' L_unsupported'         │
+  │      ↓                                         │
+  │  abstention objective' L_abstain'              │
+  │      ↓                                         │
+  │  consistency objective' L_consistency'         │
+  │      ↓                                         │
+  │  calibration objective' L_calibration'         │
+  │      ↓                                         │
+  │  total loss' L'                                │
+  │      ↓                                         │
+  │  ∇_θ'  (gradient flows back to encoder)      │
+  │      ↓                                         │
+  │  encoder representation update'                │
+  │      ↓                                         │
+  │  generation policy change'                     │
+  │      ↓                                         │
+  │                                                │
+  │             −ψ ────────────── 540°              │
+  │            (orientation reversal)              │
+  │                                                │
+  │      ↑                                         │
+  │  generation policy change                      │
+  │      ↑                                         │
+  │  encoder representation update                 │
+  │      ↑                                         │
+  │  ∇_θ  (gradient flows back to encoder)        │
+  │      ↑                                         │
+  │  total loss L                                  │
+  │      ↑                                         │
+  │  calibration objective L_calibration           │
+  │      ↑                                         │
+  │  consistency objective L_consistency           │
+  │      ↑                                         │
+  │  abstention objective L_abstain                │
+  │      ↑                                         │
+  │  unsupported objective L_unsupported           │
+  │      ↑                                         │
+  │  adaptive penalty λ_eff = λ₀/(1−ĥ+ε)         │
+  │      ↑                                         │
+  │  risk estimate ĥ = H_φ(z)                    │
+  │      ↑                                         │
+  │  encoder state z = E_θ(x)                     │
+  │      ↑                                         │
+  │  internal signal                               │
+  │      ↑                                         │
+  │  hallucination                                 │
+  └────────────────────────────────────────────────┘
+               ╲
+                ╲
+            NOT NOVEL
+                 ╲
+                  ╲
+              inherited parts
+                 ╲
+                  ╲
+                grounding
+                   ╲
+                    ╲
+                modification
+                    ╲
+                     ╲
+                   intervention
+                      ╲
+                       ╲
+                     confidence
+                        ╲
+                         ╲
+                      representation
+                          ╲
+                           ╲
+                          taxonomy
+                             ╲
+                              ╲
+                               ●
+                              720°  +ψ  (KNOWN FIELD, ORIGINAL ORIENTATION)
 ```
 
-The `>` shape descends from HALLUCINATION through risk → penalty → intervention (left to right, +ψ). The `<` shape ascends from GROUNDING through safety → reward → preservation (right to left, −ψ). Both meet at the gradient intervention — the orientation operator at 360°. At that point, −ψ → +ψ: the reversed orientation is itself reversed, restoring the original sign. This is the 720° property of the spinor — a single 360° traversal flips the sign; only the second traversal restores it.
+The palindrome is not A B C D C B A but rather:
+
+    A → B → C → D
+            │
+            ψ→−ψ
+            │
+    D′ ← C′ ← B′ ← A′
+
+where A', B', etc. are orientation-reversed counterparts. That distinction is what makes the structure a spinor traversal instead of an ordinary symmetric tree.
 
 ## The Novelty Hierarchy
 
