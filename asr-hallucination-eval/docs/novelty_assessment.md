@@ -132,6 +132,42 @@ That is much stronger than "our method beats baseline." It separates **detection
 
 That is the actual research contribution.
 
+### Dual Traversal: Joint vs. Detached
+
+```
+HALLUCINATION                    HALLUCINATION
+    → INTERNAL SIGNAL                ← INTERNAL SIGNAL
+        → RISK ESTIMATE                  ← RISK ESTIMATE
+            → ADAPTIVE PENALTY               ← ADAPTIVE PENALTY
+                → GRADIENT  \  /  GRADIENT ←
+            ← ADAPTIVE PENALTY  \/  ADAPTIVE PENALTY →
+        ← RISK ESTIMATE          /\          RISK ESTIMATE →
+    ← INTERNAL SIGNAL          /  \          INTERNAL SIGNAL →
+HALLUCINATION              /        \              HALLUCINATION
+                         /            \
+                    JOINT              DETACHED
+                   (forward)          (inverse)
+                   ĥ → λ_eff          ĥ ← λ_eff
+                   → L → ∇_θ         ← L ← ∇_θ
+                   → E_θ (loop)      ← E_θ (broken)
+                         \            /
+                          \          /
+                           \        /
+                            \      /
+                             \    /
+                              \  /
+                               X
+                              /  \
+                             /    \
+                            /      \
+                           /        \
+                          /          \
+                    RISK OBSERVABILITY
+                    = RISK INTERNALIZATION?
+```
+
+The left traversal is the **joint arm**: risk flows forward into the loss, gradients loop back into the encoder, the cycle repeats. The right traversal is the **detached arm**: risk flows backward without reaching the encoder — `stopgrad` breaks the loop. Both arms share the same risk head and the same encoder. The X marks the point where the experiment asks: does merely observing risk reduce hallucination, or must the risk signal be allowed to reshape the representation?
+
 ## The Novelty Hierarchy
 
 The strongest novelty is not the risk head alone. Aparin substantially narrows that territory by demonstrating that encoder activations contain predictive hallucination structure.
