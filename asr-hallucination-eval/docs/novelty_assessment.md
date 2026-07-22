@@ -164,7 +164,63 @@ GROUNDING
 GROUNDING
 ```
 
-The two shapes as opposing curves:
+The two shapes as opposing curves, each shown standalone:
+
+**Shape 1: > (risk descent, +ψ)**
+
+```
+>
+ →
+  →
+   →
+    →
+     →      HALLUCINATION
+      →     INTERNAL SIGNAL
+       →    ENCODER STATE
+        →   RISK ESTIMATE ĥ
+         →  ADAPTIVE PENALTY λ_eff
+          → UNSUPPORTED OBJECTIVE
+           →GRADIENT INTERVENTION
+            → ∇_θ
+             → encoder update
+              → generation policy
+               →
+                →
+                 →
+                  →
+                   >
+                  180°
+                 ψ → −ψ
+```
+
+**Shape 2: < (grounding ascent, −ψ)**
+
+```
+                   <
+                  ←
+                 ←
+                ←
+               ←
+              ←    GROUNDING
+             ←     INTERNAL SIGNAL
+            ←      ENCODER STATE
+           ←       SAFETY ESTIMATE ĥ
+          ←        ADAPTIVE REWARD λ_eff
+         ←         SUPPORTED OBJECTIVE
+        ←          GRADIENT PRESERVATION
+       ←           ∇_θ
+      ←            encoder update
+     ←             generation policy
+    ←
+   ←
+  ←
+ ←
+<
+360°
+−ψ → +ψ
+```
+
+**Both shapes superposed (>~<):**
 
 ```
     >                          <
@@ -184,7 +240,7 @@ The two shapes as opposing curves:
               ψ → −ψ
 ```
 
-The spinor and anti-spinor share the same orientation operator at the center. One traverses risk → penalty → intervention; the other traverses safety → reward → preservation. Both pass through the gradient intervention, but with opposite sign: +ψ and −ψ.
+The spinor (`>`) descends through risk, penalty, and gradient intervention, arriving at −ψ. The anti-spinor (`<`) ascends through safety, reward, and gradient preservation, arriving at +ψ. Both share the same orientation operator at the center. One traverses risk → penalty → intervention; the other traverses safety → reward → preservation. Both pass through the gradient intervention, but with opposite sign.
 
 ## The Novelty Hierarchy
 
