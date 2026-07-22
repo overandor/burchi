@@ -132,41 +132,42 @@ That is much stronger than "our method beats baseline." It separates **detection
 
 That is the actual research contribution.
 
-### Dual Traversal: Joint vs. Detached
+### Spinor Traversal: Joint vs. Detached
+
+The forward traversal represents the **joint mechanism** (Arm 4). Risk flows down into gradient intervention, then returns with reversed orientation — the encoder is reshaped:
 
 ```
-HALLUCINATION                    HALLUCINATION
-    → INTERNAL SIGNAL                ← INTERNAL SIGNAL
-        → RISK ESTIMATE                  ← RISK ESTIMATE
-            → ADAPTIVE PENALTY               ← ADAPTIVE PENALTY
-                → GRADIENT  \  /  GRADIENT ←
-            ← ADAPTIVE PENALTY  \/  ADAPTIVE PENALTY →
-        ← RISK ESTIMATE          /\          RISK ESTIMATE →
-    ← INTERNAL SIGNAL          /  \          INTERNAL SIGNAL →
-HALLUCINATION              /        \              HALLUCINATION
-                         /            \
-                    JOINT              DETACHED
-                   (forward)          (inverse)
-                   ĥ → λ_eff          ĥ ← λ_eff
-                   → L → ∇_θ         ← L ← ∇_θ
-                   → E_θ (loop)      ← E_θ (broken)
-                         \            /
-                          \          /
-                           \        /
-                            \      /
-                             \    /
-                              \  /
-                               X
-                              /  \
-                             /    \
-                            /      \
-                           /        \
-                          /          \
-                    RISK OBSERVABILITY
-                    = RISK INTERNALIZATION?
+HALLUCINATION
+    → INTERNAL SIGNAL
+        → RISK ESTIMATE
+            → ADAPTIVE PENALTY
+                → GRADIENT INTERVENTION
+            ← ADAPTIVE PENALTY
+        ← RISK ESTIMATE
+    ← INTERNAL SIGNAL
+HALLUCINATION
 ```
 
-The left traversal is the **joint arm**: risk flows forward into the loss, gradients loop back into the encoder, the cycle repeats. The right traversal is the **detached arm**: risk flows backward without reaching the encoder — `stopgrad` breaks the loop. Both arms share the same risk head and the same encoder. The X marks the point where the experiment asks: does merely observing risk reduce hallucination, or must the risk signal be allowed to reshape the representation?
+The inverse traversal represents the **detached mechanism** (Arm 3). The gradient flows up without being conditioned by ĥ. The loop is broken — risk is observed but not internalized:
+
+```
+HALLUCINATION
+    ← INTERNAL SIGNAL
+        ← RISK ESTIMATE
+            ← ADAPTIVE PENALTY
+                ← GRADIENT INTERVENTION
+            → ADAPTIVE PENALTY
+        → RISK ESTIMATE
+    → INTERNAL SIGNAL
+HALLUCINATION
+```
+
+The center (gradient intervention) is an **orientation operator**, not a mirror plane. In the joint arm, the return path nodes are orientation-reversed counterparts — the same manifold traversed with reversed sign (ψ → −ψ). In the detached arm, the gradient bypasses the risk estimate, so no orientation reversal occurs: the encoder is not reshaped by ĥ.
+
+| Traversal | Arm | Gradient flow | Encoder reshaped? | Orientation |
+|-----------|-----|---------------|-------------------|-------------|
+| Forward (→ ←) | Joint (4) | ∇_θ through ĥ | Yes | ψ → −ψ |
+| Inverse (← →) | Detached (3) | ∇_θ bypasses ĥ | No | ψ (unchanged) |
 
 ## The Novelty Hierarchy
 
