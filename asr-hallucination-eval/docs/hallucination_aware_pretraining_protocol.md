@@ -139,8 +139,35 @@ python3 -m pytest tests/test_hallucination_aware_pretraining.py -v
 
 > **The hallucination-aware training architecture has passed forward-pass integration, gradient-routing, and synthetic-embedding calibration tests. The risk head, adaptive penalty, composite loss, and five-arm registry execute correctly. No evidence yet shows that the risk estimate is calibrated on real Whisper encoder states, or that training reduces unsupported ASR output on real speech mixtures. The next decisive artifact is two genuinely trained checkpoints—detached-head and jointly optimized—evaluated on the same untouched test mixtures.**
 
+## Statistical Reporting
+
+The rebuilt canonical report (`results/hc_experiment/hc_report.json`) reports both:
+
+- **Bootstrap percentile 95% CIs** for model-level means
+- **Metropolis-Hastings MCMC 95% credible intervals** for the population mean of HC, λ/HC, and WER
+
+The MCMC sampler uses a normal likelihood and a uniform prior on the mean with proposal scale derived from the sample standard error. It is seeded for reproducibility.
+
+## Attestation
+
+An attestation manifest is generated for the canonical report and source-code artifacts:
+
+```bash
+python3 experiments/generate_asr_attestation.py \
+  --results-dir results/hc_experiment \
+  --out results/hc_experiment/attestation.json
+```
+
+The manifest includes:
+- SHA-256 fingerprints of every file in `results/hc_experiment/`
+- SHA-256 fingerprints of key source modules (`replay_hc_report.py`, `hallucination_aware_pretraining.py`, `hallucination_coefficient.py`, `compute_metrics.py`, protocol doc, tests)
+- Git commit, branch, and dirty status
+- Dependency versions (`numpy`, `torch`, `whisper`)
+- Runner/OS/Python metadata
+- A deterministic `content_sha256` (excluding the timestamp)
+
 ## Status
 
-**Protocol preregistered. Scaffold implemented and mechanically verified. Full Whisper continued-pretraining run pending.**
+**Protocol preregistered. Scaffold implemented and mechanically verified. MCMC CIs and ASR attestation manifest added. Full Whisper continued-pretraining run pending.**
 
-The inner batch loop (mel spectrogram → Whisper encoder → Whisper decoder → joint loss → backward) is structurally complete but requires a real training run. The risk head, loss terms, corpus generation, evaluation protocol, and gradient-routing receipts are functional.
+The inner batch loop (mel spectrogram → Whisper encoder → Whisper decoder → joint loss → backward) is structurally complete but requires a real training run. The risk head, loss terms, corpus generation, evaluation protocol, gradient-routing receipts, MCMC intervals, and attestation infrastructure are functional.

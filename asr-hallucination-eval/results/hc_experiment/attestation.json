@@ -1,0 +1,84 @@
+{
+  "schema": "asr.eval-attestation/v1.0",
+  "generated_utc": "2026-07-22T22:59:55.782290+00:00",
+  "project_root": "/Users/alep/CascadeProjects/asr-hallucination-eval",
+  "notes": "",
+  "runner": {
+    "os": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "hostname": "membra.local",
+    "python": "3.13.12"
+  },
+  "git": {
+    "commit": "0fe3f34f5ef5893c606cf9897c1b0e91d65dd01b",
+    "short": "0fe3f34",
+    "branch": "main",
+    "status": "M experiments/replay_hc_report.py\n M experiments/run_support_aware_experiment.py\n M experiments/support_aware_pretraining.py\n M results/hc_experiment/hc_report.json\n M results/hc_experiment/hc_report.md\n M results/support_aware_experiment/support_aware_report.json\n?? ../.devin/\n?? ../AutoTrain/\n?? ../ChatSync/\n?? ../ClientContinuity/\n?? ../ClientContinuityFusion/\n?? ../GlassDeck/\n?? ../GlyphieldBench.db.yaml\n?? ../HyperFlow/\n?? ../MacControlPlane/\n?? ../MirrorLab/\n?? ../PORTFOLIO_WHITE_PAPER.md\n?? ../VideoAppCompiler/\n?? ../__pycache__/\n?? ../adas-projects/\n?? \"../ai-ram-control-surface 2.zip\"\n?? \"../ai-ram-control-surface 3.zip\"\n?? \"../ai-ram-control-surface 4.zip\"\n?? ../ai-ram-control-surface.zip\n?? ../ai-ram-control-surface/\n?? ../alpha-gpt.zip\n?? ../alpha-gpt/\n?? experiments/generate_asr_attestation.py\n?? experiments/gradient_routing_test.py\n?? results/gradient_routing_test/\n?? ../atlas-scientific-release.zip\n?? ../atlas_appraisal.h\n?? ../browser_scraper.py\n?? ../burchi.zip\n?? ../burchi/\n?? ../cascade-control-surface/\n?? ../case_study_book.py\n?? ../case_study_state.json\n?? ../chatgpt-audio-capture/\n?? ../chatgpt-extractor/\n?? ../chatgpt-scraper/\n?? ../devin-cost-explorer/\n?? ../dirwatch/\n?? ../ecr30-rs/\n?? ../ecr300-rs/\n?? ../ecr300/\n?? ../evolution.py\n?? ../evolution_ledger.jsonl\n?? ../evolution_state.json\n?? ../extract_massage_clients\n?? ../extract_massage_clients.swift\n?? ../extracted_clients/\n?? ../front_runner.py\n?? ../front_runner_results/\n?? ../frontrunner.egg-info/\n?? ../frontrunner/\n?? ../g-lang/\n?? ../generated_startups_gen1.json\n?? ../glyph_transform.py\n?? ../glyphield/\n?? ../goa-projects/\n?? ../gpt-clone-train/\n?? ../grabsdy-demo/\n?? ../grabsdy-mac.zip\n?? ../grabsdy-mac/\n?? ../grabsdy-organism/\n?? ../grid6-vercel/\n?? ../gridova/\n?? ../handwriting-ocr-c/\n?? ../handwriting-ocr-swift/\n?? ../handwriting-ocr.zip\n?? ../handwriting-ocr/\n?? ../har-2040/\n?? ../hdar-canonical.zip\n?? ../hdar-canonical/\n?? ../hdar-cross-platform-proof.zip\n?? ../hdar-cross-platform-proof/\n?? ../hyperaudit_capture.zsh\n?? ../imessage-command-router/\n?? ../joseph_campaign_v2.scpt\n?? ../joseph_campaign_v3.scpt\n?? ../joseph_skrobynets_dossier.md\n?? ../knot_spinor_fusion/\n?? ../macfanctl/\n?? ../macforge-autopilot.zip\n?? ../macforge-autopilot/\n?? ../macpilot-0/\n?? ../mega_book.py\n?? ../membra-qr-gateway.zip\n?? ../membra-qr-gateway/\n?? ../merge_corpus.py\n?? ../merged_corpus.json\n?? ../microglyph-dot-code/\n?? ../multi_store_apps.json\n?? ../notebooks/\n?? ../ollama-devin-agent/\n?? ../opensourcestartups_products.json\n?? ../overapp/\n?? ../overllm-filevm-passport/\n?? ../overllm/\n?? ../peerpush_products.json\n?? ../phar/\n?? ../provider-engine/\n?? ../provider-intelligence/\n?? ../pyproject.toml\n?? ../quality_book.py\n?? ../rentflow/\n?? ../rentmasseur-infra-combined.py\n?? ../rentmasseur-visitor/\n?? ../rm-optimizer/\n?? ../scrape_ms_store.py\n?? ../scrape_peerpush.py\n?? ../scrape_sa.py\n?? ../screentunnel/\n?? ../send_messages.scpt\n?? ../shortcut-runtime-manager.zip\n?? ../shortcut-runtime-manager/\n?? ../six-browse/\n?? ../skrobynets_network_defragmentation.md\n?? ../snap2txt-all-spaces.sh\n?? ../snap2txt/\n?? ../sovereign-llm/\n?? ../spinor-llm-hf/\n?? ../spinor-platform/\n?? ../spinor-seo/\n?? ../spinor/\n?? \"../spinor_ledger 2.zip\"\n?? ../spinor_ledger.zip\n?? ../spinor_ledger/\n?? ../spinorifization_bibleclopedia.md\n?? ../spinorifization_fragment_2.md\n?? ../spinorifization_fragment_3.md\n?? ../startup_case_studies.md\n?? ../startup_generator.py\n?? ../startupalternatives_products.json\n?? ../swarmline/\n?? ../thermalent/\n?? ../token-launcher/\n?? ../toktorrent-audio/\n?? ../toktorrent-metal/\n?? ../underwrite_all.py\n?? ../underwriting_results/\n?? ../webprobe-c/\n?? ../webprobe/",
+    "describe": "0fe3f34"
+  },
+  "dependencies": {
+    "numpy": "1.26.4",
+    "torch": "2.11.0",
+    "whisper": "20250625"
+  },
+  "source_files": {
+    "experiments/replay_hc_report.py": {
+      "role": "report_rebuilder",
+      "sha256": "9dcef358e0f5ee5eefe46182a1b7628c41a39441366692499ffaa8ca8c2408d5",
+      "size": 15259
+    },
+    "experiments/hallucination_aware_pretraining.py": {
+      "role": "ha_pretraining_experiment",
+      "sha256": "918637ee9065937287eec5d886b99065e5da5ecbe9ec7f8f032af66a2ffc8165",
+      "size": 20772
+    },
+    "experiments/hallucination_coefficient.py": {
+      "role": "hallucination_coefficient_module",
+      "sha256": "3676c93ca3047c06d92bf8c79e2ebe4013d2e8a1231b8e2644569c80a502549f",
+      "size": 29461
+    },
+    "evaluation/compute_metrics.py": {
+      "role": "metrics_module",
+      "sha256": "5cf060327e26ae4e82cd2f8b2fb2c92645ee605deefa28248a5b8d547cef285a",
+      "size": 15742
+    },
+    "docs/hallucination_aware_pretraining_protocol.md": {
+      "role": "protocol_document",
+      "sha256": "d0b6545a715087e10b945684b5ad7c5842f22f6ad856d3546aad2ce84db3a3cb",
+      "size": 7937
+    },
+    "tests/test_hallucination_aware_pretraining.py": {
+      "role": "mechanical_tests",
+      "sha256": "47ce8ebee5aa1cac5572f9121a4fa59efac4ec43dad611845ea5d60260e2fcfc",
+      "size": 7028
+    }
+  },
+  "evidence_files": [
+    {
+      "relative_path": "hc_report.json",
+      "sha256": "325bca4f842ff7e99b1883ec43fd71d2899e391eb2a3a8d66ebc26ee84fdfef9",
+      "size": 50298
+    },
+    {
+      "relative_path": "hc_report.md",
+      "sha256": "0a7fc2de1cbe851f6bf61105b22464e1de87a68deb7837bcebe1ba00bc484b8a",
+      "size": 2805
+    },
+    {
+      "relative_path": "hc_report_original_stale.json",
+      "sha256": "ce217f52ddf92f2b523dbb3c523ae19366ca3ae5f3d840c5daafc7c31df9a916",
+      "size": 25313
+    }
+  ],
+  "extra_files": [],
+  "github_run_id": "",
+  "github_run_number": "",
+  "github_sha": "",
+  "github_ref": "",
+  "github_actor": "",
+  "github_workflow": "",
+  "canonical_report": {
+    "relative_path": "results/hc_experiment/hc_report.json",
+    "regenerate_command": "python3 experiments/replay_hc_report.py"
+  },
+  "content_sha256": "516c81e493ca615ed0fffc0de872a064f7a9cf9f3387be43012e23c909758e16"
+}

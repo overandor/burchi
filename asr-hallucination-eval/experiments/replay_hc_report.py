@@ -34,9 +34,9 @@ from experiments.hallucination_coefficient import (
 TARGET_TRANSCRIPT = "The quick brown fox jumps over the lazy dog"
 COMPETITOR_TRANSCRIPT = "The cat sat on the mat today"
 
-REPORT_IN = PROJECT_ROOT / "results" / "hc_experiment" / "hc_report.json"
-REPORT_OUT = PROJECT_ROOT / "results" / "hc_experiment" / "hc_report_rebuilt.json"
-SUMMARY_OUT = PROJECT_ROOT / "results" / "hc_experiment" / "hc_report_rebuilt.md"
+REPORT_IN = PROJECT_ROOT / "results" / "hc_experiment" / "hc_report_original_stale.json"
+REPORT_OUT = PROJECT_ROOT / "results" / "hc_experiment" / "hc_report.json"
+SUMMARY_OUT = PROJECT_ROOT / "results" / "hc_experiment" / "hc_report.md"
 
 
 def _mean(values: list[float]) -> float:
@@ -60,6 +60,47 @@ def _ci95(values: list[float]) -> tuple[float, float]:
     rng = np.random.default_rng(0)
     boots = [np.mean(rng.choice(arr, size=len(arr), replace=True)) for _ in range(2000)]
     return float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
+
+
+def _ci95_mcmc(values: list[float], n_samples: int = 3000, burn_in: int = 500, proposal_scale: float | None = None) -> tuple[float, float]:
+    """
+    95% credible interval for the mean via Metropolis-Hastings MCMC.
+
+    Likelihood: N(x | mu, sigma^2) with a uniform prior on mu and sigma.
+    This is an empirical Bayes-style sampler over the population mean.
+    """
+    if not values:
+        return (0.0, 0.0)
+    arr = np.array(values, dtype=float)
+    if len(arr) == 1:
+        return (float(arr[0]), float(arr[0]))
+
+    rng = np.random.default_rng(42)
+    n = len(arr)
+    sample_mean = arr.mean()
+    sample_std = arr.std(ddof=1) if n > 1 else 0.0
+    if sample_std == 0:
+        return (float(sample_mean), float(sample_mean))
+
+    # Sample mu using Metropolis-Hastings with normal proposal
+    proposal_scale = proposal_scale or sample_std / np.sqrt(n)
+    mu = sample_mean
+    samples = []
+
+    def log_likelihood(m: float) -> float:
+        # log P(data | mu, sigma) with known sigma
+        return -0.5 * ((arr - m) ** 2).sum() / (sample_std ** 2)
+
+    for i in range(n_samples):
+        mu_prop = rng.normal(mu, proposal_scale)
+        log_alpha = log_likelihood(mu_prop) - log_likelihood(mu)
+        if np.log(rng.random()) < log_alpha:
+            mu = mu_prop
+        if i >= burn_in:
+            samples.append(mu)
+
+    samples = np.array(samples)
+    return float(np.percentile(samples, 2.5)), float(np.percentile(samples, 97.5))
 
 
 def _recompute(transcript: str, condition: str, model: str) -> dict[str, Any]:
@@ -131,9 +172,9 @@ def _model_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "lambda": rows[0]["lambda"],
         "provenance": rows[0]["provenance"],
         "n_conditions": len(rows),
-        "hc": {"mean": _mean(hc), "median": _median(hc), "std": _std(hc), "ci95": _ci95(hc), "min": min(hc), "max": max(hc)},
-        "capacity_index": {"mean": _mean(cap), "median": _median(cap), "std": _std(cap), "ci95": _ci95(cap), "min": min(cap), "max": max(cap)},
-        "wer": {"mean": _mean(wer), "median": _median(wer), "std": _std(wer), "ci95": _ci95(wer), "min": min(wer), "max": max(wer)},
+        "hc": {"mean": _mean(hc), "median": _median(hc), "std": _std(hc), "ci95": _ci95(hc), "ci95_mcmc": _ci95_mcmc(hc), "min": min(hc), "max": max(hc)},
+        "capacity_index": {"mean": _mean(cap), "median": _median(cap), "std": _std(cap), "ci95": _ci95(cap), "ci95_mcmc": _ci95_mcmc(cap), "min": min(cap), "max": max(cap)},
+        "wer": {"mean": _mean(wer), "median": _median(wer), "std": _std(wer), "ci95": _ci95(wer), "ci95_mcmc": _ci95_mcmc(wer), "min": min(wer), "max": max(wer)},
         "uwr": {"mean": _mean(uwr), "median": _median(uwr), "std": _std(uwr)},
         "hsr": {"mean": _mean(hsr), "median": _median(hsr), "std": _std(hsr)},
         "csrr": {"mean": _mean(csrr), "median": _median(csrr), "std": _std(csrr)},
@@ -263,14 +304,16 @@ def main() -> int:
         prov = summary[m]["provenance"]
         lines.append(f"| {m} | {prov['checkpoint_name']} | {prov['params']:,} | {summary[m]['lambda']:.3f} | {summary[m]['n_conditions']} |")
 
-    lines += ["", "## Per-Model Summary (mean [95% CI])", "", "| Model | Mean HC | Median HC | λ/HC mean | λ/HC median | Mean WER | Total Reps |", "|-------|---------|-----------|-----------|-------------|----------|------------|"]
+    lines += ["", "## Per-Model Summary (mean [95% CI])", "", "| Model | Mean HC (boot) | Mean HC (MCMC) | λ/HC mean (boot) | λ/HC mean (MCMC) | Mean WER | Total Reps |", "|-------|----------------|----------------|------------------|------------------|----------|------------|"]
     for m in models:
         s = summary[m]
         hc_ci = s["hc"]["ci95"]
+        hc_mcmc = s["hc"]["ci95_mcmc"]
         cap_ci = s["capacity_index"]["ci95"]
+        cap_mcmc = s["capacity_index"]["ci95_mcmc"]
         lines.append(
-            f"| {m} | {s['hc']['mean']:.3f} [{hc_ci[0]:.3f}, {hc_ci[1]:.3f}] | {s['hc']['median']:.3f} | "
-            f"{s['capacity_index']['mean']:.2f} [{cap_ci[0]:.2f}, {cap_ci[1]:.2f}] | {s['capacity_index']['median']:.2f} | "
+            f"| {m} | {s['hc']['mean']:.3f} [{hc_ci[0]:.3f}, {hc_ci[1]:.3f}] | {s['hc']['mean']:.3f} [{hc_mcmc[0]:.3f}, {hc_mcmc[1]:.3f}] | "
+            f"{s['capacity_index']['mean']:.2f} [{cap_ci[0]:.2f}, {cap_ci[1]:.2f}] | {s['capacity_index']['mean']:.2f} [{cap_mcmc[0]:.2f}, {cap_mcmc[1]:.2f}] | "
             f"{s['wer']['mean']:.3f} | {s['repetitions']['total']} |"
         )
 

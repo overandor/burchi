@@ -12,11 +12,11 @@
 
 ## Per-Model Summary (mean [95% CI])
 
-| Model | Mean HC | Median HC | λ/HC mean | λ/HC median | Mean WER | Total Reps |
-|-------|---------|-----------|-----------|-------------|----------|------------|
-| base | 0.274 [0.093, 0.447] | 0.248 | 155.90 [80.92, 286.35] | 96.27 | 0.444 | 0 |
-| small | 0.211 [0.063, 0.382] | 0.091 | 146.29 [82.50, 222.42] | 116.79 | 0.389 | 0 |
-| tiny | 0.480 [0.143, 0.931] | 0.375 | 82.22 [51.57, 111.87] | 75.83 | 1.986 | 110 |
+| Model | Mean HC (boot) | Mean HC (MCMC) | λ/HC mean (boot) | λ/HC mean (MCMC) | Mean WER | Total Reps |
+|-------|----------------|----------------|------------------|------------------|----------|------------|
+| base | 0.274 [0.093, 0.447] | 0.274 [0.096, 0.499] | 155.90 [80.92, 286.35] | 155.90 [37.20, 305.67] | 0.444 | 0 |
+| small | 0.211 [0.063, 0.382] | 0.211 [0.041, 0.426] | 146.29 [82.50, 222.42] | 146.29 [65.70, 247.98] | 0.389 | 0 |
+| tiny | 0.480 [0.143, 0.931] | 0.480 [0.070, 0.997] | 82.22 [51.57, 111.87] | 82.22 [49.91, 123.00] | 1.986 | 110 |
 
 ## Robustness Check: Excluding tir_neg3_rev (tiny 112-token repetition loop)
 
@@ -55,5 +55,5 @@
 
 ## Canonical JSON
 
-All displayed values regenerate from `results/hc_experiment/hc_report_rebuilt.json`.
+All displayed values regenerate from `results/hc_experiment/hc_report.json`.
 
