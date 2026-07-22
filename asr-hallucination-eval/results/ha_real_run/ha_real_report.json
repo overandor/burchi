@@ -1,0 +1,2092 @@
+{
+  "schema": "asr.hallucination-aware-pretraining/v1.0-real",
+  "timestamp": "2026-07-22T23:11:26Z",
+  "model": "tiny",
+  "arms": {
+    "baseline": {
+      "arm": "baseline",
+      "results": [
+        {
+          "condition": "clean",
+          "transcript": "the quick brown fox jumps over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.1111111111111111,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 9
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 9
+        },
+        {
+          "condition": "overlap_0db",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        },
+        {
+          "condition": "reversed",
+          "transcript": "Eee\u015f bir say\u0131m\u0131n oras\u0131 da\u011f gibi",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 6,
+            "insertions": 0,
+            "deletions": 3,
+            "ref_words": 9,
+            "hyp_words": 6
+          },
+          "uwr": 1.0,
+          "hsr": 1.0,
+          "csrr": 0.0,
+          "hc": 2.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 1.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 6
+        },
+        {
+          "condition": "noise",
+          "transcript": "",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 0,
+            "insertions": 0,
+            "deletions": 9,
+            "ref_words": 9,
+            "hyp_words": 0
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 0
+        },
+        {
+          "condition": "silence",
+          "transcript": "",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 0,
+            "insertions": 0,
+            "deletions": 9,
+            "ref_words": 9,
+            "hyp_words": 0
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 0
+        },
+        {
+          "condition": "underdetermined",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 1,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        }
+      ],
+      "summary": {
+        "mean_hsr": 0.16666666666666666,
+        "mean_wer": 0.7777777777777778,
+        "mean_hc": 0.5279461279461279,
+        "coverage": 1.0,
+        "n_abstentions": 0,
+        "n_conditions": 6
+      }
+    },
+    "post_tokenization_detector": {
+      "arm": "post_tokenization_detector",
+      "results": [
+        {
+          "condition": "clean",
+          "transcript": "the quick brown fox jumps over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.1111111111111111,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 9
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 9
+        },
+        {
+          "condition": "overlap_0db",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        },
+        {
+          "condition": "reversed",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "noise",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "silence",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "underdetermined",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 1,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        }
+      ],
+      "summary": {
+        "mean_hsr": 0.0,
+        "mean_wer": 0.7777777777777778,
+        "mean_hc": 0.6946127946127946,
+        "coverage": 0.5,
+        "n_abstentions": 3,
+        "n_conditions": 6
+      }
+    },
+    "risk_head_only": {
+      "arm": "risk_head_only",
+      "results": [
+        {
+          "condition": "clean",
+          "transcript": "the quick brown fox jumps over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.1111111111111111,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 9
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 9
+        },
+        {
+          "condition": "overlap_0db",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        },
+        {
+          "condition": "reversed",
+          "transcript": "Eee\u015f bir say\u0131m\u0131n oras\u0131 da\u011f gibi",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 6,
+            "insertions": 0,
+            "deletions": 3,
+            "ref_words": 9,
+            "hyp_words": 6
+          },
+          "uwr": 1.0,
+          "hsr": 1.0,
+          "csrr": 0.0,
+          "hc": 2.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 1.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 6
+        },
+        {
+          "condition": "noise",
+          "transcript": "",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 0,
+            "insertions": 0,
+            "deletions": 9,
+            "ref_words": 9,
+            "hyp_words": 0
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 0
+        },
+        {
+          "condition": "silence",
+          "transcript": "",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 0,
+            "insertions": 0,
+            "deletions": 9,
+            "ref_words": 9,
+            "hyp_words": 0
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 0
+        },
+        {
+          "condition": "underdetermined",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 1,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        }
+      ],
+      "summary": {
+        "mean_hsr": 0.16666666666666666,
+        "mean_wer": 0.7777777777777778,
+        "mean_hc": 0.5279461279461279,
+        "coverage": 1.0,
+        "n_abstentions": 0,
+        "n_conditions": 6
+      }
+    },
+    "hallucination_aware_pretrained": {
+      "arm": "hallucination_aware_pretrained",
+      "results": [
+        {
+          "condition": "clean",
+          "transcript": "the quick brown fox jumps over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.1111111111111111,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 9
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 9
+        },
+        {
+          "condition": "overlap_0db",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        },
+        {
+          "condition": "reversed",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "noise",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "silence",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "underdetermined",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 1,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        }
+      ],
+      "summary": {
+        "mean_hsr": 0.0,
+        "mean_wer": 0.7777777777777778,
+        "mean_hc": 0.6946127946127946,
+        "coverage": 0.5,
+        "n_abstentions": 3,
+        "n_conditions": 6
+      }
+    },
+    "combined": {
+      "arm": "combined",
+      "results": [
+        {
+          "condition": "clean",
+          "transcript": "the quick brown fox jumps over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.1111111111111111,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 9
+          },
+          "uwr": 0.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 0.0,
+          "hc_components": {
+            "uwr_component": 0.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 9
+        },
+        {
+          "condition": "overlap_0db",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 0,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        },
+        {
+          "condition": "reversed",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "noise",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "silence",
+          "transcript": "[ABSTAIN]",
+          "unsupported_label": 1,
+          "wer": 1.0,
+          "wer_components": {
+            "substitutions": 1,
+            "insertions": 0,
+            "deletions": 8,
+            "ref_words": 9,
+            "hyp_words": 1
+          },
+          "uwr": 1.0,
+          "hsr": 0.0,
+          "csrr": 0.0,
+          "hc": 1.0,
+          "hc_components": {
+            "uwr_component": 1.0,
+            "hsr_component": 0.0,
+            "csrr_component": 0.0
+          },
+          "repetitions": 0,
+          "n_tokens": 1
+        },
+        {
+          "condition": "underdetermined",
+          "transcript": "The cats out on the match are over the lazy dog.",
+          "unsupported_label": 1,
+          "wer": 0.7777777777777778,
+          "wer_components": {
+            "substitutions": 5,
+            "insertions": 2,
+            "deletions": 0,
+            "ref_words": 9,
+            "hyp_words": 11
+          },
+          "uwr": 0.2727272727272727,
+          "hsr": 0.0,
+          "csrr": 0.6222222222222222,
+          "hc": 0.5838383838383838,
+          "hc_components": {
+            "uwr_component": 0.2727272727272727,
+            "hsr_component": 0.0,
+            "csrr_component": 0.3111111111111111
+          },
+          "repetitions": 0,
+          "n_tokens": 11
+        }
+      ],
+      "summary": {
+        "mean_hsr": 0.0,
+        "mean_wer": 0.7777777777777778,
+        "mean_hc": 0.6946127946127946,
+        "coverage": 0.5,
+        "n_abstentions": 3,
+        "n_conditions": 6
+      }
+    }
+  },
+  "gradient_routing_receipts": {
+    "detached_arm": {
+      "risk_head_grad_norm": 0.8265128512866795,
+      "detach_encoder": true,
+      "encoder_grad_norm": 0.0
+    },
+    "joint_arm": {
+      "risk_head_grad_norm": 0.9061000389046967,
+      "detach_encoder": false,
+      "encoder_grad_norm": 184.70910973660648
+    },
+    "detached_training_history": [
+      {
+        "epoch": 0,
+        "loss": 0.7545886635780334,
+        "h_hat": [
+          0.45268774032592773,
+          0.44278717041015625,
+          0.43122369050979614,
+          0.43936997652053833,
+          0.42453432083129883,
+          0.4405708312988281
+        ]
+      },
+      {
+        "epoch": 1,
+        "loss": 0.6605569124221802,
+        "h_hat": [
+          0.5105528831481934,
+          0.5151907801628113,
+          0.5342366099357605,
+          0.5049559473991394,
+          0.5539371967315674,
+          0.5358192920684814
+        ]
+      },
+      {
+        "epoch": 2,
+        "loss": 0.6457590460777283,
+        "h_hat": [
+          0.5940275192260742,
+          0.5836187601089478,
+          0.6143556237220764,
+          0.6244737505912781,
+          0.6443096995353699,
+          0.4969194233417511
+        ]
+      },
+      {
+        "epoch": 3,
+        "loss": 0.5967521667480469,
+        "h_hat": [
+          0.6187095642089844,
+          0.6016553044319153,
+          0.6006708145141602,
+          0.6917365789413452,
+          0.7139217853546143,
+          0.6183866262435913
+        ]
+      },
+      {
+        "epoch": 4,
+        "loss": 0.5534369349479675,
+        "h_hat": [
+          0.6203000545501709,
+          0.610268771648407,
+          0.6382380723953247,
+          0.76773601770401,
+          0.791269063949585,
+          0.6297205090522766
+        ]
+      },
+      {
+        "epoch": 5,
+        "loss": 0.5262476801872253,
+        "h_hat": [
+          0.5969517827033997,
+          0.6500275731086731,
+          0.7111452221870422,
+          0.8089739680290222,
+          0.8336625099182129,
+          0.6287053227424622
+        ]
+      },
+      {
+        "epoch": 6,
+        "loss": 0.5404385924339294,
+        "h_hat": [
+          0.6272637248039246,
+          0.6327214241027832,
+          0.6707387566566467,
+          0.8167617321014404,
+          0.8209714293479919,
+          0.6344082951545715
+        ]
+      },
+      {
+        "epoch": 7,
+        "loss": 0.48715081810951233,
+        "h_hat": [
+          0.5627837181091309,
+          0.5771477222442627,
+          0.682426393032074,
+          0.8372893929481506,
+          0.8747680187225342,
+          0.5819547176361084
+        ]
+      },
+      {
+        "epoch": 8,
+        "loss": 0.4737499952316284,
+        "h_hat": [
+          0.5399374961853027,
+          0.5942314267158508,
+          0.6876822710037231,
+          0.8736721873283386,
+          0.8597720861434937,
+          0.6043701171875
+        ]
+      },
+      {
+        "epoch": 9,
+        "loss": 0.48975440859794617,
+        "h_hat": [
+          0.5725371241569519,
+          0.5795525908470154,
+          0.717082679271698,
+          0.8830336928367615,
+          0.8899457454681396,
+          0.5227500796318054
+        ]
+      },
+      {
+        "epoch": 10,
+        "loss": 0.44494977593421936,
+        "h_hat": [
+          0.45708754658699036,
+          0.499505877494812,
+          0.6254205107688904,
+          0.8838840126991272,
+          0.9138752222061157,
+          0.5046398043632507
+        ]
+      },
+      {
+        "epoch": 11,
+        "loss": 0.4510096609592438,
+        "h_hat": [
+          0.45924460887908936,
+          0.4805470407009125,
+          0.585409939289093,
+          0.88929283618927,
+          0.9111334681510925,
+          0.5013487935066223
+        ]
+      },
+      {
+        "epoch": 12,
+        "loss": 0.42588767409324646,
+        "h_hat": [
+          0.3965992033481598,
+          0.4036323130130768,
+          0.5945382118225098,
+          0.8857600092887878,
+          0.9079728722572327,
+          0.4513852298259735
+        ]
+      },
+      {
+        "epoch": 13,
+        "loss": 0.45209458470344543,
+        "h_hat": [
+          0.38749733567237854,
+          0.4301271140575409,
+          0.6440412402153015,
+          0.8813307285308838,
+          0.915187656879425,
+          0.3660143315792084
+        ]
+      },
+      {
+        "epoch": 14,
+        "loss": 0.40378710627555847,
+        "h_hat": [
+          0.3554687798023224,
+          0.3972649872303009,
+          0.650824248790741,
+          0.8939108848571777,
+          0.9232862591743469,
+          0.42497193813323975
+        ]
+      },
+      {
+        "epoch": 15,
+        "loss": 0.40249380469322205,
+        "h_hat": [
+          0.34908822178840637,
+          0.4030032753944397,
+          0.6561918258666992,
+          0.906288206577301,
+          0.9313222169876099,
+          0.4152444005012512
+        ]
+      },
+      {
+        "epoch": 16,
+        "loss": 0.38227465748786926,
+        "h_hat": [
+          0.3328104317188263,
+          0.35807356238365173,
+          0.6658238172531128,
+          0.9325243830680847,
+          0.9368108510971069,
+          0.40501898527145386
+        ]
+      },
+      {
+        "epoch": 17,
+        "loss": 0.365200012922287,
+        "h_hat": [
+          0.35683387517929077,
+          0.39149823784828186,
+          0.6878787279129028,
+          0.9479052424430847,
+          0.9576883912086487,
+          0.45739123225212097
+        ]
+      },
+      {
+        "epoch": 18,
+        "loss": 0.401714563369751,
+        "h_hat": [
+          0.42735615372657776,
+          0.4672493636608124,
+          0.7313992381095886,
+          0.9547327160835266,
+          0.9621163606643677,
+          0.4380795359611511
+        ]
+      },
+      {
+        "epoch": 19,
+        "loss": 0.3302982747554779,
+        "h_hat": [
+          0.35567235946655273,
+          0.3320419192314148,
+          0.7563304305076599,
+          0.956658661365509,
+          0.977277934551239,
+          0.45287367701530457
+        ]
+      },
+      {
+        "epoch": 20,
+        "loss": 0.34604665637016296,
+        "h_hat": [
+          0.33509117364883423,
+          0.49284082651138306,
+          0.7470047473907471,
+          0.9687363505363464,
+          0.9771670699119568,
+          0.525870680809021
+        ]
+      },
+      {
+        "epoch": 21,
+        "loss": 0.3887661397457123,
+        "h_hat": [
+          0.3675524890422821,
+          0.5156940221786499,
+          0.7911497950553894,
+          0.975312352180481,
+          0.97430419921875,
+          0.4214293658733368
+        ]
+      },
+      {
+        "epoch": 22,
+        "loss": 0.35400673747062683,
+        "h_hat": [
+          0.37632474303245544,
+          0.46107035875320435,
+          0.8273539543151855,
+          0.9750201106071472,
+          0.9543516635894775,
+          0.46199482679367065
+        ]
+      },
+      {
+        "epoch": 23,
+        "loss": 0.35139718651771545,
+        "h_hat": [
+          0.3485656678676605,
+          0.4561660885810852,
+          0.8018987774848938,
+          0.9805050492286682,
+          0.9877481460571289,
+          0.44135525822639465
+        ]
+      },
+      {
+        "epoch": 24,
+        "loss": 0.3615380525588989,
+        "h_hat": [
+          0.3574317395687103,
+          0.45060163736343384,
+          0.8126593828201294,
+          0.9784001111984253,
+          0.9837702512741089,
+          0.41380026936531067
+        ]
+      },
+      {
+        "epoch": 25,
+        "loss": 0.35387158393859863,
+        "h_hat": [
+          0.36914846301078796,
+          0.46509501338005066,
+          0.850439190864563,
+          0.9815236926078796,
+          0.9925901889801025,
+          0.427932471036911
+        ]
+      },
+      {
+        "epoch": 26,
+        "loss": 0.3535650670528412,
+        "h_hat": [
+          0.332456111907959,
+          0.5054427981376648,
+          0.8579922318458557,
+          0.9863022565841675,
+          0.9855578541755676,
+          0.4353315234184265
+        ]
+      },
+      {
+        "epoch": 27,
+        "loss": 0.3109135329723358,
+        "h_hat": [
+          0.29081645607948303,
+          0.44248679280281067,
+          0.8084989190101624,
+          0.9882451295852661,
+          0.9912461638450623,
+          0.494415819644928
+        ]
+      },
+      {
+        "epoch": 28,
+        "loss": 0.34378930926322937,
+        "h_hat": [
+          0.37662503123283386,
+          0.4598151743412018,
+          0.8403968811035156,
+          0.9878095388412476,
+          0.9935802221298218,
+          0.45762836933135986
+        ]
+      },
+      {
+        "epoch": 29,
+        "loss": 0.29425057768821716,
+        "h_hat": [
+          0.2510654926300049,
+          0.42031431198120117,
+          0.8829314112663269,
+          0.9856410026550293,
+          0.9918403625488281,
+          0.4565913677215576
+        ]
+      },
+      {
+        "epoch": 30,
+        "loss": 0.34818586707115173,
+        "h_hat": [
+          0.27827638387680054,
+          0.47016558051109314,
+          0.8891791105270386,
+          0.9812832474708557,
+          0.9918501973152161,
+          0.37408310174942017
+        ]
+      },
+      {
+        "epoch": 31,
+        "loss": 0.28067395091056824,
+        "h_hat": [
+          0.2520615756511688,
+          0.3515456020832062,
+          0.8632782101631165,
+          0.9830612540245056,
+          0.9931069016456604,
+          0.4541052281856537
+        ]
+      },
+      {
+        "epoch": 32,
+        "loss": 0.3069134056568146,
+        "h_hat": [
+          0.2779791057109833,
+          0.44362175464630127,
+          0.8740021586418152,
+          0.9871914386749268,
+          0.9949207901954651,
+          0.4598676562309265
+        ]
+      },
+      {
+        "epoch": 33,
+        "loss": 0.3138764798641205,
+        "h_hat": [
+          0.2260880023241043,
+          0.3963989019393921,
+          0.8557084798812866,
+          0.992819607257843,
+          0.9952443242073059,
+          0.3850735127925873
+        ]
+      },
+      {
+        "epoch": 34,
+        "loss": 0.3425946533679962,
+        "h_hat": [
+          0.24506227672100067,
+          0.4557770788669586,
+          0.8975826501846313,
+          0.9923616647720337,
+          0.9945571422576904,
+          0.3517354130744934
+        ]
+      },
+      {
+        "epoch": 35,
+        "loss": 0.2801949083805084,
+        "h_hat": [
+          0.23081442713737488,
+          0.35495153069496155,
+          0.9030513167381287,
+          0.9928464293479919,
+          0.9947351813316345,
+          0.42068007588386536
+        ]
+      },
+      {
+        "epoch": 36,
+        "loss": 0.2906062602996826,
+        "h_hat": [
+          0.28795406222343445,
+          0.45480263233184814,
+          0.9200161695480347,
+          0.9955099821090698,
+          0.9974684715270996,
+          0.4931122660636902
+        ]
+      },
+      {
+        "epoch": 37,
+        "loss": 0.2997044026851654,
+        "h_hat": [
+          0.2213211953639984,
+          0.4183015823364258,
+          0.935226321220398,
+          0.9929491281509399,
+          0.9957001209259033,
+          0.3953773081302643
+        ]
+      },
+      {
+        "epoch": 38,
+        "loss": 0.31045272946357727,
+        "h_hat": [
+          0.2072078138589859,
+          0.45396751165390015,
+          0.8518431186676025,
+          0.9928951859474182,
+          0.9964099526405334,
+          0.42555299401283264
+        ]
+      },
+      {
+        "epoch": 39,
+        "loss": 0.2747495472431183,
+        "h_hat": [
+          0.20041169226169586,
+          0.4281619191169739,
+          0.9009844064712524,
+          0.9910081028938293,
+          0.9976473450660706,
+          0.47223231196403503
+        ]
+      },
+      {
+        "epoch": 40,
+        "loss": 0.3284074068069458,
+        "h_hat": [
+          0.2631080746650696,
+          0.44454118609428406,
+          0.9507116675376892,
+          0.9959384202957153,
+          0.9959577918052673,
+          0.36113449931144714
+        ]
+      },
+      {
+        "epoch": 41,
+        "loss": 0.29216161370277405,
+        "h_hat": [
+          0.26905232667922974,
+          0.4209957420825958,
+          0.9300297498703003,
+          0.9966289401054382,
+          0.9964847564697266,
+          0.44322672486305237
+        ]
+      },
+      {
+        "epoch": 42,
+        "loss": 0.33755502104759216,
+        "h_hat": [
+          0.2679206430912018,
+          0.46520665287971497,
+          0.9243704080581665,
+          0.997276246547699,
+          0.9926544427871704,
+          0.36830416321754456
+        ]
+      },
+      {
+        "epoch": 43,
+        "loss": 0.28521302342414856,
+        "h_hat": [
+          0.22786709666252136,
+          0.44485682249069214,
+          0.9413763880729675,
+          0.9972520470619202,
+          0.9959099292755127,
+          0.45072951912879944
+        ]
+      },
+      {
+        "epoch": 44,
+        "loss": 0.23201411962509155,
+        "h_hat": [
+          0.2034837007522583,
+          0.3581468462944031,
+          0.9430654644966125,
+          0.9968728423118591,
+          0.998793363571167,
+          0.5177710056304932
+        ]
+      },
+      {
+        "epoch": 45,
+        "loss": 0.2736175060272217,
+        "h_hat": [
+          0.1636035293340683,
+          0.47086912393569946,
+          0.9403032660484314,
+          0.9972646236419678,
+          0.9986600875854492,
+          0.46724560856819153
+        ]
+      },
+      {
+        "epoch": 46,
+        "loss": 0.30343106389045715,
+        "h_hat": [
+          0.18504294753074646,
+          0.4190472662448883,
+          0.9187315702438354,
+          0.9957085847854614,
+          0.9987817406654358,
+          0.3743366599082947
+        ]
+      },
+      {
+        "epoch": 47,
+        "loss": 0.2768094837665558,
+        "h_hat": [
+          0.17511537671089172,
+          0.38819965720176697,
+          0.9569886922836304,
+          0.9949980974197388,
+          0.9985426664352417,
+          0.3959135413169861
+        ]
+      },
+      {
+        "epoch": 48,
+        "loss": 0.224016472697258,
+        "h_hat": [
+          0.14582128822803497,
+          0.41509729623794556,
+          0.9372947216033936,
+          0.9960131645202637,
+          0.9988508224487305,
+          0.5597460865974426
+        ]
+      },
+      {
+        "epoch": 49,
+        "loss": 0.2831958532333374,
+        "h_hat": [
+          0.1364498883485794,
+          0.34149256348609924,
+          0.8983356356620789,
+          0.9975825548171997,
+          0.9992402791976929,
+          0.3590475618839264
+        ]
+      }
+    ],
+    "joint_training_history": [
+      {
+        "epoch": 0,
+        "loss": 0.6808227896690369,
+        "h_hat": [
+          0.4261552095413208,
+          0.4578213691711426,
+          0.5053220987319946,
+          0.4807202219963074,
+          0.48154300451278687,
+          0.4622766971588135
+        ]
+      },
+      {
+        "epoch": 1,
+        "loss": 0.6051350235939026,
+        "h_hat": [
+          0.5389428734779358,
+          0.4773175120353699,
+          0.5581937432289124,
+          0.6098023653030396,
+          0.6148423552513123,
+          0.5253257155418396
+        ]
+      },
+      {
+        "epoch": 2,
+        "loss": 0.5940507054328918,
+        "h_hat": [
+          0.5684086084365845,
+          0.5902615189552307,
+          0.5722130537033081,
+          0.7274091839790344,
+          0.6983664035797119,
+          0.5508623123168945
+        ]
+      },
+      {
+        "epoch": 3,
+        "loss": 0.572077751159668,
+        "h_hat": [
+          0.6180582642555237,
+          0.6448540091514587,
+          0.6306469440460205,
+          0.7803311347961426,
+          0.7788894772529602,
+          0.6213746666908264
+        ]
+      },
+      {
+        "epoch": 4,
+        "loss": 0.5404146909713745,
+        "h_hat": [
+          0.6046761274337769,
+          0.6406210064888,
+          0.6804116368293762,
+          0.7814218997955322,
+          0.8067885637283325,
+          0.6410360336303711
+        ]
+      },
+      {
+        "epoch": 5,
+        "loss": 0.5181002020835876,
+        "h_hat": [
+          0.6007203459739685,
+          0.632516086101532,
+          0.6611840724945068,
+          0.8589707016944885,
+          0.8517956733703613,
+          0.6292163729667664
+        ]
+      },
+      {
+        "epoch": 6,
+        "loss": 0.4857862889766693,
+        "h_hat": [
+          0.5495687127113342,
+          0.6053566336631775,
+          0.6574745178222656,
+          0.8693675398826599,
+          0.8892353773117065,
+          0.6000974774360657
+        ]
+      },
+      {
+        "epoch": 7,
+        "loss": 0.46020185947418213,
+        "h_hat": [
+          0.5206576585769653,
+          0.5790632367134094,
+          0.7083574533462524,
+          0.8621524572372437,
+          0.8798303008079529,
+          0.5830731987953186
+        ]
+      },
+      {
+        "epoch": 8,
+        "loss": 0.4695279598236084,
+        "h_hat": [
+          0.49535658955574036,
+          0.5469870567321777,
+          0.6173100471496582,
+          0.8736639022827148,
+          0.8552451729774475,
+          0.5668734312057495
+        ]
+      },
+      {
+        "epoch": 9,
+        "loss": 0.45457425713539124,
+        "h_hat": [
+          0.5263652801513672,
+          0.4917997121810913,
+          0.6726795434951782,
+          0.8722962737083435,
+          0.9151160717010498,
+          0.5058928728103638
+        ]
+      },
+      {
+        "epoch": 10,
+        "loss": 0.4437065124511719,
+        "h_hat": [
+          0.40262073278427124,
+          0.47794023156166077,
+          0.6432800889015198,
+          0.891636848449707,
+          0.8965415954589844,
+          0.43518632650375366
+        ]
+      },
+      {
+        "epoch": 11,
+        "loss": 0.43848392367362976,
+        "h_hat": [
+          0.377391517162323,
+          0.38476020097732544,
+          0.5878966450691223,
+          0.8807921409606934,
+          0.9175124168395996,
+          0.395701140165329
+        ]
+      },
+      {
+        "epoch": 12,
+        "loss": 0.42601844668388367,
+        "h_hat": [
+          0.3685864806175232,
+          0.4065798819065094,
+          0.6378681659698486,
+          0.9032405614852905,
+          0.9118534922599792,
+          0.39423906803131104
+        ]
+      },
+      {
+        "epoch": 13,
+        "loss": 0.4021730124950409,
+        "h_hat": [
+          0.36658719182014465,
+          0.3927658498287201,
+          0.6549004316329956,
+          0.9370108246803284,
+          0.9456321001052856,
+          0.4011859893798828
+        ]
+      },
+      {
+        "epoch": 14,
+        "loss": 0.4026179611682892,
+        "h_hat": [
+          0.35386723279953003,
+          0.43425238132476807,
+          0.6932206153869629,
+          0.9138606190681458,
+          0.9478428363800049,
+          0.40685445070266724
+        ]
+      },
+      {
+        "epoch": 15,
+        "loss": 0.37416303157806396,
+        "h_hat": [
+          0.36805325746536255,
+          0.3957667946815491,
+          0.713354766368866,
+          0.9601494669914246,
+          0.9507489204406738,
+          0.42601314187049866
+        ]
+      },
+      {
+        "epoch": 16,
+        "loss": 0.3774038553237915,
+        "h_hat": [
+          0.4486335813999176,
+          0.44458478689193726,
+          0.7549939751625061,
+          0.960206925868988,
+          0.9649556279182434,
+          0.4849531054496765
+        ]
+      },
+      {
+        "epoch": 17,
+        "loss": 0.3667478859424591,
+        "h_hat": [
+          0.41260695457458496,
+          0.4614385664463043,
+          0.7641798257827759,
+          0.9556517601013184,
+          0.9783878922462463,
+          0.4899708032608032
+        ]
+      },
+      {
+        "epoch": 18,
+        "loss": 0.3524019718170166,
+        "h_hat": [
+          0.4069647490978241,
+          0.45790114998817444,
+          0.796066164970398,
+          0.9682258367538452,
+          0.9773367047309875,
+          0.49841776490211487
+        ]
+      },
+      {
+        "epoch": 19,
+        "loss": 0.36063098907470703,
+        "h_hat": [
+          0.35614609718322754,
+          0.49272629618644714,
+          0.7806347608566284,
+          0.9721879363059998,
+          0.9764214754104614,
+          0.47469496726989746
+        ]
+      },
+      {
+        "epoch": 20,
+        "loss": 0.3498966693878174,
+        "h_hat": [
+          0.38667064905166626,
+          0.4720629155635834,
+          0.7808640003204346,
+          0.9731744527816772,
+          0.9866885542869568,
+          0.5046946406364441
+        ]
+      },
+      {
+        "epoch": 21,
+        "loss": 0.3492564857006073,
+        "h_hat": [
+          0.3300943374633789,
+          0.5118172764778137,
+          0.8197580575942993,
+          0.9836056232452393,
+          0.9832079410552979,
+          0.47442859411239624
+        ]
+      },
+      {
+        "epoch": 22,
+        "loss": 0.3673812448978424,
+        "h_hat": [
+          0.41439443826675415,
+          0.48665642738342285,
+          0.8445031046867371,
+          0.9853835701942444,
+          0.9744734764099121,
+          0.45258501172065735
+        ]
+      },
+      {
+        "epoch": 23,
+        "loss": 0.34972670674324036,
+        "h_hat": [
+          0.32119375467300415,
+          0.47955000400543213,
+          0.8418747186660767,
+          0.9847211241722107,
+          0.9823704957962036,
+          0.4263172447681427
+        ]
+      },
+      {
+        "epoch": 24,
+        "loss": 0.3170104920864105,
+        "h_hat": [
+          0.298065721988678,
+          0.49559226632118225,
+          0.8428301215171814,
+          0.979764461517334,
+          0.9873840808868408,
+          0.5170333385467529
+        ]
+      },
+      {
+        "epoch": 25,
+        "loss": 0.3576607406139374,
+        "h_hat": [
+          0.2971941828727722,
+          0.3533530831336975,
+          0.8286685943603516,
+          0.9863898158073425,
+          0.9887368083000183,
+          0.31842470169067383
+        ]
+      },
+      {
+        "epoch": 26,
+        "loss": 0.3365993797779083,
+        "h_hat": [
+          0.2550838589668274,
+          0.4089002311229706,
+          0.8270520567893982,
+          0.9847906231880188,
+          0.9900992512702942,
+          0.37374618649482727
+        ]
+      },
+      {
+        "epoch": 27,
+        "loss": 0.33029288053512573,
+        "h_hat": [
+          0.2704855501651764,
+          0.378320574760437,
+          0.8592627644538879,
+          0.9780510663986206,
+          0.9899080991744995,
+          0.36530110239982605
+        ]
+      },
+      {
+        "epoch": 28,
+        "loss": 0.3671247065067291,
+        "h_hat": [
+          0.2911684811115265,
+          0.4342675805091858,
+          0.8366636633872986,
+          0.98552006483078,
+          0.9915505647659302,
+          0.33703356981277466
+        ]
+      },
+      {
+        "epoch": 29,
+        "loss": 0.3132980763912201,
+        "h_hat": [
+          0.3269643187522888,
+          0.38441213965415955,
+          0.8775467276573181,
+          0.9868186712265015,
+          0.9936034083366394,
+          0.4281238913536072
+        ]
+      },
+      {
+        "epoch": 30,
+        "loss": 0.2865895628929138,
+        "h_hat": [
+          0.2500334084033966,
+          0.3902556002140045,
+          0.8851024508476257,
+          0.9887891411781311,
+          0.983162522315979,
+          0.45530468225479126
+        ]
+      },
+      {
+        "epoch": 31,
+        "loss": 0.3164099156856537,
+        "h_hat": [
+          0.3138382136821747,
+          0.37648797035217285,
+          0.8623615503311157,
+          0.9936581254005432,
+          0.9938325881958008,
+          0.4111483097076416
+        ]
+      },
+      {
+        "epoch": 32,
+        "loss": 0.28784704208374023,
+        "h_hat": [
+          0.2753320038318634,
+          0.42209669947624207,
+          0.9117011427879333,
+          0.9874157309532166,
+          0.9967227578163147,
+          0.4731692671775818
+        ]
+      },
+      {
+        "epoch": 33,
+        "loss": 0.2801876962184906,
+        "h_hat": [
+          0.23925533890724182,
+          0.44442522525787354,
+          0.877938985824585,
+          0.9943424463272095,
+          0.9888346791267395,
+          0.5102591514587402
+        ]
+      },
+      {
+        "epoch": 34,
+        "loss": 0.2945915758609772,
+        "h_hat": [
+          0.2637087106704712,
+          0.40106669068336487,
+          0.9186190962791443,
+          0.9889810085296631,
+          0.9967291355133057,
+          0.42759668827056885
+        ]
+      },
+      {
+        "epoch": 35,
+        "loss": 0.3156958818435669,
+        "h_hat": [
+          0.24148234724998474,
+          0.5136471390724182,
+          0.9288597702980042,
+          0.9927177429199219,
+          0.997995138168335,
+          0.44314783811569214
+        ]
+      },
+      {
+        "epoch": 36,
+        "loss": 0.2999773323535919,
+        "h_hat": [
+          0.23804503679275513,
+          0.4305006265640259,
+          0.9139279127120972,
+          0.9942756295204163,
+          0.9971766471862793,
+          0.42045122385025024
+        ]
+      },
+      {
+        "epoch": 37,
+        "loss": 0.3255385458469391,
+        "h_hat": [
+          0.2816416323184967,
+          0.45817485451698303,
+          0.9353920221328735,
+          0.9934573769569397,
+          0.994391143321991,
+          0.3942956328392029
+        ]
+      },
+      {
+        "epoch": 38,
+        "loss": 0.25684118270874023,
+        "h_hat": [
+          0.217781662940979,
+          0.44616225361824036,
+          0.9210807085037231,
+          0.9951116442680359,
+          0.9974632263183594,
+          0.5406980514526367
+        ]
+      },
+      {
+        "epoch": 39,
+        "loss": 0.30114826560020447,
+        "h_hat": [
+          0.3010575473308563,
+          0.45112547278404236,
+          0.9527137279510498,
+          0.9922286868095398,
+          0.9975895881652832,
+          0.4537714719772339
+        ]
+      },
+      {
+        "epoch": 40,
+        "loss": 0.28357186913490295,
+        "h_hat": [
+          0.19599606096744537,
+          0.40041372179985046,
+          0.9246561527252197,
+          0.9938767552375793,
+          0.9964998960494995,
+          0.4132167100906372
+        ]
+      },
+      {
+        "epoch": 41,
+        "loss": 0.2737816274166107,
+        "h_hat": [
+          0.17901578545570374,
+          0.3662601709365845,
+          0.9094884991645813,
+          0.9949878454208374,
+          0.9924240112304688,
+          0.41402915120124817
+        ]
+      },
+      {
+        "epoch": 42,
+        "loss": 0.33197981119155884,
+        "h_hat": [
+          0.15194493532180786,
+          0.475084125995636,
+          0.930923342704773,
+          0.9968395233154297,
+          0.998214602470398,
+          0.33087286353111267
+        ]
+      },
+      {
+        "epoch": 43,
+        "loss": 0.2784270644187927,
+        "h_hat": [
+          0.16812844574451447,
+          0.44594088196754456,
+          0.8804473280906677,
+          0.9973652958869934,
+          0.9982014894485474,
+          0.4656887948513031
+        ]
+      },
+      {
+        "epoch": 44,
+        "loss": 0.33226442337036133,
+        "h_hat": [
+          0.19719520211219788,
+          0.5345937013626099,
+          0.940742015838623,
+          0.9962078332901001,
+          0.9989511966705322,
+          0.3893941044807434
+        ]
+      },
+      {
+        "epoch": 45,
+        "loss": 0.265079140663147,
+        "h_hat": [
+          0.21458007395267487,
+          0.37009868025779724,
+          0.9482964873313904,
+          0.9960271120071411,
+          0.9987468719482422,
+          0.43673738837242126
+        ]
+      },
+      {
+        "epoch": 46,
+        "loss": 0.25375667214393616,
+        "h_hat": [
+          0.14402709901332855,
+          0.39599674940109253,
+          0.9478447437286377,
+          0.9969748258590698,
+          0.9987271428108215,
+          0.44709694385528564
+        ]
+      },
+      {
+        "epoch": 47,
+        "loss": 0.2855628728866577,
+        "h_hat": [
+          0.1415463089942932,
+          0.4115951955318451,
+          0.8932891488075256,
+          0.9966289401054382,
+          0.9969794750213623,
+          0.40205448865890503
+        ]
+      },
+      {
+        "epoch": 48,
+        "loss": 0.2969750165939331,
+        "h_hat": [
+          0.22639591991901398,
+          0.4136374890804291,
+          0.9422891139984131,
+          0.9979866743087769,
+          0.9987213015556335,
+          0.3951064944267273
+        ]
+      },
+      {
+        "epoch": 49,
+        "loss": 0.3231930136680603,
+        "h_hat": [
+          0.17421206831932068,
+          0.5703570246696472,
+          0.9503613710403442,
+          0.9955291152000427,
+          0.9972476363182068,
+          0.4296475946903229
+        ]
+      }
+    ],
+    "detached_final_h_hat": [
+      0.15987853705883026,
+      0.4328737258911133,
+      0.959479570388794,
+      0.9984846711158752,
+      0.998656153678894,
+      0.3869656026363373
+    ],
+    "joint_final_h_hat": [
+      0.1683872789144516,
+      0.5698391795158386,
+      0.9726152420043945,
+      0.9973381161689758,
+      0.9982896447181702,
+      0.5097548365592957
+    ],
+    "labels": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "hypothesis": {
+    "hypothesis": "A model jointly pretrained to estimate acoustic-support deficiency and adapt its generation loss before textual decoding will produce fewer fluent unsupported spans than an equivalent model protected only by post-decoding detection.",
+    "conditions": {
+      "hsr_pretrained_lt_posthoc": false,
+      "delta_wer_le_delta": true,
+      "unnecessary_abstention_le_tau": false
+    },
+    "values": {
+      "hsr_pretrained": 0.0,
+      "hsr_posthoc": 0.0,
+      "delta_wer": 0.0,
+      "unnecessary_abstention_rate": 0.5,
+      "delta_threshold": 0.05,
+      "tau_threshold": 0.15
+    },
+    "supported": false,
+    "critical_comparison": {
+      "joint_hsr": 0.0,
+      "detached_hsr": 0.16666666666666666,
+      "joint_lower_than_detached": true
+    }
+  },
+  "attestation": {
+    "schema": "asr.ha-real-run/v1.0",
+    "generated_utc": "2026-07-22T23:11:26Z",
+    "model": "tiny",
+    "device": "cpu",
+    "encoder_dim": 384,
+    "n_epochs": 50,
+    "whisper_version": "20250625",
+    "torch_version": "2.11.0",
+    "numpy_version": "1.26.4",
+    "python_version": "3.13.12",
+    "runner_os": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "target_transcript": "The quick brown fox jumps over the lazy dog",
+    "competitor_transcript": "The cat sat on the mat today",
+    "conditions": [
+      "clean",
+      "overlap_0db",
+      "reversed",
+      "noise",
+      "silence",
+      "underdetermined"
+    ],
+    "unsupported_labels": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "limitations": [
+    "Only the risk head is trained; Whisper encoder/decoder weights are frozen.",
+    "The 'joint' arm trains the risk head with gradients flowing through the encoder, but with frozen Whisper weights this is a proxy for full joint fine-tuning.",
+    "The corpus is small (6 conditions from 2 TTS sentences). This is a proof-of-pipeline, not a statistically powered experiment.",
+    "The post-decoding filter uses a threshold of 0.5 on the risk head output.",
+    "Full joint fine-tuning of Whisper requires GPU and is out of scope for this run."
+  ]
+}
