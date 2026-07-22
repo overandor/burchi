@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "burchi"
+version = "0.1.0"
+description = "Semantic browser automation for LLMs — find elements by meaning, not selectors"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Apache-2.0"}
+authors = [{name = "Burchi"}]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-asyncio>=0.21"]
+
+[tool.setuptools]
+packages = ["burchi"]
+package-dir = {"burchi" = "."}

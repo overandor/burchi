@@ -1,0 +1,7 @@
+[
+  {"action": "goto", "intent": "https://example.com"},
+  {"action": "digest"},
+  {"action": "find", "intent": "more information link"},
+  {"action": "markdown"},
+  {"action": "ask", "intent": "what links are on this page"}
+]
