@@ -1,0 +1,1478 @@
+{
+  "schema": "asr.hallucination-coefficient/v2.0-rebuilt",
+  "original_timestamp": "2026-07-22T22:42:40Z",
+  "rebuild_timestamp": "2026-07-22T22:45:10Z",
+  "models": [
+    "base",
+    "small",
+    "tiny"
+  ],
+  "n_conditions": 8,
+  "per_condition": [
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "clean",
+      "transcript": "the quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_20_ol100",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_6_ol100",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_0_ol100",
+      "transcript": "The cats out on the match are over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.5838383838383838,
+      "hc_components": {
+        "uwr_component": 0.2727272727272727,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3111111111111111
+      },
+      "uwr": 0.2727272727272727,
+      "hsr": 0.0,
+      "csrr": 0.6222222222222222,
+      "wer": 0.7777777777777778,
+      "wer_components": {
+        "substitutions": 5,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 75.83426030733013,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_neg3_ol100",
+      "transcript": "The cats out on the matchup, so for the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.5838383838383838,
+      "hc_components": {
+        "uwr_component": 0.2727272727272727,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3111111111111111
+      },
+      "uwr": 0.2727272727272727,
+      "hsr": 0.0,
+      "csrr": 0.6222222222222222,
+      "wer": 0.8888888888888888,
+      "wer_components": {
+        "substitutions": 6,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 75.83426030733013,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_0_ol50",
+      "transcript": "the quick brown fox jumps over the hatchet on the mat today.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.3924242424242424,
+      "hc_components": {
+        "uwr_component": 0.08333333333333333,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3090909090909091
+      },
+      "uwr": 0.08333333333333333,
+      "hsr": 0.0,
+      "csrr": 0.6181818181818182,
+      "wer": 0.5555555555555556,
+      "wer_components": {
+        "substitutions": 2,
+        "insertions": 3,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 12
+      },
+      "capacity_index": 112.82420195015911,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_0_ol25",
+      "transcript": "the quick brown fox jumps over the lazy dog. The cats add on the mat today.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.35833333333333334,
+      "hc_components": {
+        "uwr_component": 0.125,
+        "hsr_component": 0.0,
+        "csrr_component": 0.23333333333333334
+      },
+      "uwr": 0.125,
+      "hsr": 0.0,
+      "csrr": 0.4666666666666667,
+      "wer": 0.8888888888888888,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 7,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 16
+      },
+      "capacity_index": 123.55800551835605,
+      "repetitions": 0
+    },
+    {
+      "model": "tiny",
+      "model_full_name": "openai/whisper-tiny",
+      "condition": "tir_neg3_rev",
+      "transcript": "Yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah, yeah",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 1.9196516321516321,
+      "hc_components": {
+        "uwr_component": 0.9732142857142857,
+        "hsr_component": 0.9464373464373464,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.9732142857142857,
+      "hsr": 0.9464373464373464,
+      "csrr": 0.0,
+      "wer": 12.444444444444445,
+      "wer_components": {
+        "substitutions": 9,
+        "insertions": 103,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 112
+      },
+      "capacity_index": 23.064055600434937,
+      "repetitions": 110
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "clean",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_20_ol100",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_6_ol100",
+      "transcript": "The cute brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.1111111111111111,
+      "hc_components": {
+        "uwr_component": 0.1111111111111111,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.1111111111111111,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.2222222222222222,
+      "wer_components": {
+        "substitutions": 2,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": 413.0762772733339,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_0_ol100",
+      "transcript": "The cuts out on the matchup over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.6333333333333333,
+      "hc_components": {
+        "uwr_component": 0.3,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3333333333333333
+      },
+      "uwr": 0.3,
+      "hsr": 0.0,
+      "csrr": 0.6666666666666666,
+      "wer": 0.6666666666666666,
+      "wer_components": {
+        "substitutions": 5,
+        "insertions": 1,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 10
+      },
+      "capacity_index": 72.46952232865507,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_neg3_ol100",
+      "transcript": "The cats out on the matchup are over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.5838383838383838,
+      "hc_components": {
+        "uwr_component": 0.2727272727272727,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3111111111111111
+      },
+      "uwr": 0.2727272727272727,
+      "hsr": 0.0,
+      "csrr": 0.6222222222222222,
+      "wer": 0.7777777777777778,
+      "wer_components": {
+        "substitutions": 5,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 78.61313235305663,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_0_ol50",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_0_ol25",
+      "transcript": "The quick brown fox jumps over the lazy dot-cat sat on the mat today.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.3855311355311355,
+      "hc_components": {
+        "uwr_component": 0.07142857142857142,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3141025641025641
+      },
+      "uwr": 0.07142857142857142,
+      "hsr": 0.0,
+      "csrr": 0.6282051282051282,
+      "wer": 0.6666666666666666,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 5,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 14
+      },
+      "capacity_index": 119.04969511282151,
+      "repetitions": 0
+    },
+    {
+      "model": "base",
+      "model_full_name": "openai/whisper-base",
+      "condition": "tir_neg3_rev",
+      "transcript": "the end time, and I'm not asking for the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.47676767676767673,
+      "hc_components": {
+        "uwr_component": 0.45454545454545453,
+        "hsr_component": 0.022222222222222223,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.45454545454545453,
+      "hsr": 0.022222222222222223,
+      "csrr": 0.0,
+      "wer": 0.8888888888888888,
+      "wer_components": {
+        "substitutions": 6,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 96.26777648319224,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "clean",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_20_ol100",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_6_ol100",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_0_ol100",
+      "transcript": "The cat's round on the mat jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.5929292929292929,
+      "hc_components": {
+        "uwr_component": 0.18181818181818182,
+        "hsr_component": 0.0,
+        "csrr_component": 0.4111111111111111
+      },
+      "uwr": 0.18181818181818182,
+      "hsr": 0.0,
+      "csrr": 0.8222222222222222,
+      "wer": 0.6666666666666666,
+      "wer_components": {
+        "substitutions": 4,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 82.50482224411863,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_neg3_ol100",
+      "transcript": "The cat's out on the mat jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.5929292929292929,
+      "hc_components": {
+        "uwr_component": 0.18181818181818182,
+        "hsr_component": 0.0,
+        "csrr_component": 0.4111111111111111
+      },
+      "uwr": 0.18181818181818182,
+      "hsr": 0.0,
+      "csrr": 0.8222222222222222,
+      "wer": 0.6666666666666666,
+      "wer_components": {
+        "substitutions": 4,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 82.50482224411863,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_0_ol50",
+      "transcript": "The quick brown fox jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.0,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.1111111111111111,
+      "wer_components": {
+        "substitutions": 1,
+        "insertions": 0,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 9
+      },
+      "capacity_index": null,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_0_ol25",
+      "transcript": "The quick brown fox jumps over the lazy dog the cat sat on the mat today.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.3238095238095238,
+      "hc_components": {
+        "uwr_component": 0.0,
+        "hsr_component": 0.0,
+        "csrr_component": 0.3238095238095238
+      },
+      "uwr": 0.0,
+      "hsr": 0.0,
+      "csrr": 0.6476190476190476,
+      "wer": 0.7777777777777778,
+      "wer_components": {
+        "substitutions": 0,
+        "insertions": 7,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 16
+      },
+      "capacity_index": 151.07500650672168,
+      "repetitions": 0
+    },
+    {
+      "model": "small",
+      "model_full_name": "openai/whisper-small",
+      "condition": "tir_neg3_rev",
+      "transcript": "the quick ground and the moth jumps over the lazy dog.",
+      "target_transcript": "The quick brown fox jumps over the lazy dog",
+      "competitor_transcript": "The cat sat on the mat today",
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "hc": 0.18181818181818182,
+      "hc_components": {
+        "uwr_component": 0.18181818181818182,
+        "hsr_component": 0.0,
+        "csrr_component": 0.0
+      },
+      "uwr": 0.18181818181818182,
+      "hsr": 0.0,
+      "csrr": 0.0,
+      "wer": 0.5555555555555556,
+      "wer_components": {
+        "substitutions": 3,
+        "insertions": 2,
+        "deletions": 0,
+        "ref_words": 9,
+        "hyp_words": 11
+      },
+      "capacity_index": 269.0573925405424,
+      "repetitions": 0
+    }
+  ],
+  "summary": {
+    "base": {
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "n_conditions": 8,
+      "hc": {
+        "mean": 0.27382270507270506,
+        "median": 0.2483211233211233,
+        "std": 0.27527511748227923,
+        "ci95": [
+          0.09305555555555556,
+          0.44691308691308673
+        ],
+        "min": 0.0,
+        "max": 0.6333333333333333
+      },
+      "capacity_index": {
+        "mean": 155.89528071021186,
+        "median": 96.26777648319224,
+        "std": 144.90297533849477,
+        "ci95": [
+          80.91533917420344,
+          286.35287695727726
+        ],
+        "min": 72.46952232865507,
+        "max": 413.0762772733339
+      },
+      "wer": {
+        "mean": 0.4444444444444444,
+        "median": 0.4444444444444444,
+        "std": 0.3359684204526464,
+        "ci95": [
+          0.2222222222222222,
+          0.6388888888888888
+        ],
+        "min": 0.1111111111111111,
+        "max": 0.8888888888888888
+      },
+      "uwr": {
+        "mean": 0.1512265512265512,
+        "median": 0.09126984126984126,
+        "std": 0.17133246585798723
+      },
+      "hsr": {
+        "mean": 0.002777777777777778,
+        "median": 0.0,
+        "std": 0.007856742013183862
+      },
+      "csrr": {
+        "mean": 0.23963675213675212,
+        "median": 0.0,
+        "std": 0.3309813196234186
+      },
+      "repetitions": {
+        "total": 0,
+        "mean": 0.0
+      }
+    },
+    "small": {
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "n_conditions": 8,
+      "hc": {
+        "mean": 0.21143578643578642,
+        "median": 0.09090909090909091,
+        "std": 0.2627872625449085,
+        "ci95": [
+          0.0627597402597403,
+          0.3823953823953824
+        ],
+        "min": 0.0,
+        "max": 0.5929292929292929
+      },
+      "capacity_index": {
+        "mean": 146.28551088387533,
+        "median": 116.78991437542015,
+        "std": 87.99967174287852,
+        "ci95": [
+          82.50482224411863,
+          222.41924996643647
+        ],
+        "min": 82.50482224411863,
+        "max": 269.0573925405424
+      },
+      "wer": {
+        "mean": 0.3888888888888889,
+        "median": 0.33333333333333337,
+        "std": 0.3028378417196653,
+        "ci95": [
+          0.18055555555555552,
+          0.5694444444444444
+        ],
+        "min": 0.1111111111111111,
+        "max": 0.7777777777777778
+      },
+      "uwr": {
+        "mean": 0.06818181818181818,
+        "median": 0.0,
+        "std": 0.09409984900123013
+      },
+      "hsr": {
+        "mean": 0.0,
+        "median": 0.0,
+        "std": 0.0
+      },
+      "csrr": {
+        "mean": 0.2865079365079365,
+        "median": 0.0,
+        "std": 0.3990729999126216
+      },
+      "repetitions": {
+        "total": 0,
+        "mean": 0.0
+      }
+    },
+    "tiny": {
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "n_conditions": 8,
+      "hc": {
+        "mean": 0.47976074694824694,
+        "median": 0.37537878787878787,
+        "std": 0.6333396149471417,
+        "ci95": [
+          0.14279119318181818,
+          0.9314855236730235
+        ],
+        "min": 0.0,
+        "max": 1.9196516321516321
+      },
+      "capacity_index": {
+        "mean": 82.22295673672207,
+        "median": 75.83426030733013,
+        "std": 39.45386208655564,
+        "ci95": [
+          51.57012581175881,
+          111.86649576251148
+        ],
+        "min": 23.064055600434937,
+        "max": 123.55800551835605
+      },
+      "wer": {
+        "mean": 1.9861111111111112,
+        "median": 0.6666666666666667,
+        "std": 4.239911774064627,
+        "ci95": [
+          0.3055555555555556,
+          5.027777777777778
+        ],
+        "min": 0.1111111111111111,
+        "max": 12.444444444444445
+      },
+      "uwr": {
+        "mean": 0.21587527056277053,
+        "median": 0.10416666666666666,
+        "std": 0.32637812457702864
+      },
+      "hsr": {
+        "mean": 0.1183046683046683,
+        "median": 0.0,
+        "std": 0.3346161328170247
+      },
+      "csrr": {
+        "mean": 0.2911616161616162,
+        "median": 0.23333333333333334,
+        "std": 0.31533357212321844
+      },
+      "repetitions": {
+        "total": 110,
+        "mean": 13.75
+      }
+    }
+  },
+  "summary_excluding_tir_neg3_rev": {
+    "tiny": {
+      "lambda": 44.27495197741092,
+      "provenance": {
+        "checkpoint_name": "tiny",
+        "params": 39000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 44.27495197741092,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "n_conditions": 7,
+      "hc": {
+        "mean": 0.27406204906204906,
+        "median": 0.35833333333333334,
+        "std": 0.2702973774547296,
+        "ci95": [
+          0.0834054834054834,
+          0.4457431457431457
+        ],
+        "min": 0.0,
+        "max": 0.5838383838383838
+      },
+      "capacity_index": {
+        "mean": 97.01268202079385,
+        "median": 94.32923112874462,
+        "std": 24.844244501920134,
+        "ci95": [
+          75.83426030733013,
+          118.19110373425758
+        ],
+        "min": 75.83426030733013,
+        "max": 123.55800551835605
+      },
+      "wer": {
+        "mean": 0.49206349206349204,
+        "median": 0.5555555555555556,
+        "std": 0.37326907988269353,
+        "ci95": [
+          0.22222222222222227,
+          0.7460317460317459
+        ],
+        "min": 0.1111111111111111,
+        "max": 0.8888888888888888
+      },
+      "uwr": {
+        "mean": 0.10768398268398269,
+        "median": 0.08333333333333333,
+        "std": 0.12258255322853985
+      },
+      "hsr": {
+        "mean": 0.0,
+        "median": 0.0,
+        "std": 0.0
+      },
+      "csrr": {
+        "mean": 0.33275613275613275,
+        "median": 0.4666666666666667,
+        "std": 0.31600659765131434
+      },
+      "repetitions": {
+        "total": 0,
+        "mean": 0.0
+      }
+    },
+    "base": {
+      "lambda": 45.897364141481546,
+      "provenance": {
+        "checkpoint_name": "base",
+        "params": 74000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 45.897364141481546,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "n_conditions": 7,
+      "hc": {
+        "mean": 0.24483056625913768,
+        "median": 0.1111111111111111,
+        "std": 0.28383218686605693,
+        "ci95": [
+          0.0709488923774638,
+          0.4509260977118116
+        ],
+        "min": 0.0,
+        "max": 0.6333333333333333
+      },
+      "capacity_index": {
+        "mean": 170.80215676696676,
+        "median": 98.83141373293907,
+        "std": 162.83241893878161,
+        "ci95": [
+          75.54132734085584,
+          329.4604910432646
+        ],
+        "min": 72.46952232865507,
+        "max": 413.0762772733339
+      },
+      "wer": {
+        "mean": 0.38095238095238093,
+        "median": 0.2222222222222222,
+        "std": 0.3066958041521574,
+        "ci95": [
+          0.1904761904761905,
+          0.619047619047619
+        ],
+        "min": 0.1111111111111111,
+        "max": 0.7777777777777778
+      },
+      "uwr": {
+        "mean": 0.10789527932385075,
+        "median": 0.07142857142857142,
+        "std": 0.12931753297943657
+      },
+      "hsr": {
+        "mean": 0.0,
+        "median": 0.0,
+        "std": 0.0
+      },
+      "csrr": {
+        "mean": 0.27387057387057384,
+        "median": 0.0,
+        "std": 0.3418603474006709
+      },
+      "repetitions": {
+        "total": 0,
+        "mean": 0.0
+      }
+    },
+    "small": {
+      "lambda": 48.919525916462256,
+      "provenance": {
+        "checkpoint_name": "small",
+        "params": 244000000,
+        "en_only": false,
+        "training_hours": 680000,
+        "training_corpus": "OpenAI Whisper weakly supervised corpus (Radford et al. 2022)",
+        "paper_ref": "Radford et al. 2022 Table 1",
+        "lambda": 48.919525916462256,
+        "lambda_formula": "log10(params) * log10(680000)",
+        "lambda_interpretation": "capacity proxy, NOT independent pre-training exposure"
+      },
+      "n_conditions": 7,
+      "hc": {
+        "mean": 0.21566687280972993,
+        "median": 0.0,
+        "std": 0.2835482029403805,
+        "ci95": [
+          0.04625850340136055,
+          0.4235209235209235
+        ],
+        "min": 0.0,
+        "max": 0.5929292929292929
+      },
+      "capacity_index": {
+        "mean": 105.36155033165296,
+        "median": 82.50482224411863,
+        "std": 39.58901434239611,
+        "ci95": [
+          82.50482224411863,
+          151.07500650672168
+        ],
+        "min": 82.50482224411863,
+        "max": 151.07500650672168
+      },
+      "wer": {
+        "mean": 0.36507936507936506,
+        "median": 0.1111111111111111,
+        "std": 0.31891202467554786,
+        "ci95": [
+          0.1904761904761905,
+          0.6031746031746031
+        ],
+        "min": 0.1111111111111111,
+        "max": 0.7777777777777778
+      },
+      "uwr": {
+        "mean": 0.05194805194805195,
+        "median": 0.0,
+        "std": 0.08871818844986665
+      },
+      "hsr": {
+        "mean": 0.0,
+        "median": 0.0,
+        "std": 0.0
+      },
+      "csrr": {
+        "mean": 0.327437641723356,
+        "median": 0.0,
+        "std": 0.4125128951013999
+      },
+      "repetitions": {
+        "total": 0,
+        "mean": 0.0
+      }
+    }
+  },
+  "leave_one_condition_out": {
+    "hc": {
+      "tiny": {
+        "mean_full": 0.47976074694824694,
+        "max_delta": 0.20569869788619788,
+        "condition_deltas": [
+          0.06853724956403523,
+          0.06853724956403523,
+          0.06853724956403523,
+          0.014868233841448142,
+          0.014868233841448142,
+          0.012476643503429252,
+          0.017346773373559055,
+          0.20569869788619788
+        ]
+      },
+      "base": {
+        "mean_full": 0.27382270507270506,
+        "max_delta": 0.05135866118008975,
+        "condition_deltas": [
+          0.03911752929610074,
+          0.03911752929610074,
+          0.023244513423084867,
+          0.05135866118008975,
+          0.04428795410938269,
+          0.03911752929610074,
+          0.015958347208347212,
+          0.02899213881356738
+        ]
+      },
+      "small": {
+        "mean_full": 0.21143578643578642,
+        "max_delta": 0.054499072356215206,
+        "condition_deltas": [
+          0.030205112347969493,
+          0.030205112347969493,
+          0.030205112347969493,
+          0.054499072356215206,
+          0.054499072356215206,
+          0.030205112347969493,
+          0.016053391053391042,
+          0.00423108637394351
+        ]
+      }
+    },
+    "capacity_index": {
+      "tiny": {
+        "mean_full": 82.22295673672207,
+        "max_delta": 14.789725284071778,
+        "condition_deltas": [
+          1.5971741073479961,
+          1.5971741073479961,
+          7.65031130335926,
+          10.333762195408497,
+          14.789725284071778
+        ]
+      },
+      "base": {
+        "mean_full": 155.89528071021186,
+        "max_delta": 64.29524914078051,
+        "condition_deltas": [
+          64.29524914078051,
+          20.85643959538922,
+          19.32053708928882,
+          9.211396399347592,
+          14.906876056754896
+        ]
+      },
+      "small": {
+        "mean_full": 146.28551088387533,
+        "max_delta": 40.92396055222237,
+        "condition_deltas": [
+          21.260229546585578,
+          21.260229546585578,
+          1.5964985409487724,
+          40.92396055222237
+        ]
+      }
+    }
+  },
+  "hypothesis_h6": {
+    "claim": "Within the tested Whisper checkpoint family, larger parameter-count checkpoints are associated with lower unsupported-output, repetition, and speaker-confusion errors under the selected controlled speech-overlap conditions.",
+    "assessment": "Preliminary evidence consistent with H6; not confirmed.",
+    "reason": "Only 3 checkpoints were evaluated. Correlation with n=3 is unstable and cannot support a causal claim about pre-training exposure or a general scaling law.",
+    "lambda_vs_hc_correlation": -0.8907273413831854,
+    "lambda_vs_hc_correlation_excluding_tir_neg3_rev": -0.9850825361518545,
+    "lambda_vs_capacity_index_correlation": 0.6850427022502149,
+    "lambda_vs_capacity_index_correlation_excluding_tir_neg3_rev": -0.06872831872115114,
+    "n_models": 3,
+    "n_conditions_per_model": 8
+  },
+  "metadata": {
+    "rebuilt_from": "/Users/alep/CascadeProjects/asr-hallucination-eval/results/hc_experiment/hc_report.json",
+    "rebuild_method": "Recomputed via current hallucination_coefficient.py and compute_metrics.py from existing transcripts",
+    "exact_checkpoint_names": [
+      "openai/whisper-base",
+      "openai/whisper-small",
+      "openai/whisper-tiny"
+    ],
+    "whisper_version": "openai-whisper (exact pip version not captured)",
+    "decoding_configuration": {
+      "temperature": 0.0,
+      "word_timestamps": true,
+      "language": "en"
+    },
+    "audio_conditions": [
+      "tir_0_ol100",
+      "tir_0_ol50",
+      "tir_6_ol100",
+      "clean",
+      "tir_neg3_rev",
+      "tir_20_ol100",
+      "tir_0_ol25",
+      "tir_neg3_ol100"
+    ]
+  },
+  "report_disclaimers": [
+    "This report is descriptive, not causal. It compares three Whisper checkpoints on eight synthetic overlap conditions.",
+    "lambda is log10(params) * log10(680000) and is a unitless capacity proxy, not a direct measure of pre-training exposure to overlapping speech.",
+    "capacity_index (lambda/HC) is an exploratory capacity-normalized inverse-error index, not a measure of awareness.",
+    "Correlation coefficients are computed across n=3 models and are for illustration only; they do not support a scaling law.",
+    "The tir_neg3_rev condition for tiny produced a 112-token 'yeah' repetition loop; statistics excluding this outlier are reported separately."
+  ]
+}

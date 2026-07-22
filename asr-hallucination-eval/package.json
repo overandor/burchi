@@ -1,0 +1,14 @@
+{
+  "name": "asr-hallucination-eval",
+  "version": "0.1.0",
+  "description": "Controlled evaluation of hallucination and speaker-confusion errors in ASR under single-channel speech overlap",
+  "type": "module",
+  "scripts": {
+    "generate-stimuli": "node src/generate_stimuli.js",
+    "run-experiment": "python3 evaluation/run_experiment.py",
+    "compute-metrics": "python3 evaluation/compute_metrics.py",
+    "annotate": "python3 annotation/annotate.py",
+    "test": "node tests/test_mixer.js && python3 tests/test_metrics.py"
+  },
+  "dependencies": {}
+}

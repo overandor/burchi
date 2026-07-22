@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.DS_Store
+*.wav
+*.aiff
+*.mp3
+*.tar.gz
+*.pt
+*.pth
+checkpoints/
+.venv/
+venv/

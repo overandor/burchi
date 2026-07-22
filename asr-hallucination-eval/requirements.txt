@@ -1,0 +1,16 @@
+# ASR Hallucination Evaluation — Python Dependencies
+# Core
+numpy>=1.24
+scipy>=1.11
+
+# ASR models (at least one needed)
+openai-whisper>=20231117  # Class A: Whisper
+# faster-whisper>=1.0     # Alternative Class A backend
+# torchaudio>=2.1         # Class B: Emformer-RNNT (requires torch)
+
+# Annotation & analysis
+krippendorff>=0.5  # Alternative: use built-in implementation
+
+# Optional: API-based models (Class D)
+# openai>=1.0        # For GPT-4o audio
+# google-generativeai>=0.3  # For Gemini
