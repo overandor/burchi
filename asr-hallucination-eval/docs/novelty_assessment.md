@@ -132,9 +132,11 @@ That is much stronger than "our method beats baseline." It separates **detection
 
 That is the actual research contribution.
 
-### Spinor Traversal: Joint vs. Detached
+### Spinor Traversal: Two Opposing Shapes
 
-The forward traversal represents the **joint mechanism** (Arm 4). Risk flows down into gradient intervention, then returns with reversed orientation — the encoder is reshaped:
+The joint mechanism and its detached ablation form two orientation-opposed traversals. The center (gradient intervention) is an **orientation operator**, not a mirror plane. The return-path nodes are orientation-reversed counterparts, not the same nodes in reverse order.
+
+**Forward (joint arm — risk internalized):**
 
 ```
 HALLUCINATION
@@ -148,7 +150,7 @@ HALLUCINATION
 HALLUCINATION
 ```
 
-The inverse traversal represents the **detached mechanism** (Arm 3). The gradient flows up without being conditioned by ĥ. The loop is broken — risk is observed but not internalized:
+**Inverse (detached arm — risk observed, not internalized):**
 
 ```
 HALLUCINATION
@@ -162,12 +164,7 @@ HALLUCINATION
 HALLUCINATION
 ```
 
-The center (gradient intervention) is an **orientation operator**, not a mirror plane. In the joint arm, the return path nodes are orientation-reversed counterparts — the same manifold traversed with reversed sign (ψ → −ψ). In the detached arm, the gradient bypasses the risk estimate, so no orientation reversal occurs: the encoder is not reshaped by ĥ.
-
-| Traversal | Arm | Gradient flow | Encoder reshaped? | Orientation |
-|-----------|-----|---------------|-------------------|-------------|
-| Forward (→ ←) | Joint (4) | ∇_θ through ĥ | Yes | ψ → −ψ |
-| Inverse (← →) | Detached (3) | ∇_θ bypasses ĥ | No | ψ (unchanged) |
+The forward shape descends into the gradient intervention and returns with reversed orientation — the risk estimate reshapes the encoder. The inverse shape ascends through the gradient without conditioning — the risk estimate is observed but the loop is broken. The 360° traversal arrives at −ψ, not +ψ. Only a second complete pass (720°) restores the original orientation.
 
 ## The Novelty Hierarchy
 
