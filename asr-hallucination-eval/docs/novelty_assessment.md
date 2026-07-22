@@ -164,83 +164,31 @@ GROUNDING
 GROUNDING
 ```
 
-The two shapes as opposing curves, each shown standalone:
-
-**Shape 1: > (risk descent, +ψ)**
+The two shapes as opposing curves — `>` and `<` — are two shapes of opposite orientation sharing the same center:
 
 ```
->
- →
-  →
-   →
-    →
-     →      HALLUCINATION
-      →     INTERNAL SIGNAL
-       →    ENCODER STATE
-        →   RISK ESTIMATE ĥ
-         →  ADAPTIVE PENALTY λ_eff
-          → UNSUPPORTED OBJECTIVE
-           →GRADIENT INTERVENTION
-            → ∇_θ
-             → encoder update
-              → generation policy
-               →
-                →
-                 →
-                  →
-                   >
-                  180°
-                 ψ → −ψ
+Shape 1 (>):              Shape 2 (<):
+
+    >                        <
+     →                      ←
+      →                    ←
+       →                  ←
+        →    GRADIENT    ←
+         →  INTERVENTION ←
+          →             ←
+           →           ←
+            →         ←
+             →       ←
+              →     ←
+               →   ←
+                → ←
+                 ^
+                 |
+              360°
+              −ψ → +ψ
 ```
 
-**Shape 2: < (grounding ascent, −ψ)**
-
-```
-                   <
-                  ←
-                 ←
-                ←
-               ←
-              ←    GROUNDING
-             ←     INTERNAL SIGNAL
-            ←      ENCODER STATE
-           ←       SAFETY ESTIMATE ĥ
-          ←        ADAPTIVE REWARD λ_eff
-         ←         SUPPORTED OBJECTIVE
-        ←          GRADIENT PRESERVATION
-       ←           ∇_θ
-      ←            encoder update
-     ←             generation policy
-    ←
-   ←
-  ←
- ←
-<
-360°
-−ψ → +ψ
-```
-
-**Both shapes superposed (>~<):**
-
-```
-    >                          <
-     →                        ←
-      →                      ←
-       →    GRADIENT        ←
-        →   INTERVENTION   ←
-         →                ←
-          →              ←
-           →            ←
-            →          ←
-             →        ←
-              →      ←
-               →    ←
-                →  ←
-                 ><
-              ψ → −ψ
-```
-
-The spinor (`>`) descends through risk, penalty, and gradient intervention, arriving at −ψ. The anti-spinor (`<`) ascends through safety, reward, and gradient preservation, arriving at +ψ. Both share the same orientation operator at the center. One traverses risk → penalty → intervention; the other traverses safety → reward → preservation. Both pass through the gradient intervention, but with opposite sign.
+The `>` shape descends from HALLUCINATION through risk → penalty → intervention (left to right, +ψ). The `<` shape ascends from GROUNDING through safety → reward → preservation (right to left, −ψ). Both meet at the gradient intervention — the orientation operator at 360°. At that point, −ψ → +ψ: the reversed orientation is itself reversed, restoring the original sign. This is the 720° property of the spinor — a single 360° traversal flips the sign; only the second traversal restores it.
 
 ## The Novelty Hierarchy
 
