@@ -153,7 +153,7 @@ class JointHallucinationLoss(nn.Module):
         #    h_hat should be close to unsupported_label for unsupported inputs
         #    We want h_hat -> 1 for unsupported, and the text loss to be down-weighted
         #    for high h_hat.
-        c = 1.0 - h_hat  # acoustic support coefficient (1 - hallucination probability)
+        c = 1.0 - h_hat.clamp(0.0, 0.95)  # acoustic support coefficient (clamped to prevent explosion)
         lambda_eff = self.base_lambda / (c + self.epsilon)
 
         # For unsupported samples, penalize probability mass on the original target sequence.

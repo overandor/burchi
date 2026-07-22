@@ -131,6 +131,7 @@ Before any model-level training, the following receipts were verified via `tests
 Run receipts locally:
 
 ```bash
+cd asr-hallucination-eval
 python3 -m pytest tests/test_hallucination_aware_pretraining.py -v
 ```
 
