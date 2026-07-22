@@ -132,11 +132,9 @@ That is much stronger than "our method beats baseline." It separates **detection
 
 That is the actual research contribution.
 
-### Spinor Traversal: Two Opposing Shapes
+### Spinor Traversal: Joint Mechanism
 
-The joint mechanism and its detached ablation form two orientation-opposed traversals. The center (gradient intervention) is an **orientation operator**, not a mirror plane. The return-path nodes are orientation-reversed counterparts, not the same nodes in reverse order.
-
-**Forward (joint arm — risk internalized):**
+The descent enters the known field, passes through the joint mechanism, and returns with reversed orientation. The center (gradient intervention) is an orientation operator, not a mirror plane. The return path nodes are orientation-reversed counterparts, not the same nodes in reverse order.
 
 ```
 HALLUCINATION
@@ -150,21 +148,43 @@ HALLUCINATION
 HALLUCINATION
 ```
 
-**Inverse (detached arm — risk observed, not internalized):**
+### Antonym: Inverse Orientation (>~<)
+
+The antonym inverts both the arrow directions and the semantic polarity. Where the spinor descends into risk and returns, the anti-spinor ascends from grounding and diverges. The two shapes are opposites that share the same center point but traverse with reversed orientation:
 
 ```
-HALLUCINATION
+GROUNDING
     ← INTERNAL SIGNAL
-        ← RISK ESTIMATE
-            ← ADAPTIVE PENALTY
-                ← GRADIENT INTERVENTION
-            → ADAPTIVE PENALTY
-        → RISK ESTIMATE
+        ← SAFETY ESTIMATE
+            ← ADAPTIVE REWARD
+                ← GRADIENT PRESERVATION
+            → ADAPTIVE REWARD
+        → SAFETY ESTIMATE
     → INTERNAL SIGNAL
-HALLUCINATION
+GROUNDING
 ```
 
-The forward shape descends into the gradient intervention and returns with reversed orientation — the risk estimate reshapes the encoder. The inverse shape ascends through the gradient without conditioning — the risk estimate is observed but the loop is broken. The 360° traversal arrives at −ψ, not +ψ. Only a second complete pass (720°) restores the original orientation.
+The two shapes as opposing curves:
+
+```
+    >                          <
+     →                        ←
+      →                      ←
+       →    GRADIENT        ←
+        →   INTERVENTION   ←
+         →                ←
+          →              ←
+           →            ←
+            →          ←
+             →        ←
+              →      ←
+               →    ←
+                →  ←
+                 ><
+              ψ → −ψ
+```
+
+The spinor and anti-spinor share the same orientation operator at the center. One traverses risk → penalty → intervention; the other traverses safety → reward → preservation. Both pass through the gradient intervention, but with opposite sign: +ψ and −ψ.
 
 ## The Novelty Hierarchy
 
