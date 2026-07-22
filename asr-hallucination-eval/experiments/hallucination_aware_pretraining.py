@@ -127,7 +127,7 @@ class JointHallucinationLoss(nn.Module):
         asr_logits: torch.Tensor,
         targets: torch.Tensor,
         h_hat: torch.Tensor,
-        support_label: torch.Tensor,
+        unsupported_label: torch.Tensor,
         clean_logits: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
         """
@@ -135,37 +135,36 @@ class JointHallucinationLoss(nn.Module):
             asr_logits: (batch, seq, vocab) decoder logits
             targets: (batch, seq) target token ids
             h_hat: (batch,) predicted unsupported probability
-            support_label: (batch,) 1 if audio supports the transcript, 0 if unsupported
+            unsupported_label: (batch,) 1 if audio is unsupported/underdetermined, 0 if supported
             clean_logits: (batch, seq, vocab) optional clean-input teacher logits
         Returns:
             dict of loss terms and total loss
         """
         # 1. ASR cross-entropy
         asr_loss = F.cross_entropy(
-            asr_logits.view(-1, asr_logits.size(-1)),
-            targets.view(-1),
+            asr_logits.reshape(-1, asr_logits.size(-1)),
+            targets.reshape(-1),
             ignore_index=-100,
             reduction="mean",
         )
 
-        # 2. Unsupported penalty: penalize confident generation when support_label=1
+        # 2. Unsupported penalty: penalize confident generation when unsupported_label=1
         #    (the model should be uncertain/abstain)
-        #    h_hat should be close to support_label for unsupported inputs
+        #    h_hat should be close to unsupported_label for unsupported inputs
         #    We want h_hat -> 1 for unsupported, and the text loss to be down-weighted
         #    for high h_hat.
-        c = 1.0 - h_hat  # acoustic support coefficient
+        c = 1.0 - h_hat  # acoustic support coefficient (1 - hallucination probability)
         lambda_eff = self.base_lambda / (c + self.epsilon)
 
-        # For unsupported samples, flip target to ABSTAIN token if provided, else
-        # penalize probability mass on the original target sequence.
-        unsupported_mask = (support_label == 1).float()
+        # For unsupported samples, penalize probability mass on the original target sequence.
+        unsupported_mask = (unsupported_label == 1).float()
         token_probs = F.softmax(asr_logits, dim=-1)
         target_probs = token_probs.gather(-1, targets.unsqueeze(-1).clamp_min(0)).squeeze(-1)
         # L_unsupported: high when model is confident on unsupported target
         l_unsupported = -(unsupported_mask.unsqueeze(-1) * torch.log(target_probs + self.epsilon)).mean()
 
         # 3. Abstain loss: encourage high h_hat on unsupported, low h_hat on supported
-        l_abstain = F.binary_cross_entropy(h_hat, support_label.float())
+        l_abstain = F.binary_cross_entropy(h_hat, unsupported_label.float())
 
         # 4. Clean/noisy consistency: KL(clean_teacher || noisy_student)
         l_consistency = torch.tensor(0.0, device=asr_logits.device)
@@ -177,7 +176,7 @@ class JointHallucinationLoss(nn.Module):
             )
 
         # 5. Risk calibration: BCE between h_hat and observed unsupported label
-        l_calibration = F.binary_cross_entropy(h_hat, support_label.float(), reduction="mean")
+        l_calibration = F.binary_cross_entropy(h_hat, unsupported_label.float(), reduction="mean")
 
         # Adaptive weighting: for each sample, lambda_eff scales L_unsupported
         total = (
@@ -205,7 +204,7 @@ class JointHallucinationLoss(nn.Module):
 class TrainingExample:
     audio_path: str
     transcript: str
-    support_label: int  # 0 = supported, 1 = unsupported / underdetermined
+    unsupported_label: int  # 1 = unsupported / underdetermined, 0 = supported
     condition: str
     source_map: str
 
@@ -334,7 +333,7 @@ def build_corpus(
             TrainingExample(
                 audio_path=audio,
                 transcript=transcript,
-                support_label=label,
+                unsupported_label=label,
                 condition=cond,
                 source_map=source_map,
             )
@@ -418,8 +417,8 @@ def run_arm(
             #     h_hat = risk_head(encoder_out)
             # else:
             #     h_hat = torch.zeros(1, device=device)
-            # decoder_logits, targets, support_label, clean_logits = ...
-            # loss = joint_loss(decoder_logits, targets, h_hat, support_label, clean_logits)
+            # decoder_logits, targets, unsupported_label, clean_logits = ...
+            # loss = joint_loss(decoder_logits, targets, h_hat, unsupported_label, clean_logits)
             # if arm.detach_risk_head:
             #     # risk head is a classifier only; do not backprop through encoder
             #     loss["unsupported"].backward()
@@ -466,7 +465,7 @@ def run_arm(
                 "hsr": metrics["hsr"]["hsr"],
                 "csrr": metrics["csrr"]["csrr"],
                 "hc": hc["hc"],
-                "support_label": ex.support_label,
+                "unsupported_label": ex.unsupported_label,
             }
         )
 

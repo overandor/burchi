@@ -117,8 +117,29 @@ python3 experiments/hallucination_aware_pretraining.py \
 - `results/hallucination_aware_experiment/{arm_name}.json` — per-arm results
 - `results/hallucination_aware_experiment/experiment_report.json` — combined report with hypothesis assessment
 
+## Mechanical-Scaffold Receipts
+
+Before any model-level training, the following receipts were verified via `tests/test_hallucination_aware_pretraining.py`:
+
+1. **Risk head forward pass**: accepts `(batch, time, encoder_dim)` and returns one scalar risk estimate per sample in `(0,1)`.
+2. **Loss components**: `JointHallucinationLoss` returns all five terms plus a finite total and a per-batch mean `lambda_eff`.
+3. **Adaptive coefficient monotonicity**: increasing `ĥ` increases `λ_eff`; supported samples receive a smaller unsupported-output penalty than underdetermined samples.
+4. **Detached-arm gradient routing**: when the encoder representation is detached before the risk head, gradients flow into the risk head but not into the synthetic encoder/decoder parameters.
+5. **Joint-arm gradient routing**: with the representation attached, the same composite loss produces nonzero gradients in the risk head, encoder, and decoder.
+6. **Synthetic-embedding calibration**: after 300 Adam steps on two separable 8-D Gaussian clusters (supported → risk 0, unsupported → risk 1), the head reaches mean risk < 0.3 for supported inputs and > 0.7 for unsupported inputs, calibration loss falls below 30% of its initial value, and `λ_eff` is systematically larger for the unsupported class.
+
+Run receipts locally:
+
+```bash
+python3 -m pytest tests/test_hallucination_aware_pretraining.py -v
+```
+
+## Current Release Statement
+
+> **The hallucination-aware training architecture has passed forward-pass integration, gradient-routing, and synthetic-embedding calibration tests. The risk head, adaptive penalty, composite loss, and five-arm registry execute correctly. No evidence yet shows that the risk estimate is calibrated on real Whisper encoder states, or that training reduces unsupported ASR output on real speech mixtures. The next decisive artifact is two genuinely trained checkpoints—detached-head and jointly optimized—evaluated on the same untouched test mixtures.**
+
 ## Status
 
-**Protocol preregistered. Experiment scaffold implemented. Not yet run with full Whisper fine-tuning.**
+**Protocol preregistered. Scaffold implemented and mechanically verified. Full Whisper continued-pretraining run pending.**
 
-The training loop is structurally complete but the inner batch loop (mel spectrogram → encoder → decoder → loss → backward) requires full Whisper model integration. The risk head, joint loss, corpus generation, and 5-arm evaluation protocol are all functional.
+The inner batch loop (mel spectrogram → Whisper encoder → Whisper decoder → joint loss → backward) is structurally complete but requires a real training run. The risk head, loss terms, corpus generation, evaluation protocol, and gradient-routing receipts are functional.
