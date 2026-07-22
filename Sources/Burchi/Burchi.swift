@@ -1400,6 +1400,7 @@ public final class BurchiBrowser {
             switch action.lowercased() {
             case "goto":
                 success = goto(intent)
+                if waitSec > 0 { wait(waitSec) }
                 data = title()
                 buildIndex()
             case "find":
@@ -1409,20 +1410,26 @@ public final class BurchiBrowser {
             case "click":
                 success = click(intent)
                 if waitSec > 0 { wait(waitSec) }
+                buildIndex()
                 data = url()
             case "type":
                 success = type(intent, value: value ?? "")
+                if waitSec > 0 { wait(waitSec) }
+                buildIndex()
                 data = success ? "typed" : "failed"
             case "extract":
                 data = extractText(intent)
                 success = !data.isEmpty
             case "digest":
+                if waitSec > 0 { wait(waitSec) }
                 data = digest(maxElements: 100)
                 success = !data.isEmpty
             case "markdown":
+                if waitSec > 0 { wait(waitSec) }
                 data = toMarkdown()
                 success = !data.isEmpty
             case "snapshot":
+                if waitSec > 0 { wait(waitSec) }
                 data = snapshot(intent: intent.isEmpty ? nil : intent)
                 success = !data.isEmpty
             case "screenshot":
@@ -1474,6 +1481,10 @@ public final class BurchiBrowser {
                 success = !data.isEmpty && data != "{}"
             default:
                 data = "Unknown action: \(action)"
+            }
+
+            if waitSec > 0 && action.lowercased() != "click" && action.lowercased() != "type" && action.lowercased() != "goto" && action.lowercased() != "digest" && action.lowercased() != "markdown" && action.lowercased() != "snapshot" && action.lowercased() != "wait" {
+                wait(waitSec)
             }
 
             results.append(ScriptResult(action: action, success: success, data: data, url: url()))
