@@ -97,7 +97,7 @@ Generates resume packets and routes work:
 ## Implementation Status
 
 - **Spec**: Complete (this document)
-- **Sentinel**: Not yet implemented (needs fswatch + heartbeat monitor)
-- **Archivist**: Not yet implemented (needs state capture script)
-- **Executor Router**: Not yet implemented (needs resume packet generator)
-- **HYDRA_STATE.json**: Schema defined, not yet auto-populated
+- **Sentinel**: ✅ Implemented (`scripts/hydra_sentinel.py`)
+- **Archivist**: ✅ Implemented (`scripts/hydra_archivist.py`)
+- **Executor Router**: ✅ Implemented (`scripts/hydra_executor.py`)
+- **HYDRA_STATE.json**: Schema defined, auto-populated by scripts

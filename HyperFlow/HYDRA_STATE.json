@@ -1,0 +1,17 @@
+{
+  "hydra_version": 1,
+  "last_heartbeat": "2026-07-23T06:32:49.726578+00:00",
+  "active_agent": "windsurf",
+  "active_task": "HF-0009",
+  "task_status": "in_progress",
+  "branch": null,
+  "commit_hash": null,
+  "uncommitted_files": [],
+  "uncommitted_diff_hash": null,
+  "artifacts_produced": [],
+  "receipts_produced": [],
+  "blockers": [],
+  "next_action": null,
+  "next_agent": null,
+  "archive_entries": 1
+}
