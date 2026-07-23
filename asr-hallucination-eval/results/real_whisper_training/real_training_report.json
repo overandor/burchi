@@ -1,0 +1,513 @@
+{
+  "timestamp": "2026-07-23T02:18:21Z",
+  "experiment": "real_whisper_support_aware_pretraining",
+  "model": "openai/whisper-tiny",
+  "device": "mps",
+  "n_train": 32,
+  "n_eval": 20,
+  "n_steps": 200,
+  "lr": 1e-05,
+  "batch_size": 4,
+  "data_source": "LibriSpeech test-clean (real speech)",
+  "conditions": [
+    "clean",
+    "overlapped",
+    "noise",
+    "silence"
+  ],
+  "arms": {
+    "baseline": {
+      "arm": "baseline",
+      "by_condition": {
+        "clean": {
+          "n": 5,
+          "wer_mean": 0.22186813186813184,
+          "h_hat_mean": 0.4685292780399323,
+          "h_hat_std": 0.006370829602433006,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 16.0
+        },
+        "overlapped": {
+          "n": 5,
+          "wer_mean": 0.9326581196581196,
+          "h_hat_mean": 0.4509262144565582,
+          "h_hat_std": 0.0048516977903249985,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 10.6
+        },
+        "noise": {
+          "n": 5,
+          "wer_mean": 0.7206460206460206,
+          "h_hat_mean": 0.4606834352016449,
+          "h_hat_std": 0.004806952469443859,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 10.4
+        },
+        "silence": {
+          "n": 5,
+          "wer_mean": 1.0,
+          "h_hat_mean": 0.4572252035140991,
+          "h_hat_std": 0.0005386837232399455,
+          "hallucination_rate": 1.0,
+          "avg_output_words": 1.0
+        }
+      },
+      "calibration_correlation": -0.3454783525161642,
+      "silence_hallucination_rate": 1.0,
+      "n_eval": 20,
+      "sample_transcripts": [
+        {
+          "condition": "clean",
+          "ref": "HE HOPED THERE WOULD BE STEW FOR DINNER TURNIPS AND CARROTS AND BRUISED POTATOES AND FAT MUTTON PIECES TO BE LADLED OUT IN THICK PEPPERED FLOUR FATTENED SAUCE",
+          "hyp": "He hoped there would be stew for dinner, turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick, peppered flour-fat and sauce.",
+          "h_hat": 0.45616787672042847
+        },
+        {
+          "condition": "clean",
+          "ref": "THE RETREAT WILL BEGIN ON WEDNESDAY AFTERNOON IN HONOUR OF SAINT FRANCIS XAVIER WHOSE FEAST DAY IS SATURDAY",
+          "hyp": "The retreat will begin on Wednesday afternoon in honor of St. Francis Xavier whose feast day is Saturday.",
+          "h_hat": 0.4742141366004944
+        },
+        {
+          "condition": "clean",
+          "ref": "IN THE SILENCE THEIR DARK FIRE KINDLED THE DUSK INTO A TAWNY GLOW",
+          "hyp": "In the silence, their dark fire kindled the dusk into a tony glow.",
+          "h_hat": 0.4708084464073181
+        },
+        {
+          "condition": "clean",
+          "ref": "A GREAT SAINT SAINT FRANCIS XAVIER",
+          "hyp": "A great saint, Saint Francis Xavier.",
+          "h_hat": 0.4719429612159729
+        },
+        {
+          "condition": "clean",
+          "ref": "THE CHAOS IN WHICH HIS ARDOUR EXTINGUISHED ITSELF WAS A COLD INDIFFERENT KNOWLEDGE OF HIMSELF",
+          "hyp": "The chaos in which his order extinguished itself was a cold indifference knowledge of himself.",
+          "h_hat": 0.4695129692554474
+        },
+        {
+          "condition": "overlapped",
+          "ref": "IF A MAN HAD STOLEN A POUND IN HIS YOUTH AND HAD USED THAT POUND TO AMASS A HUGE FORTUNE HOW MUCH WAS HE OBLIGED TO GIVE BACK THE POUND HE HAD STOLEN ONLY OR THE POUND TOGETHER WITH THE COMPOUND INTER",
+          "hyp": "If I'm down and told I'd be power you have a head and so has my stick",
+          "h_hat": 0.460033655166626
+        },
+        {
+          "condition": "overlapped",
+          "ref": "AFTER EARLY NIGHTFALL THE YELLOW LAMPS WOULD LIGHT UP HERE AND THERE THE SQUALID QUARTER OF THE BROTHELS",
+          "hyp": "after early nightfall the ill",
+          "h_hat": 0.44827213883399963
+        },
+        {
+          "condition": "overlapped",
+          "ref": "HE TRIED TO THINK HOW IT COULD BE",
+          "hyp": "If I think and I should be a little weaker.",
+          "h_hat": 0.45058003067970276
+        }
+      ],
+      "training_losses": [
+        {
+          "total": 0,
+          "l_asr": 0,
+          "l_unsupported": 0,
+          "l_calibration": 0,
+          "h_hat_mean": 0.5,
+          "h_hat_clean": 0.5,
+          "h_hat_silence": 0.5,
+          "lambda_eff_mean": 1.0
+        }
+      ],
+      "initial_loss": 0,
+      "final_loss": 0
+    },
+    "risk_head_detached": {
+      "arm": "risk_head_detached",
+      "by_condition": {
+        "clean": {
+          "n": 5,
+          "wer_mean": 0.1225152625152625,
+          "h_hat_mean": 0.42282587885856626,
+          "h_hat_std": 0.0009184318951625693,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 16.0
+        },
+        "overlapped": {
+          "n": 5,
+          "wer_mean": 0.8657777777777778,
+          "h_hat_mean": 0.4253199934959412,
+          "h_hat_std": 0.0035833796725893517,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 10.4
+        },
+        "noise": {
+          "n": 5,
+          "wer_mean": 0.6839160839160839,
+          "h_hat_mean": 0.43020230531692505,
+          "h_hat_std": 0.0013861693842922933,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 11.0
+        },
+        "silence": {
+          "n": 5,
+          "wer_mean": 1.0,
+          "h_hat_mean": 0.4630832612514496,
+          "h_hat_std": 0.0014613245724005707,
+          "hallucination_rate": 1.0,
+          "avg_output_words": 1.0
+        }
+      },
+      "calibration_correlation": 0.9291943085667791,
+      "silence_hallucination_rate": 1.0,
+      "n_eval": 20,
+      "sample_transcripts": [
+        {
+          "condition": "clean",
+          "ref": "HE HOPED THERE WOULD BE STEW FOR DINNER TURNIPS AND CARROTS AND BRUISED POTATOES AND FAT MUTTON PIECES TO BE LADLED OUT IN THICK PEPPERED FLOUR FATTENED SAUCE",
+          "hyp": "He hoped there would be Stu for dinner, turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick, peppered flour-fat and sauce.",
+          "h_hat": 0.42165878415107727
+        },
+        {
+          "condition": "clean",
+          "ref": "THE RETREAT WILL BEGIN ON WEDNESDAY AFTERNOON IN HONOUR OF SAINT FRANCIS XAVIER WHOSE FEAST DAY IS SATURDAY",
+          "hyp": "The retreat will begin on Wednesday afternoon in honor of Saint Francis XAVIER whose feast day is SATURDAY.",
+          "h_hat": 0.4222443997859955
+        },
+        {
+          "condition": "clean",
+          "ref": "IN THE SILENCE THEIR DARK FIRE KINDLED THE DUSK INTO A TAWNY GLOW",
+          "hyp": "In the silence their dark fire kindled the dusk into a tony glow.",
+          "h_hat": 0.4224165380001068
+        },
+        {
+          "condition": "clean",
+          "ref": "A GREAT SAINT SAINT FRANCIS XAVIER",
+          "hyp": "A great saint Saint Francis XAVIER",
+          "h_hat": 0.42380115389823914
+        },
+        {
+          "condition": "clean",
+          "ref": "THE CHAOS IN WHICH HIS ARDOUR EXTINGUISHED ITSELF WAS A COLD INDIFFERENT KNOWLEDGE OF HIMSELF",
+          "hyp": "The chaos in which his ardor extinguished itself was a cold indifferent knowledge of himself.",
+          "h_hat": 0.4240085184574127
+        },
+        {
+          "condition": "overlapped",
+          "ref": "IF A MAN HAD STOLEN A POUND IN HIS YOUTH AND HAD USED THAT POUND TO AMASS A HUGE FORTUNE HOW MUCH WAS HE OBLIGED TO GIVE BACK THE POUND HE HAD STOLEN ONLY OR THE POUND TOGETHER WITH THE COMPOUND INTER",
+          "hyp": "If I'm not in this old idea where you have a head and so has my stick hound",
+          "h_hat": 0.42512717843055725
+        },
+        {
+          "condition": "overlapped",
+          "ref": "AFTER EARLY NIGHTFALL THE YELLOW LAMPS WOULD LIGHT UP HERE AND THERE THE SQUALID QUARTER OF THE BROTHELS",
+          "hyp": "After early nightfall the yellow",
+          "h_hat": 0.42141279578208923
+        },
+        {
+          "condition": "overlapped",
+          "ref": "HE TRIED TO THINK HOW IT COULD BE",
+          "hyp": "If I think I should be a leader",
+          "h_hat": 0.42136430740356445
+        }
+      ],
+      "training_losses": [
+        {
+          "total": 0.6133443117141724,
+          "l_asr": 0.26877227425575256,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.6891441345214844,
+          "h_hat_mean": 0.437396764755249,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.4676339030265808,
+          "lambda_eff_mean": 0.437396764755249
+        },
+        {
+          "total": 0.5359718799591064,
+          "l_asr": 0.2022017538547516,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.6675401926040649,
+          "h_hat_mean": 0.4559573829174042,
+          "h_hat_clean": 0.442947655916214,
+          "h_hat_silence": 0.4848761558532715,
+          "lambda_eff_mean": 0.4559573829174042
+        },
+        {
+          "total": 0.4706950783729553,
+          "l_asr": 0.1713612973690033,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.598667562007904,
+          "h_hat_mean": 0.42915838956832886,
+          "h_hat_clean": 0.42094242572784424,
+          "h_hat_silence": 0.0,
+          "lambda_eff_mean": 0.42915838956832886
+        },
+        {
+          "total": 0.48674705624580383,
+          "l_asr": 0.14316251873970032,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.687169075012207,
+          "h_hat_mean": 0.43396955728530884,
+          "h_hat_clean": 0.4205591380596161,
+          "h_hat_silence": 0.45011645555496216,
+          "lambda_eff_mean": 0.43396955728530884
+        },
+        {
+          "total": 0.6811345815658569,
+          "l_asr": 0.3355516791343689,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.6911657452583313,
+          "h_hat_mean": 0.42587125301361084,
+          "h_hat_clean": 0.42629146575927734,
+          "h_hat_silence": 0.41734692454338074,
+          "lambda_eff_mean": 0.42587125301361084
+        },
+        {
+          "total": 0.5312966108322144,
+          "l_asr": 0.23379939794540405,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.5949944257736206,
+          "h_hat_mean": 0.4350532591342926,
+          "h_hat_clean": 0.42103174328804016,
+          "h_hat_silence": 0.47711774706840515,
+          "lambda_eff_mean": 0.4350532591342926
+        },
+        {
+          "total": 0.5048238635063171,
+          "l_asr": 0.15220625698566437,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.7052351832389832,
+          "h_hat_mean": 0.4473734498023987,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.4656727910041809,
+          "lambda_eff_mean": 0.4473734498023987
+        },
+        {
+          "total": 0.5888537764549255,
+          "l_asr": 0.24432750046253204,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.6890525817871094,
+          "h_hat_mean": 0.4290277361869812,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.0,
+          "lambda_eff_mean": 0.4290277361869812
+        },
+        {
+          "total": 0.516156792640686,
+          "l_asr": 0.17173674702644348,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.6888400316238403,
+          "h_hat_mean": 0.43821871280670166,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.4662500023841858,
+          "lambda_eff_mean": 0.43821871280670166
+        },
+        {
+          "total": 0.5287103056907654,
+          "l_asr": 0.24148577451705933,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.5744490623474121,
+          "h_hat_mean": 0.4250112473964691,
+          "h_hat_clean": 0.423229455947876,
+          "h_hat_silence": 0.0,
+          "lambda_eff_mean": 0.4250112473964691
+        }
+      ],
+      "initial_loss": 2.537463426589966,
+      "final_loss": 0.5287103056907654
+    },
+    "joint_aware": {
+      "arm": "joint_aware",
+      "by_condition": {
+        "clean": {
+          "n": 5,
+          "wer_mean": 0.19663003663003664,
+          "h_hat_mean": 0.1632203072309494,
+          "h_hat_std": 0.021066141473882118,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 15.8
+        },
+        "overlapped": {
+          "n": 5,
+          "wer_mean": 1.9087863247863246,
+          "h_hat_mean": 0.23662277162075043,
+          "h_hat_std": 0.01872144254653453,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 19.6
+        },
+        "noise": {
+          "n": 5,
+          "wer_mean": 0.5756243756243757,
+          "h_hat_mean": 0.5021661937236785,
+          "h_hat_std": 0.015112434259630877,
+          "hallucination_rate": 0.0,
+          "avg_output_words": 10.8
+        },
+        "silence": {
+          "n": 5,
+          "wer_mean": 1.0,
+          "h_hat_mean": 0.9508808135986329,
+          "h_hat_std": 0.0006999746970442495,
+          "hallucination_rate": 1.0,
+          "avg_output_words": 1.0
+        }
+      },
+      "calibration_correlation": 0.9763702986241539,
+      "silence_hallucination_rate": 1.0,
+      "n_eval": 20,
+      "sample_transcripts": [
+        {
+          "condition": "clean",
+          "ref": "HE HOPED THERE WOULD BE STEW FOR DINNER TURNIPS AND CARROTS AND BRUISED POTATOES AND FAT MUTTON PIECES TO BE LADLED OUT IN THICK PEPPERED FLOUR FATTENED SAUCE",
+          "hyp": "He hoped there would be Stu for dinner, Ternipson carats and bruised potatoes and fat mutton pieces to be ladled out in thick, peppered flour-fatten sauce",
+          "h_hat": 0.2027893364429474
+        },
+        {
+          "condition": "clean",
+          "ref": "THE RETREAT WILL BEGIN ON WEDNESDAY AFTERNOON IN HONOUR OF SAINT FRANCIS XAVIER WHOSE FEAST DAY IS SATURDAY",
+          "hyp": "The retreat will begin on Wendstay after noon in honor of St. Francis XAVIER whose feast day is SATURDAY.",
+          "h_hat": 0.15935413539409637
+        },
+        {
+          "condition": "clean",
+          "ref": "IN THE SILENCE THEIR DARK FIRE KINDLED THE DUSK INTO A TAWNY GLOW",
+          "hyp": "In the Silence, their dark fire kindled the dusk into a Tony Glow.",
+          "h_hat": 0.14847056567668915
+        },
+        {
+          "condition": "clean",
+          "ref": "A GREAT SAINT SAINT FRANCIS XAVIER",
+          "hyp": "A GREAT SAINT SAINT FRANCIS XAVIER",
+          "h_hat": 0.14271417260169983
+        },
+        {
+          "condition": "clean",
+          "ref": "THE CHAOS IN WHICH HIS ARDOUR EXTINGUISHED ITSELF WAS A COLD INDIFFERENT KNOWLEDGE OF HIMSELF",
+          "hyp": "The chaos in which his ardor extinguished itself was a cold indifference knowledge of himself",
+          "h_hat": 0.16277332603931427
+        },
+        {
+          "condition": "overlapped",
+          "ref": "IF A MAN HAD STOLEN A POUND IN HIS YOUTH AND HAD USED THAT POUND TO AMASS A HUGE FORTUNE HOW MUCH WAS HE OBLIGED TO GIVE BACK THE POUND HE HAD STOLEN ONLY OR THE POUND TOGETHER WITH THE COMPOUND INTER",
+          "hyp": "If I'll land in this old I'd be there you'll have a head and so has my stick pound",
+          "h_hat": 0.24244187772274017
+        },
+        {
+          "condition": "overlapped",
+          "ref": "AFTER EARLY NIGHTFALL THE YELLOW LAMPS WOULD LIGHT UP HERE AND THERE THE SQUALID QUARTER OF THE BROTHELS",
+          "hyp": "After the early nightfall the yellow",
+          "h_hat": 0.21890123188495636
+        },
+        {
+          "condition": "overlapped",
+          "ref": "HE TRIED TO THINK HOW IT COULD BE",
+          "hyp": "If I think and have it it will be great",
+          "h_hat": 0.25565260648727417
+        }
+      ],
+      "training_losses": [
+        {
+          "total": 0.4041594862937927,
+          "l_asr": 0.108360156416893,
+          "l_unsupported": 0.044914159923791885,
+          "l_calibration": 0.5017703175544739,
+          "h_hat_mean": 0.4667295217514038,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.944342315196991,
+          "lambda_eff_mean": 0.056133583188056946
+        },
+        {
+          "total": 0.25270718336105347,
+          "l_asr": 0.045463163405656815,
+          "l_unsupported": 0.08484816551208496,
+          "l_calibration": 0.24479174613952637,
+          "h_hat_mean": 0.5652722120285034,
+          "h_hat_clean": 0.1896975189447403,
+          "h_hat_silence": 0.9396786689758301,
+          "lambda_eff_mean": 0.0910295695066452
+        },
+        {
+          "total": 0.2899308204650879,
+          "l_asr": 0.05390740558505058,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.4720468521118164,
+          "h_hat_mean": 0.2567727267742157,
+          "h_hat_clean": 0.2760108709335327,
+          "h_hat_silence": 0.0,
+          "lambda_eff_mean": 0.2567727267742157
+        },
+        {
+          "total": 0.27007004618644714,
+          "l_asr": 0.019635315984487534,
+          "l_unsupported": 0.030279936268925667,
+          "l_calibration": 0.4403095841407776,
+          "h_hat_mean": 0.5387836694717407,
+          "h_hat_clean": 0.2491939812898636,
+          "h_hat_silence": 0.9174410700798035,
+          "lambda_eff_mean": 0.04351675882935524
+        },
+        {
+          "total": 0.3768709897994995,
+          "l_asr": 0.1549944132566452,
+          "l_unsupported": 0.02610531821846962,
+          "l_calibration": 0.3915424942970276,
+          "h_hat_mean": 0.44445595145225525,
+          "h_hat_clean": 0.14077000319957733,
+          "h_hat_silence": 0.9042381048202515,
+          "lambda_eff_mean": 0.037239640951156616
+        },
+        {
+          "total": 0.18322168290615082,
+          "l_asr": 0.0636330246925354,
+          "l_unsupported": 0.039895400404930115,
+          "l_calibration": 0.1593865156173706,
+          "h_hat_mean": 0.3637562096118927,
+          "h_hat_clean": 0.17256148159503937,
+          "h_hat_silence": 0.9373403787612915,
+          "lambda_eff_mean": 0.04898962751030922
+        },
+        {
+          "total": 0.26552295684814453,
+          "l_asr": 0.022384950891137123,
+          "l_unsupported": 0.062165819108486176,
+          "l_calibration": 0.36194437742233276,
+          "h_hat_mean": 0.5624451041221619,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.9159696102142334,
+          "lambda_eff_mean": 0.0684995949268341
+        },
+        {
+          "total": 0.4591878354549408,
+          "l_asr": 0.12037274986505508,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.6776301860809326,
+          "h_hat_mean": 0.41050079464912415,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.0,
+          "lambda_eff_mean": 0.41050079464912415
+        },
+        {
+          "total": 0.3608524799346924,
+          "l_asr": 0.05708087980747223,
+          "l_unsupported": 0.049997515976428986,
+          "l_calibration": 0.5075481534004211,
+          "h_hat_mean": 0.4508900046348572,
+          "h_hat_clean": 0.0,
+          "h_hat_silence": 0.9565641283988953,
+          "lambda_eff_mean": 0.060680318623781204
+        },
+        {
+          "total": 0.15181128680706024,
+          "l_asr": 0.01782418228685856,
+          "l_unsupported": 0.0,
+          "l_calibration": 0.26797419786453247,
+          "h_hat_mean": 0.1593261957168579,
+          "h_hat_clean": 0.1377742439508438,
+          "h_hat_silence": 0.0,
+          "lambda_eff_mean": 0.1593261957168579
+        }
+      ],
+      "initial_loss": 2.5005884170532227,
+      "final_loss": 0.15181128680706024
+    }
+  },
+  "release_statement": "Real Whisper-tiny trained on real LibriSpeech mixtures. Three arms compared: baseline (ASR only), risk-head-detached (risk head trained but gradients do not flow to encoder), and joint-aware (risk head gradients flow back to encoder). Results include real WER on clean/noise, hallucination rate on silence, and risk head calibration correlation. This is the first real model-level evidence, not a simulation."
+}

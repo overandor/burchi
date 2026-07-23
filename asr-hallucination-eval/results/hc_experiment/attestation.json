@@ -1,6 +1,6 @@
 {
   "schema": "asr.eval-attestation/v1.0",
-  "generated_utc": "2026-07-22T22:59:55.782290+00:00",
+  "generated_utc": "2026-07-22T23:01:57.581481+00:00",
   "project_root": "/Users/alep/CascadeProjects/asr-hallucination-eval",
   "notes": "",
   "runner": {
@@ -9,11 +9,11 @@
     "python": "3.13.12"
   },
   "git": {
-    "commit": "0fe3f34f5ef5893c606cf9897c1b0e91d65dd01b",
-    "short": "0fe3f34",
+    "commit": "1b52cad6bd8c9dd8bc4e933d724d0ac5bd3ce190",
+    "short": "1b52cad",
     "branch": "main",
-    "status": "M experiments/replay_hc_report.py\n M experiments/run_support_aware_experiment.py\n M experiments/support_aware_pretraining.py\n M results/hc_experiment/hc_report.json\n M results/hc_experiment/hc_report.md\n M results/support_aware_experiment/support_aware_report.json\n?? ../.devin/\n?? ../AutoTrain/\n?? ../ChatSync/\n?? ../ClientContinuity/\n?? ../ClientContinuityFusion/\n?? ../GlassDeck/\n?? ../GlyphieldBench.db.yaml\n?? ../HyperFlow/\n?? ../MacControlPlane/\n?? ../MirrorLab/\n?? ../PORTFOLIO_WHITE_PAPER.md\n?? ../VideoAppCompiler/\n?? ../__pycache__/\n?? ../adas-projects/\n?? \"../ai-ram-control-surface 2.zip\"\n?? \"../ai-ram-control-surface 3.zip\"\n?? \"../ai-ram-control-surface 4.zip\"\n?? ../ai-ram-control-surface.zip\n?? ../ai-ram-control-surface/\n?? ../alpha-gpt.zip\n?? ../alpha-gpt/\n?? experiments/generate_asr_attestation.py\n?? experiments/gradient_routing_test.py\n?? results/gradient_routing_test/\n?? ../atlas-scientific-release.zip\n?? ../atlas_appraisal.h\n?? ../browser_scraper.py\n?? ../burchi.zip\n?? ../burchi/\n?? ../cascade-control-surface/\n?? ../case_study_book.py\n?? ../case_study_state.json\n?? ../chatgpt-audio-capture/\n?? ../chatgpt-extractor/\n?? ../chatgpt-scraper/\n?? ../devin-cost-explorer/\n?? ../dirwatch/\n?? ../ecr30-rs/\n?? ../ecr300-rs/\n?? ../ecr300/\n?? ../evolution.py\n?? ../evolution_ledger.jsonl\n?? ../evolution_state.json\n?? ../extract_massage_clients\n?? ../extract_massage_clients.swift\n?? ../extracted_clients/\n?? ../front_runner.py\n?? ../front_runner_results/\n?? ../frontrunner.egg-info/\n?? ../frontrunner/\n?? ../g-lang/\n?? ../generated_startups_gen1.json\n?? ../glyph_transform.py\n?? ../glyphield/\n?? ../goa-projects/\n?? ../gpt-clone-train/\n?? ../grabsdy-demo/\n?? ../grabsdy-mac.zip\n?? ../grabsdy-mac/\n?? ../grabsdy-organism/\n?? ../grid6-vercel/\n?? ../gridova/\n?? ../handwriting-ocr-c/\n?? ../handwriting-ocr-swift/\n?? ../handwriting-ocr.zip\n?? ../handwriting-ocr/\n?? ../har-2040/\n?? ../hdar-canonical.zip\n?? ../hdar-canonical/\n?? ../hdar-cross-platform-proof.zip\n?? ../hdar-cross-platform-proof/\n?? ../hyperaudit_capture.zsh\n?? ../imessage-command-router/\n?? ../joseph_campaign_v2.scpt\n?? ../joseph_campaign_v3.scpt\n?? ../joseph_skrobynets_dossier.md\n?? ../knot_spinor_fusion/\n?? ../macfanctl/\n?? ../macforge-autopilot.zip\n?? ../macforge-autopilot/\n?? ../macpilot-0/\n?? ../mega_book.py\n?? ../membra-qr-gateway.zip\n?? ../membra-qr-gateway/\n?? ../merge_corpus.py\n?? ../merged_corpus.json\n?? ../microglyph-dot-code/\n?? ../multi_store_apps.json\n?? ../notebooks/\n?? ../ollama-devin-agent/\n?? ../opensourcestartups_products.json\n?? ../overapp/\n?? ../overllm-filevm-passport/\n?? ../overllm/\n?? ../peerpush_products.json\n?? ../phar/\n?? ../provider-engine/\n?? ../provider-intelligence/\n?? ../pyproject.toml\n?? ../quality_book.py\n?? ../rentflow/\n?? ../rentmasseur-infra-combined.py\n?? ../rentmasseur-visitor/\n?? ../rm-optimizer/\n?? ../scrape_ms_store.py\n?? ../scrape_peerpush.py\n?? ../scrape_sa.py\n?? ../screentunnel/\n?? ../send_messages.scpt\n?? ../shortcut-runtime-manager.zip\n?? ../shortcut-runtime-manager/\n?? ../six-browse/\n?? ../skrobynets_network_defragmentation.md\n?? ../snap2txt-all-spaces.sh\n?? ../snap2txt/\n?? ../sovereign-llm/\n?? ../spinor-llm-hf/\n?? ../spinor-platform/\n?? ../spinor-seo/\n?? ../spinor/\n?? \"../spinor_ledger 2.zip\"\n?? ../spinor_ledger.zip\n?? ../spinor_ledger/\n?? ../spinorifization_bibleclopedia.md\n?? ../spinorifization_fragment_2.md\n?? ../spinorifization_fragment_3.md\n?? ../startup_case_studies.md\n?? ../startup_generator.py\n?? ../startupalternatives_products.json\n?? ../swarmline/\n?? ../thermalent/\n?? ../token-launcher/\n?? ../toktorrent-audio/\n?? ../toktorrent-metal/\n?? ../underwrite_all.py\n?? ../underwriting_results/\n?? ../webprobe-c/\n?? ../webprobe/",
-    "describe": "0fe3f34"
+    "status": "M experiments/run_support_aware_experiment.py\n M experiments/support_aware_pretraining.py\n M results/hc_experiment/hc_report.json\n M results/support_aware_experiment/support_aware_report.json\n?? ../.devin/\n?? ../AutoTrain/\n?? ../ChatSync/\n?? ../ClientContinuity/\n?? ../ClientContinuityFusion/\n?? ../GlassDeck/\n?? ../GlyphieldBench.db.yaml\n?? ../HyperFlow/\n?? ../MacControlPlane/\n?? ../MirrorLab/\n?? ../PORTFOLIO_WHITE_PAPER.md\n?? ../VideoAppCompiler/\n?? ../__pycache__/\n?? ../adas-projects/\n?? \"../ai-ram-control-surface 2.zip\"\n?? \"../ai-ram-control-surface 3.zip\"\n?? \"../ai-ram-control-surface 4.zip\"\n?? ../ai-ram-control-surface.zip\n?? ../ai-ram-control-surface/\n?? ../alpha-gpt.zip\n?? ../alpha-gpt/\n?? experiments/gradient_routing_test.py\n?? results/gradient_routing_test/\n?? ../atlas-scientific-release.zip\n?? ../atlas_appraisal.h\n?? ../browser_scraper.py\n?? ../burchi.zip\n?? ../burchi/\n?? ../cascade-control-surface/\n?? ../case_study_book.py\n?? ../case_study_state.json\n?? ../chatgpt-audio-capture/\n?? ../chatgpt-extractor/\n?? ../chatgpt-scraper/\n?? ../devin-cost-explorer/\n?? ../dirwatch/\n?? ../ecr30-rs/\n?? ../ecr300-rs/\n?? ../ecr300/\n?? ../evolution.py\n?? ../evolution_ledger.jsonl\n?? ../evolution_state.json\n?? ../extract_massage_clients\n?? ../extract_massage_clients.swift\n?? ../extracted_clients/\n?? ../front_runner.py\n?? ../front_runner_results/\n?? ../frontrunner.egg-info/\n?? ../frontrunner/\n?? ../g-lang/\n?? ../generated_startups_gen1.json\n?? ../glyph_transform.py\n?? ../glyphield/\n?? ../goa-projects/\n?? ../gpt-clone-train/\n?? ../grabsdy-demo/\n?? ../grabsdy-mac.zip\n?? ../grabsdy-mac/\n?? ../grabsdy-organism/\n?? ../grid6-vercel/\n?? ../gridova/\n?? ../handwriting-ocr-c/\n?? ../handwriting-ocr-swift/\n?? ../handwriting-ocr.zip\n?? ../handwriting-ocr/\n?? ../har-2040/\n?? ../hdar-canonical.zip\n?? ../hdar-canonical/\n?? ../hdar-cross-platform-proof.zip\n?? ../hdar-cross-platform-proof/\n?? ../hyperaudit_capture.zsh\n?? ../imessage-command-router/\n?? ../joseph_campaign_v2.scpt\n?? ../joseph_campaign_v3.scpt\n?? ../joseph_skrobynets_dossier.md\n?? ../knot_spinor_fusion/\n?? ../macfanctl/\n?? ../macforge-autopilot.zip\n?? ../macforge-autopilot/\n?? ../macpilot-0/\n?? ../mega_book.py\n?? ../membra-qr-gateway.zip\n?? ../membra-qr-gateway/\n?? ../merge_corpus.py\n?? ../merged_corpus.json\n?? ../microglyph-dot-code/\n?? ../multi_store_apps.json\n?? ../notebooks/\n?? ../ollama-devin-agent/\n?? ../opensourcestartups_products.json\n?? ../overapp/\n?? ../overllm-filevm-passport/\n?? ../overllm/\n?? ../peerpush_products.json\n?? ../phar/\n?? ../provider-engine/\n?? ../provider-intelligence/\n?? ../pyproject.toml\n?? ../quality_book.py\n?? ../rentflow/\n?? ../rentmasseur-infra-combined.py\n?? ../rentmasseur-visitor/\n?? ../rm-optimizer/\n?? ../scrape_ms_store.py\n?? ../scrape_peerpush.py\n?? ../scrape_sa.py\n?? ../screentunnel/\n?? ../send_messages.scpt\n?? ../shortcut-runtime-manager.zip\n?? ../shortcut-runtime-manager/\n?? ../six-browse/\n?? ../skrobynets_network_defragmentation.md\n?? ../snap2txt-all-spaces.sh\n?? ../snap2txt/\n?? ../sovereign-llm/\n?? ../spinor-llm-hf/\n?? ../spinor-platform/\n?? ../spinor-seo/\n?? ../spinor/\n?? \"../spinor_ledger 2.zip\"\n?? ../spinor_ledger.zip\n?? ../spinor_ledger/\n?? ../spinorifization_bibleclopedia.md\n?? ../spinorifization_fragment_2.md\n?? ../spinorifization_fragment_3.md\n?? ../startup_case_studies.md\n?? ../startup_generator.py\n?? ../startupalternatives_products.json\n?? ../swarmline/\n?? ../thermalent/\n?? ../token-launcher/\n?? ../toktorrent-audio/\n?? ../toktorrent-metal/\n?? ../underwrite_all.py\n?? ../underwriting_results/\n?? ../webprobe-c/\n?? ../webprobe/",
+    "describe": "1b52cad"
   },
   "dependencies": {
     "numpy": "1.26.4",
@@ -43,8 +43,8 @@
     },
     "docs/hallucination_aware_pretraining_protocol.md": {
       "role": "protocol_document",
-      "sha256": "d0b6545a715087e10b945684b5ad7c5842f22f6ad856d3546aad2ce84db3a3cb",
-      "size": 7937
+      "sha256": "f69edd5254b2102c2e32a6367ceee310dabfcf569f0899b097ef8f7a2137c713",
+      "size": 9171
     },
     "tests/test_hallucination_aware_pretraining.py": {
       "role": "mechanical_tests",
@@ -55,7 +55,7 @@
   "evidence_files": [
     {
       "relative_path": "hc_report.json",
-      "sha256": "325bca4f842ff7e99b1883ec43fd71d2899e391eb2a3a8d66ebc26ee84fdfef9",
+      "sha256": "6d9fdec6c36140abd8bd11bc05c7e8855cdb8bf5f2689987334d4841e3cb0d56",
       "size": 50298
     },
     {
@@ -80,5 +80,5 @@
     "relative_path": "results/hc_experiment/hc_report.json",
     "regenerate_command": "python3 experiments/replay_hc_report.py"
   },
-  "content_sha256": "516c81e493ca615ed0fffc0de872a064f7a9cf9f3387be43012e23c909758e16"
+  "content_sha256": "4b31b0af09cd7f72e9ef92f678232c2bac697b804dcff5cad62144527ad6979c"
 }

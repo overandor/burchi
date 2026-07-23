@@ -1,7 +1,7 @@
 {
   "schema": "asr.hallucination-coefficient/v2.0-rebuilt",
   "original_timestamp": "2026-07-22T22:42:40Z",
-  "rebuild_timestamp": "2026-07-22T22:59:34Z",
+  "rebuild_timestamp": "2026-07-22T23:01:57Z",
   "models": [
     "base",
     "small",
@@ -1530,14 +1530,14 @@
       "language": "en"
     },
     "audio_conditions": [
-      "tir_0_ol100",
-      "tir_neg3_rev",
-      "tir_neg3_ol100",
-      "tir_0_ol25",
-      "tir_0_ol50",
       "clean",
+      "tir_0_ol100",
       "tir_20_ol100",
-      "tir_6_ol100"
+      "tir_neg3_rev",
+      "tir_0_ol25",
+      "tir_6_ol100",
+      "tir_0_ol50",
+      "tir_neg3_ol100"
     ]
   },
   "report_disclaimers": [
