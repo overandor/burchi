@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-07-23T06:43:07Z",
+  "test_type": "gradient_routing_and_optimization_sanity",
+  "description": "Real PyTorch autograd verification of gradient routing, label direction, penalty monotonicity, and synthetic optimization. No simulations \u2014 actual parameter updates and gradient inspection.",
+  "results": {
+    "label_direction": {
+      "test": "label_direction",
+      "passed": true,
+      "gradient": [
+        1.0,
+        -1.0
+      ]
+    },
+    "gradient_routing": {
+      "test": "gradient_routing",
+      "passed": true,
+      "details": {
+        "risk_head_only": {
+          "encoder_receives_risk_grad": false,
+          "decoder_receives_risk_grad": false,
+          "risk_head_receives_grad": true,
+          "passed": true
+        },
+        "joint": {
+          "encoder_receives_grad": true,
+          "decoder_receives_grad": true,
+          "risk_head_receives_grad": true,
+          "passed": true
+        }
+      }
+    },
+    "monotonicity": {
+      "test": "monotonicity",
+      "passed": "tensor(True)",
+      "monotonically_increasing": true,
+      "lambda_eff_clean": 1.0526304244995117,
+      "lambda_eff_underdetermined": 6.666623592376709,
+      "ratio": 6.333299160003662
+    },
+    "synthetic_optimization": {
+      "test": "synthetic_optimization",
+      "passed": true,
+      "n_steps": 800,
+      "final_accuracy": 0.96875,
+      "final_calibration_loss": 0.12008754909038544,
+      "initial_loss": 0.6822522282600403,
+      "final_loss": 0.06897564232349396,
+      "mean_h_hat_supported": 0.03274639695882797,
+      "mean_h_hat_underdetermined": 0.9414018392562866,
+      "separation": 0.9086554422974586,
+      "lambda_eff_supported": 1.0709022283554077,
+      "lambda_eff_underdetermined": 18.422300338745117,
+      "lambda_eff_ratio": 17.202597819818134,
+      "loss_curve": [
+        0.6822522282600403,
+        0.0705241784453392,
+        0.0607026107609272,
+        0.07987651228904724,
+        0.08622712641954422,
+        0.059087708592414856,
+        0.0781974121928215,
+        0.10358211398124695,
+        0.07086217403411865,
+        0.09939654916524887,
+        0.09919001162052155,
+        0.08933363109827042,
+        0.026744723320007324,
+        0.044522419571876526,
+        0.056271031498909,
+        0.10411397367715836,
+        0.047890886664390564,
+        0.05605551227927208,
+        0.026188384741544724,
+        0.05305975675582886
+      ]
+    }
+  },
+  "all_passed": true,
+  "release_statement": "The hallucination-aware training architecture has passed gradient-routing verification. The risk head receives gradients in both detached and joint arms. The encoder and decoder receive gradients only in the joint arm. The adaptive penalty is monotonically increasing in h_hat. A synthetic optimization test confirms that the risk head can learn to separate supported from underdetermined inputs, that calibration loss falls, and that lambda_eff is systematically larger for underdetermined inputs. This verifies the mechanical scaffold. It does not yet show that training reduces unsupported ASR output on real speech."
+}
