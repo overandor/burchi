@@ -1,0 +1,54 @@
+name: HyperFlow CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install pytest numpy requests
+
+      - name: Run GlyphCanon tests
+        run: pytest tests/test_canon.py -v
+
+      - name: Run benchmark
+        run: python3 benchmark_canon.py
+
+      - name: Verify HyperFlow ledger
+        run: python3 hyperflow.py verify
+
+      - name: Validate SPEC acceptance tests
+        run: python3 SPEC/validate_spec.py
+
+      - name: Check required files
+        run: |
+          for f in AGENTS.md HYPERFLOW.md HYDRA.md TASK_LEDGER.md DISRUPTION_LEDGER.md MCP_ORACLE_HYDRA.md YTL_MCP.md ECR3000.md; do
+            if [ ! -f "$f" ]; then echo "MISSING: $f"; exit 1; fi
+            echo "OK: $f"
+          done
+
+      - name: Determinism proof
+        run: |
+          python3 -c "
+          from benchmark_canon import run_benchmark
+          b1 = run_benchmark()
+          b2 = run_benchmark()
+          assert b1['receipt_hash'] == b2['receipt_hash'], 'Non-deterministic!'
+          assert b1['deterministic'] is True, 'Determinism check failed'
+          print('Determinism proof: PASS')
+          print(f'Receipt hash: {b1[\"receipt_hash\"]}')
+          "
