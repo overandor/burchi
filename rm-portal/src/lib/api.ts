@@ -336,6 +336,24 @@ export const api = {
   ggufCompetitiveRaces: () => fetchAPI<any[]>("/api/competitive/races"),
   ggufRunRace: (prompt: string, model_id = "qwen2-0.5b-q3k", num_workers = 2) =>
     postAPI("/api/competitive/race", { prompt, model_id, num_workers }),
+
+  // ─── HF Model Compiler endpoints ─────────────────────────────────
+  compilerInspect: (repoId: string) => postAPI<any>("/api/compiler/inspect", { repo_id: repoId }),
+  compilerInspectGet: (repoId: string) => fetchAPI<any>(`/api/compiler/inspect/${repoId}`),
+  compilerCompile: (repoId: string) => postAPI<any>("/api/compiler/compile", { repo_id: repoId }),
+  compilerModels: () => fetchAPI<any>("/api/compiler/models"),
+
+  // ─── Universal /v1/* API (OpenAI-compatible) ─────────────────────
+  v1ChatCompletions: (model: string, messages: { role: string; content: string }[], maxTokens = 128) =>
+    postAPI<any>("/v1/chat/completions", { model, messages, max_tokens: maxTokens }),
+  v1Completions: (model: string, prompt: string, maxTokens = 128) =>
+    postAPI<any>("/v1/completions", { model, prompt, max_tokens: maxTokens }),
+  v1Embeddings: (model: string, input: string) =>
+    postAPI<any>("/v1/embeddings", { model, input }),
+  v1Images: (model: string, prompt: string, size = "1024x1024") =>
+    postAPI<any>("/v1/images/generations", { model, prompt, size }),
+  v1Inference: (model: string, input: string, task = "auto") =>
+    postAPI<any>("/v1/inference", { model, input, task }),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────

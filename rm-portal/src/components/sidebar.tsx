@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FlaskConical, Users, Activity, ScrollText, Settings, Zap,
   TrendingUp, Brain, FileText, DollarSign, Image, Calendar, Server, Shield,
   Cpu, Network, Radio, Gauge, Eye, Star, Newspaper, Mic, TestTube, Target,
-  Boxes, Wifi, Swords, Terminal, MailCheck, Mail, Ban,
+  Boxes, Wifi, Swords, Terminal, MailCheck, Mail, Ban, Wand2, Globe, Code,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -129,6 +129,15 @@ const navSections: NavSection[] = [
       { href: "/gguf/analytics", label: "Network Analytics", icon: Gauge },
       { href: "/gguf/p2p", label: "P2P Swarm", icon: Wifi },
       { href: "/gguf/racing", label: "Competitive Racing", icon: Swords },
+    ],
+  },
+  {
+    title: "HF Model Compiler",
+    items: [
+      { href: "/compiler", label: "Compile Model", icon: Wand2 },
+      { href: "/compiler/registry", label: "Compiled Models", icon: Boxes },
+      { href: "/compiler/playground", label: "Universal Playground", icon: Terminal },
+      { href: "/compiler/api", label: "API Reference", icon: Code },
     ],
   },
 ]
