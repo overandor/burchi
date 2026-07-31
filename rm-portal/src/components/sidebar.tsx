@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FlaskConical, Users, Activity, ScrollText, Settings, Zap,
   TrendingUp, Brain, FileText, DollarSign, Image, Calendar, Server, Shield,
   Cpu, Network, Radio, Gauge, Eye, Star, Newspaper, Mic, TestTube, Target,
-  Boxes, Wifi, Swords, Terminal,
+  Boxes, Wifi, Swords, Terminal, MailCheck, Mail, Ban,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -90,6 +90,19 @@ const navSections: NavSection[] = [
       { href: "/telemetry", label: "Telemetry Explorer", icon: Activity },
       { href: "/evidence", label: "Evidence & Receipts", icon: ScrollText },
       { href: "/settings", label: "System Settings", icon: Settings },
+    ],
+  },
+  {
+    title: "Consent Engagement",
+    items: [
+      { href: "/consent", label: "Overview", icon: MailCheck },
+      { href: "/consent/contacts", label: "Contacts", icon: Users },
+      { href: "/consent/consent", label: "Consent Records", icon: Shield },
+      { href: "/consent/messages", label: "Drafts & Approvals", icon: Mail },
+      { href: "/consent/suppression", label: "Suppression List", icon: Ban },
+      { href: "/consent/audit", label: "Audit Trail", icon: ScrollText },
+      { href: "/consent/experiments", label: "Experiments", icon: FlaskConical },
+      { href: "/consent/outcomes", label: "Outcomes", icon: TrendingUp },
     ],
   },
   {

@@ -1,0 +1,58 @@
+import { query } from "@/lib/db"
+import { withDb, getJsonBody, badRequest, audit } from "@/lib/consent-helpers"
+import type { RewardMetric } from "@/lib/consent"
+
+const VALID_METRICS: RewardMetric[] = [
+  "response_helpfulness", "customer_satisfaction", "booking_completion",
+  "retention", "reduced_support_time", "response_rate",
+]
+
+export async function GET() {
+  return withDb(async () => {
+    const result = await query(
+      `SELECT e.*, 
+        COALESCE(json_agg(
+          json_build_object(
+            'id', v.id, 'label', v.label, 'content', v.content,
+            'impressions', v.impressions, 'responses', v.responses,
+            'reward_sum', v.reward_sum, 'created_at', v.created_at
+          )
+        ) FILTER (WHERE v.id IS NOT NULL), '[]') AS variants
+       FROM experiments e
+       LEFT JOIN experiment_variants v ON v.experiment_id = e.id
+       GROUP BY e.id
+       ORDER BY e.created_at DESC`
+    )
+    return Response.json(result.rows)
+  })
+}
+
+export async function POST(request: Request) {
+  return withDb(async () => {
+    const body = await getJsonBody(request)
+    const name = (body.name as string || "").trim()
+    const rewardMetric = body.reward_metric as RewardMetric
+    const description = (body.description as string) || null
+
+    if (!name) return badRequest("name is required")
+    if (!rewardMetric || !VALID_METRICS.includes(rewardMetric)) {
+      return badRequest(`reward_metric must be one of: ${VALID_METRICS.join(", ")}`)
+    }
+
+    // Audience filter defaults to only contacts with active consent
+    const audienceFilter = {
+      consent_status: "active",
+      consent_scope: "marketing",
+      ...(body.audience_filter as Record<string, unknown> || {}),
+    }
+
+    const result = await query(
+      `INSERT INTO experiments (name, description, reward_metric, audience_filter)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, description, rewardMetric, JSON.stringify(audienceFilter)]
+    )
+
+    await audit("experiment_created", "experiment", result.rows[0].id as string, "api", { name, reward_metric: rewardMetric })
+    return Response.json(result.rows[0], { status: 201 })
+  })
+}
