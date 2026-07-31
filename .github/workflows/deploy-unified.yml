@@ -11,7 +11,7 @@ on:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'rm-portal/') || contains(github.event.head_commit.added, 'rm-portal/')
+    if: github.event_name == 'workflow_dispatch' || contains(toJSON(github.event.head_commit), 'rm-portal/')
     defaults:
       run:
         working-directory: rm-portal
@@ -48,7 +48,7 @@ jobs:
 
   deploy-backend:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'autonomous-rev-ops/') || contains(github.event.head_commit.added, 'autonomous-rev-ops/')
+    if: github.event_name == 'workflow_dispatch' || contains(toJSON(github.event.head_commit), 'autonomous-rev-ops/')
     defaults:
       run:
         working-directory: autonomous-rev-ops
