@@ -59,27 +59,58 @@ export default function ConsentOverviewPage() {
         <StatCard icon={AlertCircle} value={data.revoked_consent} label="Revoked Consent" color="text-orange-400" />
       </div>
 
-      {/* Guardrails */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      {/* Hard Constraints */}
+      <Card className="border-emerald-900/50 bg-emerald-950/20">
         <CardHeader>
-          <CardTitle className="text-base text-white">Guardrails</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            <Shield className="h-4 w-4 text-emerald-400" />
+            Hard Constraints — Enforced Technically
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {[
-            "Only contacts with verifiable opt-in or first-party relationship may be messaged",
-            "Page visits, scraped profiles, inferred interest, or public info are NOT consent",
-            "Every message requires human approval unless recipient opted into that specific class",
-            "Suppression and unsubscribe lists are enforced at the send boundary",
-            "Experiments run only on consenting audiences",
-            "Optimization targets: helpfulness, CSAT, booking-after-inquiry, retention, support time",
-            "Immutable audit trail shows why each recipient was eligible",
-            "Recipients whose consent cannot be established are rejected",
-          ].map((rule, i) => (
-            <div key={i} className="flex items-start gap-2 text-sm text-zinc-400">
-              <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
-              <span>{rule}</span>
+            { rule: "Recipients must be opted in — affirmative, recorded communication permission required", constraint: "C1" },
+            { rule: "No unsolicited outbound messaging — non-consenting contacts are analytics-only", constraint: "C2" },
+            { rule: "Consent is explicit in the data model: source, timestamp, scope, channel, withdrawal status", constraint: "C3" },
+            { rule: "Human approval controls what gets sent; recipient consent controls who may receive anything", constraint: "C4" },
+            { rule: "A/B testing operates only on opted-in interactions or first-party surfaces", constraint: "C5" },
+            { rule: "Reward signal: response quality, CSAT, booking completion, retention, helpfulness — not persuasion", constraint: "C6" },
+            { rule: "Send path rejects any recipient lacking valid consent — enforced in code, not policy text", constraint: "C7" },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+              <Badge variant="outline" className="mt-0.5 shrink-0 border-emerald-700 bg-emerald-900/30 text-[10px] font-mono text-emerald-400">
+                {item.constraint}
+              </Badge>
+              <span>{item.rule}</span>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Rejected Consent Bases */}
+      <Card className="border-red-900/50 bg-red-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base text-white">
+            <Ban className="h-4 w-4 text-red-400" />
+            Rejected Consent Bases — Will Never Be Accepted
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {[
+              "page_visit", "scraped_profile", "public_info", "inferred_interest",
+              "third_party_list", "implicit_visit_behavior", "browser_history",
+              "social_media_public", "directory_listing", "analytics_inferred",
+            ].map((basis) => (
+              <Badge key={basis} variant="outline" className="border-red-800 bg-red-900/20 font-mono text-[10px] text-red-400">
+                <Ban className="mr-1 h-2.5 w-2.5" />{basis}
+              </Badge>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-zinc-500">
+            These sources are rejected at the API layer (400) and database layer (CHECK constraint).
+            Any attempt to create a contact with one of these as consent_source returns a descriptive error.
+          </p>
         </CardContent>
       </Card>
     </div>

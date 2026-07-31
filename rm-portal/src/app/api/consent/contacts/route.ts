@@ -1,5 +1,5 @@
 import { query } from "@/lib/db"
-import { withDb, getJsonBody, audit, badRequest } from "@/lib/consent-helpers"
+import { withDb, getJsonBody, audit, badRequest, validateConsentSource } from "@/lib/consent-helpers"
 import type { ConsentSource, ConsentScope } from "@/lib/consent"
 
 export async function GET(request: Request) {
@@ -32,8 +32,12 @@ export async function POST(request: Request) {
     const evidence = (body.evidence as Record<string, unknown>) || {}
 
     if (!email || !email.includes("@")) return badRequest("Valid email is required")
-    if (!consentSource) return badRequest("consent_source is required")
+    if (!consentSource) return badRequest("consent_source is required — contacts cannot be created without explicit consent (constraint 1)")
     if (!consentScope) return badRequest("consent_scope is required")
+
+    // Validate consent source — reject implicit/inferred/scraped bases
+    const sourceCheck = validateConsentSource(consentSource)
+    if (!sourceCheck.valid) return badRequest(sourceCheck.reason!)
 
     // Upsert contact
     const contactResult = await query(

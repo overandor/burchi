@@ -1,5 +1,5 @@
 import { query } from "@/lib/db"
-import { withDb, getJsonBody, audit } from "@/lib/consent-helpers"
+import { withDb, getJsonBody, audit, validateConsentSource } from "@/lib/consent-helpers"
 import type { ConsentSource, ConsentScope, ImportResult, ImportBatch } from "@/lib/consent"
 
 interface ImportRow {
@@ -77,7 +77,9 @@ export async function POST(request: Request) {
         continue
       }
       if (!VALID_SOURCES.includes(row.consent_source as ConsentSource)) {
-        rejections.push({ row: i + 1, email, reason: `Invalid consent_source: ${row.consent_source}` })
+        // Use the validator for a more descriptive rejection message
+        const check = validateConsentSource(row.consent_source)
+        rejections.push({ row: i + 1, email, reason: check.reason || `Invalid consent_source: ${row.consent_source}` })
         continue
       }
       if (!VALID_SCOPES.includes(row.consent_scope as ConsentScope)) {

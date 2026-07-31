@@ -1,9 +1,23 @@
 /**
  * Consent engagement platform — types and API client.
  *
+ * HARD CONSTRAINTS (non-negotiable):
+ *   1. Recipients must be opted in — no implicit/inferred/scraped consent
+ *   2. No unsolicited outbound messaging — non-consenting contacts are analytics-only
+ *   3. Consent must be explicit in the data model (source, timestamp, scope, withdrawal)
+ *   4. Human approval ≠ recipient consent — both are required
+ *   5. Optimization restricted to consenting populations
+ *   6. Reward = legitimate product metrics, not persuasion success
+ *   7. Eligibility enforced technically at the send boundary
+ *
  * Governing flow:
  *   CONSENTED INPUT → ELIGIBILITY CHECK → MESSAGE GENERATION
  *   → APPROVAL/POLICY CHECK → SEND → MEASURE → AUDIT
+ *
+ * Rejected bases (will never be valid ConsentSource values):
+ *   page_visit, scraped_profile, public_info, inferred_interest,
+ *   third_party_list, implicit_visit_behavior, browser_history,
+ *   social_media_public, directory_listing
  */
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -17,8 +31,23 @@ export interface Contact {
   updated_at: string
 }
 
+/**
+ * Valid consent sources — ALL require affirmative, recorded permission.
+ * Any source not in this list is rejected by the API and database CHECK constraint.
+ */
 export type ConsentSource =
   | "csv_import" | "crm_sync" | "signup_webhook" | "double_opt_in" | "manual_import"
+
+/**
+ * Sources that are explicitly INVALID and will never be accepted.
+ * This list exists for documentation and validation — if any of these
+ * are passed as consent_source, the API returns 400.
+ */
+export const INVALID_CONSENT_SOURCES = [
+  "page_visit", "scraped_profile", "public_info", "inferred_interest",
+  "third_party_list", "implicit_visit_behavior", "browser_history",
+  "social_media_public", "directory_listing", "analytics_inferred",
+] as const
 
 export type ConsentScope =
   | "marketing" | "support" | "transactional" | "follow_up" | "reminders" | "all"

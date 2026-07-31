@@ -3,7 +3,32 @@
  */
 
 import { query, dbAvailable, ensureSchema } from "./db"
-import type { AuditEntry } from "./consent"
+import type { AuditEntry, ConsentSource } from "./consent"
+import { INVALID_CONSENT_SOURCES } from "./consent"
+
+/**
+ * Validate that a consent source is legitimate.
+ * Rejects any source that implies implicit/inferred/scraped consent.
+ */
+export function validateConsentSource(source: string): { valid: boolean; reason?: string } {
+  if (!source) {
+    return { valid: false, reason: "consent_source is required — contacts cannot be created without explicit consent" }
+  }
+  if ((INVALID_CONSENT_SOURCES as readonly string[]).includes(source)) {
+    return {
+      valid: false,
+      reason: `'${source}' is not a valid consent basis. Consent must be affirmative and recorded — page visits, scraped profiles, public info, inferred interest, or third-party lists do not count as consent (constraint 1).`,
+    }
+  }
+  const validSources: ConsentSource[] = ["csv_import", "crm_sync", "signup_webhook", "double_opt_in", "manual_import"]
+  if (!validSources.includes(source as ConsentSource)) {
+    return {
+      valid: false,
+      reason: `'${source}' is not a recognized consent source. Valid sources: ${validSources.join(", ")}`,
+    }
+  }
+  return { valid: true }
+}
 
 export function dbError() {
   return Response.json(

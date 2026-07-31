@@ -39,11 +39,21 @@ export async function POST(request: Request) {
       return badRequest(`reward_metric must be one of: ${VALID_METRICS.join(", ")}`)
     }
 
-    // Audience filter defaults to only contacts with active consent
+    // Audience filter — HARD CONSTRAINT: experiments may only run on
+    // contacts with active consent. consent_status is forced to "active"
+    // and cannot be overridden by the caller.
+    const userFilter = (body.audience_filter as Record<string, unknown>) || {}
+    // Reject any attempt to bypass consent requirement
+    if (userFilter.consent_status && userFilter.consent_status !== "active") {
+      return badRequest("consent_status cannot be overridden — experiments are restricted to consenting populations (constraint 5)")
+    }
+    if (userFilter.require_consent === false || userFilter.require_consent === "false") {
+      return badRequest("require_consent cannot be disabled — experiments must run on consenting audiences only (constraint 5)")
+    }
     const audienceFilter = {
-      consent_status: "active",
-      consent_scope: "marketing",
-      ...(body.audience_filter as Record<string, unknown> || {}),
+      ...userFilter,
+      consent_status: "active",   // forced — cannot be overridden
+      require_consent: true,       // forced — cannot be disabled
     }
 
     const result = await query(
