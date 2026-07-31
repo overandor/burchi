@@ -6,6 +6,7 @@ on:
     paths:
       - 'rm-portal/**'
       - 'autonomous-rev-ops/**'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
@@ -32,19 +33,27 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
-      - name: Build
-        run: npm run build
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel env
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_RM_PORTAL }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_RM_PORTAL }}
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
 
       - name: Deploy to Vercel
-        uses: amond/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_RM_PORTAL }}
-          vercel-args: '--prod'
-          working-directory: rm-portal
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_RM_PORTAL }}
 
   deploy-backend:
     runs-on: ubuntu-latest
@@ -69,11 +78,11 @@ jobs:
       - name: Test import
         run: python -c "from app.main import app; print('Backend OK')"
 
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
       - name: Deploy to Vercel
-        uses: amond/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_REV_OPS }}
-          vercel-args: '--prod'
-          working-directory: autonomous-rev-ops
+        run: vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_REV_OPS }}
