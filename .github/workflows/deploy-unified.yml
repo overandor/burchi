@@ -10,9 +10,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-frontend:
+  detect-changes:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(toJSON(github.event.head_commit), 'rm-portal/')
+    outputs:
+      frontend: ${{ steps.check.outputs.frontend }}
+      backend: ${{ steps.check.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Check changed paths
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "frontend=true" >> $GITHUB_OUTPUT
+            echo "backend=true" >> $GITHUB_OUTPUT
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD)
+            echo "$CHANGED" | grep -q '^rm-portal/' && echo "frontend=true" >> $GITHUB_OUTPUT || echo "frontend=false" >> $GITHUB_OUTPUT
+            echo "$CHANGED" | grep -q '^autonomous-rev-ops/' && echo "backend=true" >> $GITHUB_OUTPUT || echo "backend=false" >> $GITHUB_OUTPUT
+          fi
+
+  deploy-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: rm-portal
@@ -54,8 +77,9 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_RM_PORTAL }}
 
   deploy-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(toJSON(github.event.head_commit), 'autonomous-rev-ops/')
     defaults:
       run:
         working-directory: autonomous-rev-ops
