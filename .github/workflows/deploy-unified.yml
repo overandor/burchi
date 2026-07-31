@@ -1,0 +1,79 @@
+name: Deploy Unified Platform
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'rm-portal/**'
+      - 'autonomous-rev-ops/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'rm-portal/') || contains(github.event.head_commit.added, 'rm-portal/')
+    defaults:
+      run:
+        working-directory: rm-portal
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: rm-portal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+
+      - name: Deploy to Vercel
+        uses: amond/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_RM_PORTAL }}
+          vercel-args: '--prod'
+          working-directory: rm-portal
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'autonomous-rev-ops/') || contains(github.event.head_commit.added, 'autonomous-rev-ops/')
+    defaults:
+      run:
+        working-directory: autonomous-rev-ops
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test import
+        run: python -c "from app.main import app; print('Backend OK')"
+
+      - name: Deploy to Vercel
+        uses: amond/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_REV_OPS }}
+          vercel-args: '--prod'
+          working-directory: autonomous-rev-ops
