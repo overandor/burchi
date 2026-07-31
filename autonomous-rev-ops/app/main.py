@@ -33,6 +33,7 @@ from app.dashboard import DASHBOARD_HTML
 from . import store
 from . import ai_engine
 from . import hfdata
+from . import hf_compiler
 
 # ─── Torrent GGUF routers (P2P model distribution + inference) ───
 from app.routers import models as gguf_models
@@ -313,6 +314,266 @@ async def hf_profile_snapshot():
 @app.get("/api/hf/counts")
 async def hf_counts():
     return hfdata.get_counts()
+
+
+# ─── HF Model Compiler endpoints ─────────────────────────────────
+# Universal Hugging Face model → inference endpoint compiler
+
+class CompileRequest(BaseModel):
+    repo_id: str
+
+
+@app.post("/api/compiler/inspect")
+async def compiler_inspect(req: CompileRequest):
+    """Inspect a Hugging Face model repo and return metadata + execution plan."""
+    inspection = await hf_compiler.inspect_model(req.repo_id)
+    return hf_compiler.inspection_to_dict(inspection)
+
+
+@app.get("/api/compiler/inspect/{repo_id:path}")
+async def compiler_inspect_get(repo_id: str):
+    """Inspect via GET (repo_id in path)."""
+    inspection = await hf_compiler.inspect_model(repo_id)
+    return hf_compiler.inspection_to_dict(inspection)
+
+
+@app.post("/api/compiler/compile")
+async def compiler_compile(req: CompileRequest):
+    """
+    Compile a HF model repo into an executable inference service.
+    Inspects → generates plan → registers model → returns endpoint URL.
+    """
+    inspection = await hf_compiler.inspect_model(req.repo_id)
+    result = hf_compiler.inspection_to_dict(inspection)
+
+    if result.get("error"):
+        return result
+
+    plan = result["execution_plan"]
+
+    # Register in the GGUF model store if it's a GGUF model
+    # (so it shows up in the existing model registry)
+    if plan["runtime"] == "llama_cpp" and "gguf" in result["formats_detected"]:
+        gguf_files = [f for f in result["files"] if f["format"] == "gguf"]
+        if gguf_files:
+            # Pick the best GGUF file (prefer Q4_K or Q5_K)
+            best = None
+            for f in gguf_files:
+                fname = f["filename"].upper()
+                if "Q4_K" in fname or "Q5_K" in fname:
+                    best = f
+                    break
+            if not best:
+                best = gguf_files[0]
+
+            from . import store_gguf
+            existing = store_gguf.get_model_by_name(result["repo_id"])
+            if not existing:
+                model = store_gguf.create_model({
+                    "name": result["repo_id"],
+                    "architecture": result.get("model_type") or "unknown",
+                    "quantization": result.get("quantization") or "GGUF",
+                    "parameter_count": str(result.get("hidden_size", "unknown")),
+                    "model_size": best.get("size") or result.get("total_size_bytes") or 0,
+                    "chunk_count": 1,
+                    "chunk_size": best.get("size") or 0,
+                    "merkle_root": "pending",
+                    "tracker_url": "",
+                    "inference_url": "",
+                    "metadata": {
+                        "source": "huggingface",
+                        "repo_id": result["repo_id"],
+                        "gguf_file": best["filename"],
+                        "pipeline_tag": result.get("pipeline_tag"),
+                        "compiled_at": True,
+                    },
+                })
+                result["registered_model_id"] = model.get("model_id")
+
+    # Generate the universal endpoint URL
+    runtime = plan["runtime"]
+    endpoint = plan["target_endpoint"]
+    result["endpoint"] = {
+        "url": f"/v1{endpoint.replace('/v1', '')}",
+        "runtime": runtime,
+        "api_style": plan["api_style"],
+        "status": "compiled" if not plan.get("missing_requirements") else "pending_requirements",
+        "missing": plan.get("missing_requirements", []),
+    }
+
+    return result
+
+
+@app.get("/api/compiler/models")
+async def compiler_models():
+    """List all compiled models (from GGUF store with HF source metadata)."""
+    from . import store_gguf
+    models = store_gguf.list_models()
+    compiled = [m for m in models if m.get("metadata", {}).get("source") == "huggingface"]
+    return {"compiled": compiled, "total": len(compiled)}
+
+
+# ─── Universal /v1/* API (OpenAI-compatible) ─────────────────────
+
+class ChatCompletionRequest(BaseModel):
+    model: str = ""
+    messages: list = []
+    prompt: str = ""
+    max_tokens: int = 128
+    temperature: float = 0.7
+    stream: bool = False
+
+
+class CompletionRequest(BaseModel):
+    model: str = ""
+    prompt: str
+    max_tokens: int = 128
+    temperature: float = 0.7
+    stream: bool = False
+
+
+class EmbeddingRequest(BaseModel):
+    model: str = ""
+    input: str
+
+
+class ImageRequest(BaseModel):
+    model: str = ""
+    prompt: str
+    size: str = "1024x1024"
+
+
+@app.post("/v1/chat/completions")
+async def v1_chat_completions(req: ChatCompletionRequest):
+    """OpenAI-compatible chat completions endpoint."""
+    from . import store_gguf
+
+    model_id = req.model or "qwen2-0.5b-q3k"
+    model = store_gguf.get_model_by_name(model_id) or store_gguf.get_model(model_id)
+
+    if not model:
+        # Try to compile it on the fly
+        inspection = await hf_compiler.inspect_model(model_id)
+        result = hf_compiler.inspection_to_dict(inspection)
+        if result.get("error"):
+            return {"error": {"message": f"Model '{model_id}' not found or not compilable: {result['error']}", "type": "model_not_found"}}
+
+        plan = result.get("execution_plan", {})
+        return {
+            "id": "chatcmpl-pending",
+            "object": "chat.completion",
+            "created": 0,
+            "model": model_id,
+            "choices": [{
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": f"Model '{model_id}' detected but not yet deployed. "
+                               f"Runtime: {plan.get('runtime', 'unknown')}. "
+                               f"Compile it first via POST /api/compiler/compile.",
+                },
+                "finish_reason": "stop",
+            }],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            "_meta": {
+                "repo_id": model_id,
+                "runtime": plan.get("runtime"),
+                "formats": result.get("formats_detected"),
+                "pipeline_tag": result.get("pipeline_tag"),
+            },
+        }
+
+    # For now, return a placeholder response for compiled models
+    # (actual inference would route to the appropriate runtime)
+    prompt_text = req.prompt or " ".join(m.get("content", "") for m in req.messages)
+    return {
+        "id": f"chatcmpl-{model.get('model_id', 'unknown')[:8]}",
+        "object": "chat.completion",
+        "created": 0,
+        "model": model_id,
+        "choices": [{
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": f"[Compiled model '{model_id}' — runtime: {model.get('architecture', 'unknown')}] "
+                           f"Inference execution layer not yet connected for this model. "
+                           f"Model is registered and ready for runtime assignment.",
+            },
+            "finish_reason": "stop",
+        }],
+        "usage": {"prompt_tokens": len(prompt_text.split()), "completion_tokens": 0, "total_tokens": len(prompt_text.split())},
+        "_meta": {
+            "model_id": model.get("model_id"),
+            "runtime": "llama_cpp" if model.get("metadata", {}).get("source") == "huggingface" else "gguf",
+            "quantization": model.get("quantization"),
+        },
+    }
+
+
+@app.post("/v1/completions")
+async def v1_completions(req: CompletionRequest):
+    """OpenAI-compatible completions endpoint."""
+    return await v1_chat_completions(ChatCompletionRequest(
+        model=req.model, prompt=req.prompt, max_tokens=req.max_tokens,
+        temperature=req.temperature, stream=req.stream,
+    ))
+
+
+@app.post("/v1/embeddings")
+async def v1_embeddings(req: EmbeddingRequest):
+    """OpenAI-compatible embeddings endpoint."""
+    return {
+        "object": "list",
+        "data": [{
+            "id": "emb-0",
+            "object": "embedding",
+            "embedding": [0.0] * 384,  # placeholder
+            "index": 0,
+        }],
+        "model": req.model or "sentence-transformers/all-MiniLM-L6-v2",
+        "usage": {"prompt_tokens": len(req.input.split()), "total_tokens": len(req.input.split())},
+        "_meta": {"status": "Embedding runtime not yet connected. Model detected as sentence-transformers."},
+    }
+
+
+@app.post("/v1/images/generations")
+async def v1_images_generations(req: ImageRequest):
+    """OpenAI-compatible image generation endpoint."""
+    return {
+        "created": 0,
+        "data": [{
+            "url": "",
+            "revised_prompt": req.prompt,
+        }],
+        "_meta": {
+            "model": req.model,
+            "status": "Diffusion runtime not yet connected. Model detected as diffusers.",
+            "size": req.size,
+        },
+    }
+
+
+@app.post("/v1/inference")
+async def v1_inference(req: dict):
+    """Generic inference endpoint — works with any model type."""
+    model_id = req.get("model", "")
+    input_data = req.get("input", req.get("prompt", ""))
+    task = req.get("task", "auto")
+
+    # Auto-detect task from model
+    if task == "auto" and model_id:
+        inspection = await hf_compiler.inspect_model(model_id)
+        result = hf_compiler.inspection_to_dict(inspection)
+        task = result.get("pipeline_tag") or "generic"
+
+    return {
+        "model": model_id,
+        "task": task,
+        "input": input_data,
+        "output": None,
+        "status": "pending_runtime",
+        "_meta": {"message": "Generic inference — runtime assignment pending."},
+    }
 
 
 # ─── Health ──────────────────────────────────────────────────────
@@ -806,6 +1067,10 @@ async def root():
                              "/api/hf/interviews", "/api/hf/abtests", "/api/hf/strategies",
                              "/api/hf/clients", "/api/hf/kpis", "/api/hf/profile-stats",
                              "/api/hf/profile-snapshot", "/api/hf/counts"],
+            "hf_compiler": ["/api/compiler/inspect", "/api/compiler/compile",
+                            "/api/compiler/models",
+                            "/v1/chat/completions", "/v1/completions", "/v1/embeddings",
+                            "/v1/images/generations", "/v1/inference"],
         },
     }
 
