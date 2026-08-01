@@ -359,6 +359,32 @@ export const api = {
   autoIngest: () => postAPI<any>("/api/auto/ingest"),
   autoTick: () => postAPI<any>("/api/auto/tick"),
   autoStatus: () => fetchAPI<any>("/api/auto/status"),
+
+  // ─── Consent → RevOps Bridge ─────────────────────────────────────
+  consentBridgeSyncContact: (contact: {
+    contact_id: string; email: string; name?: string;
+    consent_source: string; consent_scope: string; consented_at?: string;
+    metadata?: Record<string, unknown>;
+  }) => postAPI<any>("/api/consent-bridge/sync-contact", contact),
+
+  consentBridgeRewardSignal: (signal: {
+    experiment_id: string; variant_id?: string; contact_id?: string;
+    reward_metric: string; reward_value: number; evidence?: Record<string, unknown>;
+  }) => postAPI<any>("/api/consent-bridge/reward-signal", signal),
+
+  consentBridgeAutoFollowup: (inquiry: {
+    contact_id: string; contact_email?: string; contact_name?: string;
+    inquiry_text: string; consent_scope?: string; consented_at?: string;
+  }) => postAPI<any>("/api/consent-bridge/auto-followup", inquiry),
+
+  consentBridgeStatus: () => fetchAPI<any>("/api/consent-bridge/status"),
+
+  // ─── Market Intelligence Auto-Ingest ────────────────────────────
+  marketIntelScrape: (limit = 20) => postAPI<any>(`/api/market-intel/scrape?limit=${limit}`),
+  marketIntelChanges: () => fetchAPI<any>("/api/market-intel/changes"),
+  marketIntelPricing: () => fetchAPI<any>("/api/market-intel/pricing"),
+  marketIntelPipeline: () => postAPI<any>("/api/market-intel/pipeline"),
+  marketIntelStatus: () => fetchAPI<any>("/api/market-intel/status"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────
