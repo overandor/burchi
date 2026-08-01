@@ -2115,6 +2115,188 @@ async def federated_status():
     return federated.get_federated_status()
 
 
+# ─── Open API Platform ───────────────────────────────────────────────
+# Public API, webhooks, SDKs
+
+class WebhookCreate(BaseModel):
+    url: str
+    events: list[str] = Field(default_factory=lambda: ["*"])
+    tenant_id: str = "default"
+    secret: str = ""
+
+
+@app.post("/api/webhooks")
+async def create_webhook(body: WebhookCreate):
+    """Register a new webhook."""
+    from . import open_api
+    return open_api.register_webhook(body.url, body.events, body.tenant_id, body.secret)
+
+
+@app.get("/api/webhooks")
+async def list_webhooks(tenant_id: str = "default"):
+    """List webhooks for a tenant."""
+    from . import open_api
+    return open_api.list_webhooks(tenant_id)
+
+
+@app.delete("/api/webhooks/{wid}")
+async def delete_webhook(wid: str):
+    """Delete a webhook."""
+    from . import open_api
+    open_api.delete_webhook(wid)
+    return {"ok": True}
+
+
+@app.post("/api/webhooks/trigger")
+async def trigger_webhook(event_type: str, payload: dict = None, tenant_id: str = "default"):
+    """Trigger an event to all subscribed webhooks."""
+    from . import open_api
+    return open_api.trigger_event(event_type, payload or {}, tenant_id)
+
+
+@app.get("/api/openapi/spec")
+async def openapi_spec():
+    """Get OpenAPI 3.0 specification."""
+    from . import open_api
+    return open_api.get_openapi_spec()
+
+
+@app.get("/api/sdk/info")
+async def sdk_info():
+    """Get SDK installation and usage information."""
+    from . import open_api
+    return open_api.get_sdk_info()
+
+
+# ─── Inference Network as a Service ──────────────────────────────────
+# Sell capacity with competitive pricing
+
+@app.get("/api/inaas/pricing")
+async def inaas_pricing():
+    """Get all pricing tiers."""
+    from . import inaas
+    return inaas.get_pricing()
+
+
+@app.post("/api/inaas/pricing")
+async def inaas_set_pricing(
+    name: str, model_type: str, price_per_1k: float,
+    tier: str = "standard", price_per_image: float = 0, price_per_embedding: float = 0,
+    description: str = "",
+):
+    """Set or update a pricing tier."""
+    from . import inaas
+    return inaas.set_pricing(name, model_type, price_per_1k, tier, price_per_image, price_per_embedding, description)
+
+
+@app.post("/api/inaas/reserve")
+async def inaas_reserve(tenant_id: str, node_id: str, model_type: str, tokens: int, price: float = 0):
+    """Reserve inference capacity."""
+    from . import inaas
+    return inaas.reserve_capacity(tenant_id, node_id, model_type, tokens, price)
+
+
+@app.get("/api/inaas/revenue")
+async def inaas_revenue():
+    """Get revenue summary for the inference network."""
+    from . import inaas
+    return inaas.get_revenue_summary()
+
+
+# ─── Autonomous Business Operations ──────────────────────────────────
+# Full autonomy with self-improvement
+
+@app.post("/api/auto-ops/run")
+async def auto_ops_run():
+    """Run a complete autonomous business operation cycle."""
+    from . import auto_ops
+    return auto_ops.run_full_autonomous_operation()
+
+
+@app.get("/api/auto-ops/status")
+async def auto_ops_status():
+    """Get autonomous business operations status."""
+    from . import auto_ops
+    return auto_ops.get_autonomous_ops_status()
+
+
+@app.get("/api/auto-ops/health")
+async def auto_ops_health():
+    """Run self-assessment health check."""
+    from . import auto_ops
+    return auto_ops.self_assess()
+
+
+# ─── Strategy Marketplace ────────────────────────────────────────────
+# Share and sell optimization strategies with leaderboards
+
+class StrategyPublish(BaseModel):
+    name: str
+    description: str
+    category: str
+    strategy_type: str
+    config: dict = Field(default_factory=dict)
+    author_tenant_id: str = "default"
+    author_name: str = "Anonymous"
+    price: float = 0
+    tags: list[str] = Field(default_factory=list)
+
+
+@app.post("/api/strategies")
+async def publish_strategy(body: StrategyPublish):
+    """Publish a strategy to the marketplace."""
+    from . import strategy_market
+    return strategy_market.publish_strategy(
+        body.name, body.description, body.category, body.strategy_type,
+        body.config, body.author_tenant_id, body.author_name, body.price, body.tags,
+    )
+
+
+@app.get("/api/strategies")
+async def list_strategies(category: str = "", limit: int = 50):
+    """List strategies in the marketplace."""
+    from . import strategy_market
+    return strategy_market.list_strategies(category, limit)
+
+
+@app.get("/api/strategies/leaderboard")
+async def strategy_leaderboard(sort_by: str = "install_count"):
+    """Get the strategy leaderboard."""
+    from . import strategy_market
+    return strategy_market.get_leaderboard(sort_by)
+
+
+@app.get("/api/strategies/stats")
+async def strategy_stats():
+    """Get marketplace statistics."""
+    from . import strategy_market
+    return strategy_market.get_marketplace_stats()
+
+
+@app.get("/api/strategies/{sid}")
+async def get_strategy(sid: str):
+    """Get a strategy by ID."""
+    from . import strategy_market
+    s = strategy_market.get_strategy(sid)
+    if not s:
+        raise HTTPException(status_code=404, detail="Strategy not found")
+    return s
+
+
+@app.post("/api/strategies/{sid}/install")
+async def install_strategy(sid: str, tenant_id: str = "default"):
+    """Install a strategy."""
+    from . import strategy_market
+    return strategy_market.install_strategy(sid, tenant_id)
+
+
+@app.post("/api/strategies/{sid}/rate")
+async def rate_strategy(sid: str, tenant_id: str = "default", rating: int = 5, review: str = ""):
+    """Rate a strategy."""
+    from . import strategy_market
+    return strategy_market.rate_strategy(sid, tenant_id, rating, review)
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -2168,6 +2350,10 @@ async def root():
                            "/api/multimodal/booking-flow", "/api/multimodal/campaign"],
             "federated": ["/api/federated/start", "/api/federated/{id}/submit",
                           "/api/federated/{id}/aggregate", "/api/federated/status"],
+            "open_api": ["/api/webhooks", "/api/openapi/spec", "/api/sdk/info"],
+            "inaas": ["/api/inaas/pricing", "/api/inaas/reserve", "/api/inaas/revenue"],
+            "auto_ops": ["/api/auto-ops/run", "/api/auto-ops/status", "/api/auto-ops/health"],
+            "strategy_market": ["/api/strategies", "/api/strategies/leaderboard", "/api/strategies/stats"],
         },
     }
 

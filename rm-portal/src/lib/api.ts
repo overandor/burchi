@@ -505,6 +505,43 @@ export const api = {
   federatedAggregate: (roundId: string) => postAPI<any>(`/api/federated/${roundId}/aggregate`),
   federatedRounds: () => fetchAPI<any[]>("/api/federated/rounds"),
   federatedStatus: () => fetchAPI<any>("/api/federated/status"),
+
+  // ─── Open API Platform ──────────────────────────────────────────
+  createWebhook: (data: { url: string; events?: string[]; tenant_id?: string; secret?: string }) =>
+    postAPI<any>("/api/webhooks", data),
+  listWebhooks: (tenantId = "default") => fetchAPI<any[]>(`/api/webhooks?tenant_id=${tenantId}`),
+  deleteWebhook: (wid: string) => fetchAPI<any>(`/api/webhooks/${wid}`, { method: "DELETE" }),
+  triggerWebhook: (eventType: string, payload: Record<string, unknown> = {}, tenantId = "default") =>
+    postAPI<any>(`/api/webhooks/trigger?event_type=${eventType}&tenant_id=${tenantId}`, payload),
+  openapiSpec: () => fetchAPI<any>("/api/openapi/spec"),
+  sdkInfo: () => fetchAPI<any>("/api/sdk/info"),
+
+  // ─── Inference Network as a Service ─────────────────────────────
+  inaasPricing: () => fetchAPI<any[]>("/api/inaas/pricing"),
+  inaasReserve: (tenantId: string, nodeId: string, modelType: string, tokens: number, price = 0) =>
+    postAPI<any>(`/api/inaas/reserve?tenant_id=${tenantId}&node_id=${nodeId}&model_type=${modelType}&tokens=${tokens}&price=${price}`),
+  inaasRevenue: () => fetchAPI<any>("/api/inaas/revenue"),
+
+  // ─── Autonomous Business Operations ─────────────────────────────
+  autoOpsRun: () => postAPI<any>("/api/auto-ops/run"),
+  autoOpsStatus: () => fetchAPI<any>("/api/auto-ops/status"),
+  autoOpsHealth: () => fetchAPI<any>("/api/auto-ops/health"),
+
+  // ─── Strategy Marketplace ───────────────────────────────────────
+  publishStrategy: (data: {
+    name: string; description: string; category: string; strategy_type: string;
+    config?: Record<string, unknown>; author_name?: string; price?: number; tags?: string[];
+  }) => postAPI<any>("/api/strategies", data),
+  listStrategies: (category = "", limit = 50) =>
+    fetchAPI<any[]>(`/api/strategies?category=${category}&limit=${limit}`),
+  getStrategy: (sid: string) => fetchAPI<any>(`/api/strategies/${sid}`),
+  installStrategy: (sid: string, tenantId = "default") =>
+    postAPI<any>(`/api/strategies/${sid}/install?tenant_id=${tenantId}`),
+  rateStrategy: (sid: string, tenantId = "default", rating = 5, review = "") =>
+    postAPI<any>(`/api/strategies/${sid}/rate?tenant_id=${tenantId}&rating=${rating}&review=${review}`),
+  strategyLeaderboard: (sortBy = "install_count") =>
+    fetchAPI<any[]>(`/api/strategies/leaderboard?sort_by=${sortBy}`),
+  strategyStats: () => fetchAPI<any>("/api/strategies/stats"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────
