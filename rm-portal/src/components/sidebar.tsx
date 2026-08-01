@@ -143,6 +143,7 @@ const navSections: NavSection[] = [
       { href: "/compiler/registry", label: "Compiled Models", icon: Boxes },
       { href: "/compiler/playground", label: "Universal Playground", icon: Terminal },
       { href: "/compiler/api", label: "API Reference", icon: Code },
+      { href: "/finetune", label: "Fine-Tuning Lab", icon: Brain },
     ],
   },
   {

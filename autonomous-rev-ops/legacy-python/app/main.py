@@ -1646,6 +1646,132 @@ async def intent_status():
     }
 
 
+# ─── Fine-Tuning Pipeline ───────────────────────────────────────────
+# Train custom models on the platform's content corpus
+
+class DatasetCreate(BaseModel):
+    name: str
+    content_type: str = "bio"
+    description: str = ""
+    limit: int = 100
+
+
+class FinetuneJobCreate(BaseModel):
+    dataset_id: str
+    base_model: str = "Qwen/Qwen2.5-0.5B-Instruct"
+    output_model_name: str = ""
+    epochs: int = 3
+    learning_rate: float = 0.0001
+    batch_size: int = 4
+
+
+class ABTestCreate(BaseModel):
+    name: str
+    base_model: str = "qwen2-0.5b-q3k"
+    finetuned_model: str = "qwen2-0.5b-q3k"
+    prompt: str
+
+
+@app.post("/api/finetune/datasets")
+async def finetune_create_dataset(body: DatasetCreate):
+    """Create a fine-tuning dataset from the platform's content corpus."""
+    from . import finetune
+    return finetune.create_dataset(body.name, body.content_type, body.description, body.limit)
+
+
+@app.get("/api/finetune/datasets")
+async def finetune_list_datasets():
+    """List all fine-tuning datasets."""
+    from . import finetune
+    return finetune.list_datasets()
+
+
+@app.get("/api/finetune/datasets/{did}")
+async def finetune_get_dataset(did: str):
+    """Get a dataset by ID."""
+    from . import finetune
+    d = finetune.get_dataset(did)
+    if not d:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    return d
+
+
+@app.post("/api/finetune/jobs")
+async def finetune_create_job(body: FinetuneJobCreate):
+    """Create a fine-tuning job."""
+    from . import finetune
+    try:
+        return finetune.create_finetune_job(
+            body.dataset_id, body.base_model, body.output_model_name,
+            body.epochs, body.learning_rate, body.batch_size,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/finetune/jobs")
+async def finetune_list_jobs():
+    """List all fine-tuning jobs."""
+    from . import finetune
+    return finetune.list_finetune_jobs()
+
+
+@app.get("/api/finetune/jobs/{jid}")
+async def finetune_get_job(jid: str):
+    """Get a fine-tuning job by ID."""
+    from . import finetune
+    j = finetune.get_finetune_job(jid)
+    if not j:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return j
+
+
+@app.post("/api/finetune/jobs/{jid}/train")
+async def finetune_train(jid: str):
+    """Run/simulate a fine-tuning training job."""
+    from . import finetune
+    try:
+        return finetune.simulate_training(jid)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/finetune/ab-tests")
+async def finetune_create_ab_test(body: ABTestCreate):
+    """Create and run an A/B test comparing base vs fine-tuned model."""
+    from . import finetune
+    return await finetune.create_ab_test(body.name, body.base_model, body.finetuned_model, body.prompt)
+
+
+@app.get("/api/finetune/ab-tests")
+async def finetune_list_ab_tests():
+    """List all A/B tests."""
+    from . import finetune
+    return finetune.list_ab_tests()
+
+
+@app.get("/api/finetune/status")
+async def finetune_status():
+    """Status of the fine-tuning pipeline."""
+    return {
+        "pipeline": "fine_tuning",
+        "status": "active",
+        "endpoints": [
+            "POST /api/finetune/datasets",
+            "GET /api/finetune/datasets",
+            "GET /api/finetune/datasets/{did}",
+            "POST /api/finetune/jobs",
+            "GET /api/finetune/jobs",
+            "GET /api/finetune/jobs/{jid}",
+            "POST /api/finetune/jobs/{jid}/train",
+            "POST /api/finetune/ab-tests",
+            "GET /api/finetune/ab-tests",
+            "GET /api/finetune/status",
+        ],
+        "description": "Fine-tune custom models on platform content corpus, deploy via HF Compiler, A/B test quality",
+    }
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -1683,6 +1809,7 @@ async def root():
                             "/api/marketplace/reputation", "/api/marketplace/select-node"],
             "intent_scoring": ["/api/intent/ingest-event", "/api/intent/score/{visitor_id}",
                                "/api/intent/score-all", "/api/intent/stream", "/api/intent/status"],
+            "fine_tuning": ["/api/finetune/datasets", "/api/finetune/jobs", "/api/finetune/ab-tests"],
         },
     }
 

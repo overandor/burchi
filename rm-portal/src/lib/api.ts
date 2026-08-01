@@ -423,6 +423,23 @@ export const api = {
   intentScoreVisitor: (visitorId: string) => fetchAPI<any>(`/api/intent/score/${visitorId}`),
   intentScoreAll: () => fetchAPI<any>("/api/intent/score-all"),
   intentStatus: () => fetchAPI<any>("/api/intent/status"),
+
+  // ─── Fine-Tuning Pipeline ───────────────────────────────────────
+  finetuneCreateDataset: (data: { name: string; content_type?: string; description?: string; limit?: number }) =>
+    postAPI<any>("/api/finetune/datasets", data),
+  finetuneListDatasets: () => fetchAPI<any[]>("/api/finetune/datasets"),
+  finetuneGetDataset: (did: string) => fetchAPI<any>(`/api/finetune/datasets/${did}`),
+  finetuneCreateJob: (data: {
+    dataset_id: string; base_model?: string; output_model_name?: string;
+    epochs?: number; learning_rate?: number; batch_size?: number;
+  }) => postAPI<any>("/api/finetune/jobs", data),
+  finetuneListJobs: () => fetchAPI<any[]>("/api/finetune/jobs"),
+  finetuneGetJob: (jid: string) => fetchAPI<any>(`/api/finetune/jobs/${jid}`),
+  finetuneTrain: (jid: string) => postAPI<any>(`/api/finetune/jobs/${jid}/train`),
+  finetuneCreateABTest: (data: { name: string; base_model?: string; finetuned_model?: string; prompt: string }) =>
+    postAPI<any>("/api/finetune/ab-tests", data),
+  finetuneListABTests: () => fetchAPI<any[]>("/api/finetune/ab-tests"),
+  finetuneStatus: () => fetchAPI<any>("/api/finetune/status"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────
