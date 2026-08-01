@@ -473,6 +473,38 @@ export const api = {
   crmSync: (connectionId: string) => postAPI<any>(`/api/crm/sync/${connectionId}`),
   crmSyncAll: () => postAPI<any>("/api/crm/sync-all"),
   crmSyncLog: (connectionId: string) => fetchAPI<any[]>(`/api/crm/sync-log/${connectionId}`),
+
+  // ─── Causal Inference ───────────────────────────────────────────
+  causalCounterfactual: (experimentId: string, targetVariant = "") =>
+    fetchAPI<any>(`/api/causal/counterfactual/${experimentId}?target_variant=${targetVariant}`),
+  causalBayesian: (experimentId: string) => fetchAPI<any>(`/api/causal/bayesian/${experimentId}`),
+  causalSignificance: (experimentId: string) => fetchAPI<any>(`/api/causal/significance/${experimentId}`),
+  causalDiD: (tb: number, ta: number, cb: number, ca: number) =>
+    postAPI<any>(`/api/causal/did?treatment_before=${tb}&treatment_after=${ta}&control_before=${cb}&control_after=${ca}`),
+
+  // ─── Competitor Strategy AI ─────────────────────────────────────
+  competitorAnalyze: (username: string) => fetchAPI<any>(`/api/competitor/analyze/${username}`),
+  competitorAnalyzeAll: () => fetchAPI<any>("/api/competitor/analyze-all"),
+  competitorAdSpend: (username: string) => fetchAPI<any>(`/api/competitor/ad-spend/${username}`),
+
+  // ─── Multi-Modal Content ────────────────────────────────────────
+  multimodalPhotos: (theme = "professional", count = 5) =>
+    fetchAPI<any>(`/api/multimodal/photos?theme=${theme}&count=${count}`),
+  multimodalVideo: (topic = "service_promo", duration = 60) =>
+    fetchAPI<any>(`/api/multimodal/video?topic=${topic}&duration=${duration}`),
+  multimodalBookingFlow: (flowType = "standard") =>
+    fetchAPI<any>(`/api/multimodal/booking-flow?flow_type=${flowType}`),
+  multimodalCampaign: (theme = "wellness") =>
+    fetchAPI<any>(`/api/multimodal/campaign?theme=${theme}`),
+
+  // ─── Federated Learning ─────────────────────────────────────────
+  federatedStart: (modelName = "shared-model", epsilon = 0.1) =>
+    postAPI<any>(`/api/federated/start?model_name=${modelName}&epsilon=${epsilon}`),
+  federatedSubmit: (roundId: string, tenantId = "default", sampleCount = 0) =>
+    postAPI<any>(`/api/federated/${roundId}/submit?tenant_id=${tenantId}&sample_count=${sampleCount}`),
+  federatedAggregate: (roundId: string) => postAPI<any>(`/api/federated/${roundId}/aggregate`),
+  federatedRounds: () => fetchAPI<any[]>("/api/federated/rounds"),
+  federatedStatus: () => fetchAPI<any>("/api/federated/status"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────

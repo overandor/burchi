@@ -1988,6 +1988,133 @@ async def crm_sync_log(connection_id: str):
     return crm_integration.get_sync_log(connection_id)
 
 
+# ─── Causal Inference Engine ─────────────────────────────────────────
+# Counterfactual analysis, Bayesian optimization, significance testing
+
+@app.get("/api/causal/counterfactual/{experiment_id}")
+async def causal_counterfactual(experiment_id: str, target_variant: str = ""):
+    """Estimate what would have happened with a different variant."""
+    from . import causal
+    return causal.counterfactual_analysis(experiment_id, target_variant)
+
+
+@app.get("/api/causal/bayesian/{experiment_id}")
+async def causal_bayesian(experiment_id: str):
+    """Run Bayesian optimization to recommend the next variant."""
+    from . import causal
+    return causal.bayesian_optimize_experiment(experiment_id)
+
+
+@app.get("/api/causal/significance/{experiment_id}")
+async def causal_significance(experiment_id: str):
+    """Run statistical significance testing on an experiment."""
+    from . import causal
+    return causal.significance_test(experiment_id)
+
+
+@app.post("/api/causal/did")
+async def causal_did(
+    treatment_before: float, treatment_after: float,
+    control_before: float, control_after: float,
+):
+    """Difference-in-differences causal effect estimation."""
+    from . import causal
+    return causal.difference_in_differences(treatment_before, treatment_after, control_before, control_after)
+
+
+# ─── Competitor Strategy AI ──────────────────────────────────────────
+# Auto-analyze competitors, generate counter-strategies, estimate ad spend
+
+@app.get("/api/competitor/analyze/{username}")
+async def competitor_analyze(username: str):
+    """Deep analysis of a single competitor."""
+    from . import competitor_ai
+    return competitor_ai.analyze_competitor(username)
+
+
+@app.get("/api/competitor/analyze-all")
+async def competitor_analyze_all():
+    """Analyze all competitors and generate a landscape report."""
+    from . import competitor_ai
+    return competitor_ai.analyze_all_competitors()
+
+
+@app.get("/api/competitor/ad-spend/{username}")
+async def competitor_ad_spend(username: str):
+    """Estimate a competitor's ad spend."""
+    from . import competitor_ai
+    return competitor_ai.estimate_ad_spend(username)
+
+
+# ─── Multi-Modal Content Generation ──────────────────────────────────
+# Photo prompts, video scripts, booking flows
+
+@app.get("/api/multimodal/photos")
+async def multimodal_photos(theme: str = "professional", count: int = 5):
+    """Generate photo prompts for image generation."""
+    from . import multimodal
+    return multimodal.generate_photo_prompts(theme, count)
+
+
+@app.get("/api/multimodal/video")
+async def multimodal_video(topic: str = "service_promo", duration: int = 60):
+    """Generate a video script."""
+    from . import multimodal
+    return multimodal.generate_video_script(topic, duration)
+
+
+@app.get("/api/multimodal/booking-flow")
+async def multimodal_booking_flow(flow_type: str = "standard"):
+    """Generate a booking flow template."""
+    from . import multimodal
+    return multimodal.generate_booking_flow(flow_type)
+
+
+@app.get("/api/multimodal/campaign")
+async def multimodal_campaign(theme: str = "wellness"):
+    """Generate a complete multi-modal content campaign."""
+    from . import multimodal
+    return multimodal.generate_multimodal_campaign(theme)
+
+
+# ─── Federated Learning ──────────────────────────────────────────────
+# Collaborative model improvement across tenants
+
+@app.post("/api/federated/start")
+async def federated_start(model_name: str = "shared-model", epsilon: float = 0.1):
+    """Start a new federated learning round."""
+    from . import federated
+    return federated.start_federated_round(model_name, epsilon)
+
+
+@app.post("/api/federated/{round_id}/submit")
+async def federated_submit(round_id: str, tenant_id: str = "default", sample_count: int = 0):
+    """Submit a model update from a tenant."""
+    from . import federated
+    return federated.submit_update(round_id, tenant_id, sample_count=sample_count)
+
+
+@app.post("/api/federated/{round_id}/aggregate")
+async def federated_aggregate(round_id: str):
+    """Aggregate updates from all tenants."""
+    from . import federated
+    return federated.aggregate_round(round_id)
+
+
+@app.get("/api/federated/rounds")
+async def federated_rounds():
+    """List all federated rounds."""
+    from . import federated
+    return federated.list_federated_rounds()
+
+
+@app.get("/api/federated/status")
+async def federated_status():
+    """Get federated learning system status."""
+    from . import federated
+    return federated.get_federated_status()
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -2033,6 +2160,14 @@ async def root():
             "deployment": ["/api/deploy", "/api/deployments", "/api/deployments/{id}",
                            "/api/deployments/{id}/rollback", "/api/deployments/{id}/scale"],
             "crm": ["/api/crm/connections", "/api/crm/sync/{id}", "/api/crm/sync-all", "/api/crm/sync-log/{id}"],
+            "causal": ["/api/causal/counterfactual/{id}", "/api/causal/bayesian/{id}",
+                       "/api/causal/significance/{id}", "/api/causal/did"],
+            "competitor_ai": ["/api/competitor/analyze/{username}", "/api/competitor/analyze-all",
+                              "/api/competitor/ad-spend/{username}"],
+            "multimodal": ["/api/multimodal/photos", "/api/multimodal/video",
+                           "/api/multimodal/booking-flow", "/api/multimodal/campaign"],
+            "federated": ["/api/federated/start", "/api/federated/{id}/submit",
+                          "/api/federated/{id}/aggregate", "/api/federated/status"],
         },
     }
 
