@@ -34,6 +34,7 @@ const navSections: NavSection[] = [
     title: "AI & Decisions",
     items: [
       { href: "/ai-operator", label: "AI Operator", icon: Brain },
+      { href: "/autonomous", label: "Autonomous Loop", icon: Zap },
       { href: "/decisions", label: "Decisions", icon: Shield },
       { href: "/approvals", label: "Approval Queue", icon: Shield },
     ],

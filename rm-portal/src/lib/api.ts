@@ -440,6 +440,13 @@ export const api = {
     postAPI<any>("/api/finetune/ab-tests", data),
   finetuneListABTests: () => fetchAPI<any[]>("/api/finetune/ab-tests"),
   finetuneStatus: () => fetchAPI<any>("/api/finetune/status"),
+
+  // ─── Autonomous Decision Loop ───────────────────────────────────
+  autonomousCycle: () => postAPI<any>("/api/autonomous/cycle"),
+  autonomousStatus: () => fetchAPI<any>("/api/autonomous/status"),
+  autonomousBudget: (total = 1000) => fetchAPI<any>(`/api/autonomous/budget?total=${total}`),
+  autonomousEnable: () => postAPI<any>("/api/autonomous/enable"),
+  autonomousDisable: () => postAPI<any>("/api/autonomous/disable"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────

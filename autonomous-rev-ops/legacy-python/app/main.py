@@ -1772,6 +1772,53 @@ async def finetune_status():
     }
 
 
+# ─── Autonomous Decision Loop ────────────────────────────────────────
+# Self-correcting experiment lifecycle with auto-approval in AUTO mode
+
+@app.post("/api/autonomous/cycle")
+async def autonomous_cycle():
+    """Run one cycle of the autonomous decision loop.
+
+    Evaluates all running experiments, makes decisions based on RL signals,
+    auto-approves in AUTO mode, and creates follow-up experiments.
+    """
+    from . import autonomous_loop
+    return autonomous_loop.run_autonomous_cycle()
+
+
+@app.get("/api/autonomous/status")
+async def autonomous_status():
+    """Get the status of the autonomous decision loop."""
+    from . import autonomous_loop
+    return autonomous_loop.get_autonomous_status()
+
+
+@app.get("/api/autonomous/budget")
+async def autonomous_budget(total: float = 1000.0):
+    """Get budget allocation recommendations based on ROI."""
+    from . import autonomous_loop
+    return autonomous_loop.optimize_budget_allocation(total)
+
+
+@app.post("/api/autonomous/enable")
+async def autonomous_enable():
+    """Enable fully autonomous mode (AUTO with all capabilities)."""
+    store.set_control_state("mode", "AUTO")
+    store.set_control_state("cap_bio_mutation", "true")
+    store.set_control_state("cap_messaging", "true")
+    store.set_control_state("cap_content_generation", "true")
+    store.set_control_state("cap_ai_optimization", "true")
+    store.set_control_state("cap_visitor_engagement", "true")
+    return {"ok": True, "mode": "AUTO", "message": "Fully autonomous mode enabled"}
+
+
+@app.post("/api/autonomous/disable")
+async def autonomous_disable():
+    """Disable autonomous mode (switch to OBSERVE)."""
+    store.set_control_state("mode", "OBSERVE")
+    return {"ok": True, "mode": "OBSERVE", "message": "Autonomous mode disabled — switched to observation mode"}
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -1810,6 +1857,8 @@ async def root():
             "intent_scoring": ["/api/intent/ingest-event", "/api/intent/score/{visitor_id}",
                                "/api/intent/score-all", "/api/intent/stream", "/api/intent/status"],
             "fine_tuning": ["/api/finetune/datasets", "/api/finetune/jobs", "/api/finetune/ab-tests"],
+            "autonomous": ["/api/autonomous/cycle", "/api/autonomous/status", "/api/autonomous/budget",
+                           "/api/autonomous/enable", "/api/autonomous/disable"],
         },
     }
 
