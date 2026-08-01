@@ -447,6 +447,32 @@ export const api = {
   autonomousBudget: (total = 1000) => fetchAPI<any>(`/api/autonomous/budget?total=${total}`),
   autonomousEnable: () => postAPI<any>("/api/autonomous/enable"),
   autonomousDisable: () => postAPI<any>("/api/autonomous/disable"),
+
+  // ─── Cross-Platform Ingestion ───────────────────────────────────
+  ingestionAddSource: (data: { source_type: string; source_name: string; credentials?: Record<string, unknown> }) =>
+    postAPI<any>("/api/ingestion/sources", data),
+  ingestionListSources: () => fetchAPI<any[]>("/api/ingestion/sources"),
+  ingestionIngest: (sourceId: string) => postAPI<any>(`/api/ingestion/ingest/${sourceId}`),
+  ingestionIngestAll: () => postAPI<any>("/api/ingestion/ingest-all"),
+  ingestionAttribution: () => fetchAPI<any>("/api/ingestion/attribution"),
+
+  // ─── Deployment Pipeline ────────────────────────────────────────
+  deployModel: (data: {
+    model_id: string; model_name?: string; runtime?: string; provider?: string;
+    auto_scale?: boolean; min_replicas?: number; max_replicas?: number;
+  }) => postAPI<any>("/api/deploy", data),
+  listDeployments: () => fetchAPI<any[]>("/api/deployments"),
+  getDeployment: (did: string) => fetchAPI<any>(`/api/deployments/${did}`),
+  rollbackDeployment: (did: string) => postAPI<any>(`/api/deployments/${did}/rollback`),
+  scaleDeployment: (did: string, replicas: number) => postAPI<any>(`/api/deployments/${did}/scale?replicas=${replicas}`),
+
+  // ─── CRM Integration ────────────────────────────────────────────
+  crmAddConnection: (data: { crm_type: string; name: string; api_key?: string; api_url?: string }) =>
+    postAPI<any>("/api/crm/connections", data),
+  crmListConnections: () => fetchAPI<any[]>("/api/crm/connections"),
+  crmSync: (connectionId: string) => postAPI<any>(`/api/crm/sync/${connectionId}`),
+  crmSyncAll: () => postAPI<any>("/api/crm/sync-all"),
+  crmSyncLog: (connectionId: string) => fetchAPI<any[]>(`/api/crm/sync-log/${connectionId}`),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────

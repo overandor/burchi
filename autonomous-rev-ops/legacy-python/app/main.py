@@ -1819,6 +1819,175 @@ async def autonomous_disable():
     return {"ok": True, "mode": "OBSERVE", "message": "Autonomous mode disabled — switched to observation mode"}
 
 
+# ─── Cross-Platform Ingestion ────────────────────────────────────────
+# Unified data pipeline from GA, Meta Ads, Google Business, Yelp, RubRatings
+
+class SourceCreate(BaseModel):
+    source_type: str  # google_analytics, meta_ads, google_business, yelp, rubratings
+    source_name: str
+    credentials: dict = Field(default_factory=dict)
+
+
+@app.post("/api/ingestion/sources")
+async def ingestion_add_source(body: SourceCreate):
+    """Register a data source for ingestion."""
+    from . import cross_platform
+    return cross_platform.add_source(body.source_type, body.source_name, body.credentials)
+
+
+@app.get("/api/ingestion/sources")
+async def ingestion_list_sources():
+    """List all ingestion sources."""
+    from . import cross_platform
+    return cross_platform.list_sources()
+
+
+@app.post("/api/ingestion/ingest/{source_id}")
+async def ingestion_ingest(source_id: str):
+    """Ingest data from a specific source."""
+    from . import cross_platform
+    source = cross_platform.get_source(source_id)
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    source_type = source["source_type"]
+    if source_type == "google_analytics":
+        return cross_platform.ingest_google_analytics(source_id)
+    elif source_type == "meta_ads":
+        return cross_platform.ingest_meta_ads(source_id)
+    elif source_type == "google_business":
+        return cross_platform.ingest_google_business(source_id)
+    elif source_type == "yelp":
+        return cross_platform.ingest_yelp(source_id)
+    elif source_type == "rubratings":
+        return cross_platform.ingest_rubratings(source_id)
+    raise HTTPException(status_code=400, detail=f"Unknown source type: {source_type}")
+
+
+@app.post("/api/ingestion/ingest-all")
+async def ingestion_ingest_all():
+    """Ingest data from all configured sources."""
+    from . import cross_platform
+    return cross_platform.ingest_all()
+
+
+@app.get("/api/ingestion/attribution")
+async def ingestion_attribution():
+    """Get unified attribution across all sources."""
+    from . import cross_platform
+    return cross_platform.get_unified_attribution()
+
+
+# ─── Deployment Pipeline ─────────────────────────────────────────────
+# One-click GPU deploy: compile → provision → deploy → register
+
+class DeployRequest(BaseModel):
+    model_id: str
+    model_name: str = ""
+    runtime: str = "llama_cpp"
+    provider: str = "vercel"
+    auto_scale: bool = False
+    min_replicas: int = 1
+    max_replicas: int = 3
+
+
+@app.post("/api/deploy")
+async def deploy_model(body: DeployRequest):
+    """One-click deploy: compile model → provision → deploy endpoint → register."""
+    from . import deploy_pipeline
+    return await deploy_pipeline.deploy_model(
+        body.model_id, body.model_name, body.runtime, body.provider,
+        body.auto_scale, body.min_replicas, body.max_replicas,
+    )
+
+
+@app.get("/api/deployments")
+async def list_deployments():
+    """List all deployments."""
+    from . import deploy_pipeline
+    return deploy_pipeline.list_deployments()
+
+
+@app.get("/api/deployments/{did}")
+async def get_deployment(did: str):
+    """Get a deployment by ID."""
+    from . import deploy_pipeline
+    d = deploy_pipeline.get_deployment(did)
+    if not d:
+        raise HTTPException(status_code=404, detail="Deployment not found")
+    return d
+
+
+@app.post("/api/deployments/{did}/rollback")
+async def rollback_deployment(did: str):
+    """Rollback a deployment."""
+    from . import deploy_pipeline
+    return deploy_pipeline.rollback_deployment(did)
+
+
+@app.post("/api/deployments/{did}/scale")
+async def scale_deployment(did: str, replicas: int = 1):
+    """Scale a deployment to N replicas."""
+    from . import deploy_pipeline
+    return deploy_pipeline.scale_deployment(did, replicas)
+
+
+# ─── CRM Integration ─────────────────────────────────────────────────
+# Sync consent-verified contacts to HubSpot, Salesforce, Pipedrive
+
+class CRMConnectionCreate(BaseModel):
+    crm_type: str  # hubspot, salesforce, pipedrive
+    name: str
+    api_key: str = ""
+    api_url: str = ""
+
+
+@app.post("/api/crm/connections")
+async def crm_add_connection(body: CRMConnectionCreate):
+    """Add a CRM connection."""
+    from . import crm_integration
+    return crm_integration.add_crm_connection(body.crm_type, body.name, body.api_key, body.api_url)
+
+
+@app.get("/api/crm/connections")
+async def crm_list_connections():
+    """List all CRM connections."""
+    from . import crm_integration
+    return crm_integration.list_crm_connections()
+
+
+@app.post("/api/crm/sync/{connection_id}")
+async def crm_sync(connection_id: str):
+    """Sync consent-verified contacts to a CRM."""
+    from . import crm_integration
+    conn_data = crm_integration.get_crm_connection(connection_id)
+    if not conn_data:
+        raise HTTPException(status_code=404, detail="CRM connection not found")
+
+    crm_type = conn_data["crm_type"]
+    if crm_type == "hubspot":
+        return crm_integration.sync_to_hubspot(connection_id)
+    elif crm_type == "salesforce":
+        return crm_integration.sync_to_salesforce(connection_id)
+    elif crm_type == "pipedrive":
+        return crm_integration.sync_to_pipedrive(connection_id)
+    raise HTTPException(status_code=400, detail=f"Unknown CRM type: {crm_type}")
+
+
+@app.post("/api/crm/sync-all")
+async def crm_sync_all():
+    """Sync to all enabled CRM connections."""
+    from . import crm_integration
+    return crm_integration.sync_all()
+
+
+@app.get("/api/crm/sync-log/{connection_id}")
+async def crm_sync_log(connection_id: str):
+    """Get sync log for a CRM connection."""
+    from . import crm_integration
+    return crm_integration.get_sync_log(connection_id)
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -1859,6 +2028,11 @@ async def root():
             "fine_tuning": ["/api/finetune/datasets", "/api/finetune/jobs", "/api/finetune/ab-tests"],
             "autonomous": ["/api/autonomous/cycle", "/api/autonomous/status", "/api/autonomous/budget",
                            "/api/autonomous/enable", "/api/autonomous/disable"],
+            "cross_platform": ["/api/ingestion/sources", "/api/ingestion/ingest/{id}",
+                               "/api/ingestion/ingest-all", "/api/ingestion/attribution"],
+            "deployment": ["/api/deploy", "/api/deployments", "/api/deployments/{id}",
+                           "/api/deployments/{id}/rollback", "/api/deployments/{id}/scale"],
+            "crm": ["/api/crm/connections", "/api/crm/sync/{id}", "/api/crm/sync-all", "/api/crm/sync-log/{id}"],
         },
     }
 

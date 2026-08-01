@@ -5,6 +5,7 @@ import {
   TrendingUp, Brain, FileText, DollarSign, Image, Calendar, Server, Shield,
   Cpu, Network, Radio, Gauge, Eye, Star, Newspaper, Mic, TestTube, Target,
   Boxes, Wifi, Swords, Terminal, MailCheck, Mail, Ban, Wand2, Globe, Code, Radar,
+  Database, Rocket, Building2,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -107,6 +108,7 @@ const navSections: NavSection[] = [
       { href: "/consent/experiments", label: "Experiments", icon: FlaskConical },
       { href: "/consent/outcomes", label: "Outcomes", icon: TrendingUp },
       { href: "/consent/bridge", label: "RevOps Bridge", icon: Network },
+      { href: "/crm", label: "CRM Sync", icon: Building2 },
     ],
   },
   {
@@ -123,6 +125,7 @@ const navSections: NavSection[] = [
       { href: "/hf/clients", label: "Client CRM", icon: Users },
       { href: "/hf/kpis", label: "Hourly KPIs", icon: TrendingUp },
       { href: "/hf/intel", label: "Auto-Ingest Pipeline", icon: Radar },
+      { href: "/ingestion", label: "Cross-Platform Ingest", icon: Database },
     ],
   },
   {
@@ -145,6 +148,7 @@ const navSections: NavSection[] = [
       { href: "/compiler/playground", label: "Universal Playground", icon: Terminal },
       { href: "/compiler/api", label: "API Reference", icon: Code },
       { href: "/finetune", label: "Fine-Tuning Lab", icon: Brain },
+      { href: "/deployments", label: "Deployments", icon: Rocket },
     ],
   },
   {
