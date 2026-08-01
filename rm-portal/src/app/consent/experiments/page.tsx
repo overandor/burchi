@@ -27,32 +27,32 @@ export default function ExperimentsPage() {
         <StatCard icon={FlaskConical} value={data.filter((e) => e.status === "draft").length} label="Drafts" color="text-amber-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Experiments</CardTitle>
+          <CardTitle className="text-base text-foreground">Experiments</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Name</TableHead>
-                <TableHead className="text-zinc-500">Reward Metric</TableHead>
-                <TableHead className="text-zinc-500">Status</TableHead>
-                <TableHead className="text-zinc-500">Variants</TableHead>
-                <TableHead className="text-zinc-500">Created</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Name</TableHead>
+                <TableHead className="text-muted-foreground">Reward Metric</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Variants</TableHead>
+                <TableHead className="text-muted-foreground">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-zinc-500 py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No experiments yet. Experiments run only on contacts with active consent.
                   </TableCell>
                 </TableRow>
               ) : (
                 data.map((exp) => (
-                  <TableRow key={exp.id} className="border-zinc-800/50">
-                    <TableCell className="font-medium text-white">{exp.name}</TableCell>
+                  <TableRow key={exp.id} className="border-border/50">
+                    <TableCell className="font-medium text-foreground">{exp.name}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[9px]">{exp.reward_metric}</Badge>
                     </TableCell>
@@ -61,8 +61,8 @@ export default function ExperimentsPage() {
                         {exp.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-zinc-400 text-xs">{exp.variants?.length ?? 0}</TableCell>
-                    <TableCell className="text-zinc-500 text-xs">{new Date(exp.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{exp.variants?.length ?? 0}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{new Date(exp.created_at).toLocaleDateString()}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -71,9 +71,9 @@ export default function ExperimentsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Allowed Reward Metrics</CardTitle>
+          <CardTitle className="text-base text-foreground">Allowed Reward Metrics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           {[
@@ -84,7 +84,7 @@ export default function ExperimentsPage() {
             "reduced_support_time — Time saved in support resolution",
             "response_rate — Recipient responds (inbound engagement, not conversion)",
           ].map((m, i) => (
-            <div key={i} className="text-xs text-zinc-400 py-0.5">
+            <div key={i} className="text-xs text-muted-foreground py-0.5">
               <Badge variant="outline" className="mr-2 text-[9px] border-emerald-500/30 bg-emerald-500/10 text-emerald-400">allowed</Badge>
               {m}
             </div>

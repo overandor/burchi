@@ -21,7 +21,7 @@ const typeBadgeClass: Record<string, string> = {
 }
 
 function typeBadgeClassFor(type: string): string {
-  return typeBadgeClass[type.toLowerCase()] || "border-zinc-700 bg-zinc-800/50 text-zinc-400"
+  return typeBadgeClass[type.toLowerCase()] || "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 export default function ContentStudioPage() {
@@ -73,12 +73,12 @@ export default function ContentStudioPage() {
               onClick={() => setActiveFilter(filter)}
               className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                 isActive
-                  ? "border-zinc-600 bg-zinc-800 text-white"
-                  : "border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                  ? "border-muted-foreground/40 bg-accent text-foreground"
+                  : "border-border bg-card/50 text-muted-foreground hover:border-border/80 hover:text-foreground/90"
               }`}
             >
               {filter}
-              <span className="rounded-full bg-zinc-800 px-1.5 text-[10px] tabular-nums text-zinc-400">{count}</span>
+              <span className="rounded-full bg-accent px-1.5 text-[10px] tabular-nums text-muted-foreground">{count}</span>
             </button>
           )
         })}
@@ -86,10 +86,10 @@ export default function ContentStudioPage() {
 
       {/* Content Grid */}
       {filtered.length === 0 ? (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16">
-            <FileText className="h-8 w-8 text-zinc-600" />
-            <p className="text-sm text-zinc-500">No {activeFilter !== "All" ? activeFilter.toLowerCase() : ""} content yet</p>
+            <FileText className="h-8 w-8 text-muted-foreground/60" />
+            <p className="text-sm text-muted-foreground">No {activeFilter !== "All" ? activeFilter.toLowerCase() : ""} content yet</p>
             <Button onClick={handleGenerate} disabled={generating} variant="outline" size="sm" className="mt-2">
               <Plus className="h-4 w-4" />
               Generate content
@@ -99,23 +99,23 @@ export default function ContentStudioPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((item) => (
-            <Card key={item.id} className="border-zinc-800 bg-zinc-900/50">
+            <Card key={item.id} className="border-border bg-card/50">
               <CardHeader className="flex flex-row items-start justify-between gap-2 pb-3">
                 <div className="space-y-1">
                   <Badge variant="outline" className={`text-[9px] uppercase ${typeBadgeClassFor(item.type)}`}>
                     {item.type}
                   </Badge>
-                  <CardTitle className="text-sm text-white">{item.title}</CardTitle>
+                  <CardTitle className="text-sm text-foreground">{item.title}</CardTitle>
                 </div>
                 <Badge variant="outline" className={`text-[9px] ${statusBadgeClass(item.status)}`}>
                   {item.status}
                 </Badge>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="line-clamp-3 text-xs text-zinc-400">{item.body}</p>
-                <Separator className="bg-zinc-800" />
+                <p className="line-clamp-3 text-xs text-muted-foreground">{item.body}</p>
+                <Separator className="bg-accent" />
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-600 tabular-nums">
+                  <span className="text-[10px] text-muted-foreground/60 tabular-nums">
                     {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </span>
                   {item.performance_score > 0 && (

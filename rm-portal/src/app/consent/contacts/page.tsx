@@ -44,9 +44,9 @@ export default function ContactsPage() {
         <StatCard icon={Upload} value={showImport ? "Open" : "Closed"} label="Import Dialog" color="text-amber-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base text-white">Contact Roster</CardTitle>
+          <CardTitle className="text-base text-foreground">Contact Roster</CardTitle>
           <Button size="sm" variant="outline" onClick={() => setShowImport(!showImport)}>
             <Upload className="mr-2 h-3.5 w-3.5" />
             Import CSV
@@ -54,8 +54,8 @@ export default function ContactsPage() {
         </CardHeader>
         <CardContent>
           {showImport && (
-            <div className="mb-4 space-y-3 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">
+            <div className="mb-4 space-y-3 rounded-lg border border-border bg-sidebar p-4">
+              <p className="text-xs text-muted-foreground">
                 CSV format: email, name, consent_source, consent_scope, consented_at
                 <br />
                 consent_source: csv_import | crm_sync | signup_webhook | double_opt_in | manual_import
@@ -63,7 +63,7 @@ export default function ContactsPage() {
                 consent_scope: marketing | support | transactional | follow_up | reminders | all
               </p>
               <textarea
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-200 font-mono"
+                className="w-full rounded-lg border border-border bg-card p-3 text-sm text-foreground/90 font-mono"
                 rows={6}
                 placeholder="email,name,consent_source,consent_scope,consented_at&#10;jane@example.com,Jane,double_opt_in,marketing,2026-07-01T10:00:00Z"
                 value={importText}
@@ -76,7 +76,7 @@ export default function ContactsPage() {
           )}
 
           {importResult && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-sidebar px-4 py-3 text-xs">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
               <span className="text-emerald-400">Accepted: {importResult.accepted}</span>
               {importResult.rejected > 0 && (
@@ -92,39 +92,39 @@ export default function ContactsPage() {
 
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Email</TableHead>
-                <TableHead className="text-zinc-500">Name</TableHead>
-                <TableHead className="text-zinc-500">Consent</TableHead>
-                <TableHead className="text-zinc-500">Sent</TableHead>
-                <TableHead className="text-zinc-500">Created</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Email</TableHead>
+                <TableHead className="text-muted-foreground">Name</TableHead>
+                <TableHead className="text-muted-foreground">Consent</TableHead>
+                <TableHead className="text-muted-foreground">Sent</TableHead>
+                <TableHead className="text-muted-foreground">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-zinc-500 py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No contacts yet. Import opted-in contacts to get started.
                   </TableCell>
                 </TableRow>
               ) : (
                 data.map((c: any) => (
-                  <TableRow key={c.id} className="border-zinc-800/50">
-                    <TableCell className="font-medium text-white">{c.email}</TableCell>
-                    <TableCell className="text-zinc-300">{c.name ?? "—"}</TableCell>
+                  <TableRow key={c.id} className="border-border/50">
+                    <TableCell className="font-medium text-foreground">{c.email}</TableCell>
+                    <TableCell className="text-foreground/80">{c.name ?? "—"}</TableCell>
                     <TableCell>
                       {c.active_consent_count > 0 ? (
                         <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[9px]">
                           Active
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-500 text-[9px]">
+                        <Badge variant="outline" className="border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
                           None
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="tabular-nums text-zinc-400">{c.sent_count ?? 0}</TableCell>
-                    <TableCell className="text-zinc-500 text-xs">{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="tabular-nums text-muted-foreground">{c.sent_count ?? 0}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{new Date(c.created_at).toLocaleDateString()}</TableCell>
                   </TableRow>
                 ))
               )}

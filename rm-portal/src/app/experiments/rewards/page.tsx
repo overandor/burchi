@@ -70,52 +70,52 @@ export default function RewardsPage() {
 
       {/* summary stats */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <Trophy className="h-7 w-7 text-orange-400" />
           <div>
-            <div className="text-xl font-bold text-white tabular-nums">{rows.length}</div>
-            <div className="text-[10px] text-zinc-500">total variants</div>
+            <div className="text-xl font-bold text-foreground tabular-nums">{rows.length}</div>
+            <div className="text-[10px] text-muted-foreground">total variants</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <TrendingUp className="h-7 w-7 text-emerald-400" />
           <div>
             <div className="text-xl font-bold text-emerald-400 tabular-nums">{positiveCount}</div>
-            <div className="text-[10px] text-zinc-500">positive reward</div>
+            <div className="text-[10px] text-muted-foreground">positive reward</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <TrendingDown className="h-7 w-7 text-red-400" />
           <div>
             <div className="text-xl font-bold text-red-400 tabular-nums">{negativeCount}</div>
-            <div className="text-[10px] text-zinc-500">negative reward</div>
+            <div className="text-[10px] text-muted-foreground">negative reward</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <MousePointerClick className="h-7 w-7 text-blue-400" />
           <div>
             <div className={`text-xl font-bold tabular-nums ${rewardColor(avgReward)}`}>
               {avgReward.toFixed(2)}
             </div>
-            <div className="text-[10px] text-zinc-500">avg reward</div>
+            <div className="text-[10px] text-muted-foreground">avg reward</div>
           </div>
         </div>
       </div>
 
       {rows.length === 0 ? (
-        <Card className="border-zinc-800 bg-zinc-900/50">
-          <CardContent className="py-12 text-center text-sm text-zinc-500">
+        <Card className="border-border bg-card/50">
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
             No variants with reward data yet.
           </CardContent>
         </Card>
       ) : (
         <>
           {/* chart */}
-          <Card className="border-zinc-800 bg-zinc-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-emerald-400" />
-                <CardTitle className="text-sm text-white">Variant Rewards</CardTitle>
+                <CardTitle className="text-sm text-foreground">Variant Rewards</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -165,31 +165,31 @@ export default function RewardsPage() {
           </Card>
 
           {/* table */}
-          <Card className="border-zinc-800 bg-zinc-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
-              <CardTitle className="text-sm text-white">Variant Details</CardTitle>
+              <CardTitle className="text-sm text-foreground">Variant Details</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="border-zinc-800 hover:bg-transparent">
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Variant</TableHead>
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Experiment</TableHead>
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider text-right">Reward</TableHead>
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider text-right">Impressions</TableHead>
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider text-right">Clicks</TableHead>
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider text-right">CTR</TableHead>
-                    <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Status</TableHead>
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Variant</TableHead>
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Experiment</TableHead>
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider text-right">Reward</TableHead>
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider text-right">Impressions</TableHead>
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider text-right">Clicks</TableHead>
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider text-right">CTR</TableHead>
+                    <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rows.map((r) => (
-                    <TableRow key={r.variant.id} className="border-zinc-800/70">
+                    <TableRow key={r.variant.id} className="border-border/70">
                       <TableCell>
-                        <span className="text-sm font-medium text-white">{r.variant.label}</span>
+                        <span className="text-sm font-medium text-foreground">{r.variant.label}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs text-zinc-400">{r.experiment.name}</span>
+                        <span className="text-xs text-muted-foreground">{r.experiment.name}</span>
                       </TableCell>
                       <TableCell className="text-right">
                         <span
@@ -199,19 +199,19 @@ export default function RewardsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="flex items-center justify-end gap-1 text-xs text-zinc-300 tabular-nums">
-                          <Eye className="h-3 w-3 text-zinc-600" />
+                        <span className="flex items-center justify-end gap-1 text-xs text-foreground/80 tabular-nums">
+                          <Eye className="h-3 w-3 text-muted-foreground/60" />
                           {r.variant.impressions ?? 0}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="flex items-center justify-end gap-1 text-xs text-zinc-300 tabular-nums">
-                          <MousePointerClick className="h-3 w-3 text-zinc-600" />
+                        <span className="flex items-center justify-end gap-1 text-xs text-foreground/80 tabular-nums">
+                          <MousePointerClick className="h-3 w-3 text-muted-foreground/60" />
                           {r.variant.clicks ?? 0}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="text-xs text-zinc-300 tabular-nums">
+                        <span className="text-xs text-foreground/80 tabular-nums">
                           {r.ctr.toFixed(1)}%
                         </span>
                       </TableCell>

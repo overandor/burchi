@@ -42,31 +42,31 @@ export default function HfStrategiesPage() {
         <StatCard icon={Star} value={strategies.length} label="Loaded" color="text-amber-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Strategy Leaderboard</CardTitle>
+          <CardTitle className="text-base text-foreground">Strategy Leaderboard</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Strategy</TableHead>
-                <TableHead className="text-zinc-500">Total Reward</TableHead>
-                <TableHead className="text-zinc-500">Appearances</TableHead>
-                <TableHead className="text-zinc-500">Avg Reward</TableHead>
-                <TableHead className="text-zinc-500">AB Test Score</TableHead>
-                <TableHead className="text-zinc-500">AB Test Reasoning</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Strategy</TableHead>
+                <TableHead className="text-muted-foreground">Total Reward</TableHead>
+                <TableHead className="text-muted-foreground">Appearances</TableHead>
+                <TableHead className="text-muted-foreground">Avg Reward</TableHead>
+                <TableHead className="text-muted-foreground">AB Test Score</TableHead>
+                <TableHead className="text-muted-foreground">AB Test Reasoning</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {strategies.map((s: any, i: number) => (
-                <TableRow key={i} className="border-zinc-800/50">
-                  <TableCell className="font-medium text-white">{s.strategy ?? "—"}</TableCell>
+                <TableRow key={i} className="border-border/50">
+                  <TableCell className="font-medium text-foreground">{s.strategy ?? "—"}</TableCell>
                   <TableCell className={`tabular-nums font-bold ${rewardColor(s.total_reward ?? 0)}`}>
                     {(s.total_reward ?? 0).toFixed(3)}
                   </TableCell>
-                  <TableCell className="tabular-nums text-zinc-300">{s.appearances ?? 0}</TableCell>
-                  <TableCell className="tabular-nums text-zinc-400">
+                  <TableCell className="tabular-nums text-foreground/80">{s.appearances ?? 0}</TableCell>
+                  <TableCell className="tabular-nums text-muted-foreground">
                     {(s.avg_reward ?? 0).toFixed(3)}
                   </TableCell>
                   <TableCell>
@@ -74,7 +74,7 @@ export default function HfStrategiesPage() {
                       {(s.ab_test_score ?? 0).toFixed(2)}
                     </span>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate text-xs text-zinc-500">
+                  <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                     {s.ab_test_reasoning ?? "—"}
                   </TableCell>
                 </TableRow>

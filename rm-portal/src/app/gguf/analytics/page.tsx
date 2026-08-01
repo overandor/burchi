@@ -41,16 +41,16 @@ export default function GgufAnalyticsPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top models */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-blue-400" />
-              <CardTitle className="text-base text-white">Top Models</CardTitle>
+              <CardTitle className="text-base text-foreground">Top Models</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             {topModels.length === 0 ? (
-              <p className="py-8 text-center text-sm text-zinc-500">No model usage data yet.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">No model usage data yet.</p>
             ) : (
               <div className="space-y-3">
                 {topModels.map((m, i) => {
@@ -61,14 +61,14 @@ export default function GgufAnalyticsPage() {
                     <div key={m.model_id ?? i} className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-600 tabular-nums">#{i + 1}</span>
-                          <span className="font-medium text-zinc-200">
+                          <span className="text-muted-foreground/60 tabular-nums">#{i + 1}</span>
+                          <span className="font-medium text-foreground/90">
                             {m.name ?? m.model_id}
                           </span>
                         </div>
-                        <span className="text-zinc-400 tabular-nums">{count}</span>
+                        <span className="text-muted-foreground tabular-nums">{count}</span>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent">
                         <div
                           className="h-full rounded-full bg-blue-500/60"
                           style={{ width: `${pct}%` }}
@@ -83,33 +83,33 @@ export default function GgufAnalyticsPage() {
         </Card>
 
         {/* Recent events */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Gauge className="h-4 w-4 text-emerald-400" />
-              <CardTitle className="text-base text-white">Recent Events</CardTitle>
+              <CardTitle className="text-base text-foreground">Recent Events</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             {events.length === 0 ? (
-              <p className="py-8 text-center text-sm text-zinc-500">No events recorded.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">No events recorded.</p>
             ) : (
               <div className="space-y-2">
                 {events.slice(0, 12).map((ev, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-xs"
+                    className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2 text-xs"
                   >
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className="border-zinc-700 bg-zinc-800/50 text-[10px] text-zinc-300"
+                        className="border-border/80 bg-accent/30 text-[10px] text-foreground/80"
                       >
                         {ev.type ?? ev.event ?? "event"}
                       </Badge>
-                      <span className="text-zinc-400">{ev.message ?? ev.detail ?? ""}</span>
+                      <span className="text-muted-foreground">{ev.message ?? ev.detail ?? ""}</span>
                     </div>
-                    <span className="text-zinc-600">{ev.timestamp ?? ev.time ?? ""}</span>
+                    <span className="text-muted-foreground/60">{ev.timestamp ?? ev.time ?? ""}</span>
                   </div>
                 ))}
               </div>
@@ -120,9 +120,9 @@ export default function GgufAnalyticsPage() {
 
       {/* Node uptime */}
       {nodeUptime.length > 0 && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
-            <CardTitle className="text-base text-white">Node Uptime</CardTitle>
+            <CardTitle className="text-base text-foreground">Node Uptime</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -131,9 +131,9 @@ export default function GgufAnalyticsPage() {
                 return (
                   <div
                     key={n.node_id ?? n.name}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5"
+                    className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2.5"
                   >
-                    <span className="text-xs font-medium text-zinc-200">
+                    <span className="text-xs font-medium text-foreground/90">
                       {n.name ?? n.node_id}
                     </span>
                     <span

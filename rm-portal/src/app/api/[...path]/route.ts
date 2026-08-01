@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from "next/server"
 const BACKEND_URL =
   process.env.BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://127.0.0.1:8002"
+  "https://autonomous-rev-ops.vercel.app"
 
 async function proxy(request: NextRequest, path: string[]) {
   const search = request.nextUrl.search || ""

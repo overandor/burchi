@@ -14,14 +14,14 @@ function actionBadge(action: string) {
     return "border-blue-500/30 bg-blue-500/10 text-blue-400"
   if (action.includes("Responded") || action.includes("nurture"))
     return "border-purple-500/30 bg-purple-500/10 text-purple-400"
-  return "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+  return "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 function rankColor(rank: number) {
   if (rank === 1) return "text-amber-400"
-  if (rank === 2) return "text-zinc-300"
+  if (rank === 2) return "text-foreground/80"
   if (rank === 3) return "text-orange-400"
-  return "text-zinc-500"
+  return "text-muted-foreground"
 }
 
 export default function HighIntentPage() {
@@ -50,10 +50,10 @@ export default function HighIntentPage() {
       </div>
 
       {/* Priority queue table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Star className="h-5 w-5 text-orange-400" />
-          <CardTitle className="text-base text-white">Priority Queue</CardTitle>
+          <CardTitle className="text-base text-foreground">Priority Queue</CardTitle>
           <Badge variant="outline" className="ml-auto border-orange-500/30 bg-orange-500/10 text-orange-400 text-[9px]">
             <Flame className="mr-1 h-2.5 w-2.5" />
             {total} READY
@@ -61,31 +61,31 @@ export default function HighIntentPage() {
         </CardHeader>
         <CardContent>
           {visitors.length === 0 ? (
-            <div className="py-8 text-center text-sm text-zinc-500">No high-intent visitors detected</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">No high-intent visitors detected</div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="w-12 text-zinc-500">Rank</TableHead>
-                  <TableHead className="text-zinc-500">Username</TableHead>
-                  <TableHead className="text-zinc-500">Engagement</TableHead>
-                  <TableHead className="text-zinc-500">Visits</TableHead>
-                  <TableHead className="text-zinc-500">Lifecycle</TableHead>
-                  <TableHead className="text-zinc-500">Inferred Intent</TableHead>
-                  <TableHead className="text-zinc-500">Next Action</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="w-12 text-muted-foreground">Rank</TableHead>
+                  <TableHead className="text-muted-foreground">Username</TableHead>
+                  <TableHead className="text-muted-foreground">Engagement</TableHead>
+                  <TableHead className="text-muted-foreground">Visits</TableHead>
+                  <TableHead className="text-muted-foreground">Lifecycle</TableHead>
+                  <TableHead className="text-muted-foreground">Inferred Intent</TableHead>
+                  <TableHead className="text-muted-foreground">Next Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {visitors.map((v, i) => {
                   const rank = i + 1
                   return (
-                    <TableRow key={v.username} className="border-zinc-800/50">
+                    <TableRow key={v.username} className="border-border/50">
                       <TableCell>
                         <span className={`text-sm font-bold tabular-nums ${rankColor(rank)}`}>
                           {rank <= 3 ? `#${rank}` : rank}
                         </span>
                       </TableCell>
-                      <TableCell className="font-medium text-white">
+                      <TableCell className="font-medium text-foreground">
                         <div className="flex items-center gap-2">
                           {v.is_repeat && <Users className="h-3 w-3 text-purple-400" />}
                           {v.username}
@@ -96,25 +96,25 @@ export default function HighIntentPage() {
                           <span className={`text-sm font-bold ${scoreColor(v.engagement_score)}`}>
                             {(v.engagement_score * 100).toFixed(0)}
                           </span>
-                          <div className="h-1.5 w-16 rounded-full bg-zinc-800">
+                          <div className="h-1.5 w-16 rounded-full bg-accent">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-zinc-600 to-orange-400"
+                              className="h-full rounded-full bg-gradient-to-r from-muted-foreground to-orange-400"
                               style={{ width: `${v.engagement_score * 100}%` }}
                             />
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="tabular-nums text-zinc-300">{v.visit_count}</TableCell>
+                      <TableCell className="tabular-nums text-foreground/80">{v.visit_count}</TableCell>
                       <TableCell>
                         {v.lifecycle_stage ? (
-                          <Badge variant="outline" className="text-[9px] border-zinc-700 bg-zinc-800/50 text-zinc-300">
+                          <Badge variant="outline" className="text-[9px] border-border/80 bg-accent/30 text-foreground/80">
                             {v.lifecycle_stage}
                           </Badge>
                         ) : (
-                          <span className="text-zinc-600 text-xs">—</span>
+                          <span className="text-muted-foreground/60 text-xs">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-400">
+                      <TableCell className="text-xs text-muted-foreground">
                         {v.inferred_intent || "—"}
                       </TableCell>
                       <TableCell>

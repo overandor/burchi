@@ -20,7 +20,7 @@ const actionTypeColors: Record<string, string> = {
   continue: "border-blue-500/30 bg-blue-500/10 text-blue-400",
   rotate: "border-amber-500/30 bg-amber-500/10 text-amber-400",
   eliminate: "border-red-500/30 bg-red-500/10 text-red-400",
-  observe: "border-zinc-700 bg-zinc-800/50 text-zinc-400",
+  observe: "border-border/80 bg-accent/30 text-muted-foreground",
 }
 
 const modeIcons: Record<string, React.ElementType> = {
@@ -43,29 +43,29 @@ export default function DecisionsPage() {
         subtitle="AI decision log — actions taken across experiments and variants"
       />
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Brain className="h-5 w-5 text-orange-400" />
-          <CardTitle className="text-base text-white">Decision Log</CardTitle>
-          <Badge variant="outline" className="ml-auto border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]">
+          <CardTitle className="text-base text-foreground">Decision Log</CardTitle>
+          <Badge variant="outline" className="ml-auto border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
             {decisions.length} total
           </Badge>
         </CardHeader>
         <CardContent>
           {decisions.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No decisions recorded yet
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Timestamp</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Action</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Rationale</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider w-32">Confidence</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Mode</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Status</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Timestamp</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Action</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Rationale</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider w-32">Confidence</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Mode</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -73,8 +73,8 @@ export default function DecisionsPage() {
                   const actionColor = actionTypeColors[d.action_type] || actionTypeColors.observe
                   const ModeIcon = modeIcons[d.mode] || Clock
                   return (
-                    <TableRow key={d.id} className="border-zinc-800/50 hover:bg-zinc-800/30">
-                      <TableCell className="text-[10px] text-zinc-500 tabular-nums whitespace-nowrap">
+                    <TableRow key={d.id} className="border-border/50 hover:bg-accent/30">
+                      <TableCell className="text-[10px] text-muted-foreground tabular-nums whitespace-nowrap">
                         {new Date(d.created_at).toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -88,23 +88,23 @@ export default function DecisionsPage() {
                           {d.action_type.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-300 max-w-md">
+                      <TableCell className="text-xs text-foreground/80 max-w-md">
                         <span className="line-clamp-2">{d.rationale}</span>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-zinc-500 tabular-nums">
+                            <span className="text-[10px] text-muted-foreground tabular-nums">
                               {(d.confidence * 100).toFixed(0)}%
                             </span>
                           </div>
-                          <Progress value={d.confidence * 100} className="h-1.5 bg-zinc-800" />
+                          <Progress value={d.confidence * 100} className="h-1.5 bg-accent" />
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
-                          <ModeIcon className="h-3 w-3 text-zinc-500" />
-                          <span className="text-[10px] text-zinc-400">{d.mode}</span>
+                          <ModeIcon className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground">{d.mode}</span>
                         </div>
                       </TableCell>
                       <TableCell>

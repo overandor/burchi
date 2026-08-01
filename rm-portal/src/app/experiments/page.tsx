@@ -25,12 +25,12 @@ export default function ExperimentsPage() {
         <div key={exp.id} className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-white">{exp.name}</h2>
+              <h2 className="text-lg font-bold text-foreground">{exp.name}</h2>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline" className={statusBadgeClass(exp.status)}>
                   {exp.status.toUpperCase()}
                 </Badge>
-                <span className="text-[10px] text-zinc-500">
+                <span className="text-[10px] text-muted-foreground">
                   {exp.observations} observations · {(exp.confidence * 100).toFixed(0)}% confidence
                 </span>
               </div>
@@ -42,18 +42,18 @@ export default function ExperimentsPage() {
               const isWinner = v.status === "leader" || v.status === "deployed"
               const hasData = v.impressions > 0
               return (
-                <Card key={v.id} className={`border-zinc-800 bg-zinc-900/50 ${isWinner ? "ring-1 ring-emerald-500/30" : ""}`}>
+                <Card key={v.id} className={`border-border bg-card/50 ${isWinner ? "ring-1 ring-emerald-500/30" : ""}`}>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {isWinner ? <Crown className="h-4 w-4 text-emerald-400" /> : <FlaskConical className="h-4 w-4 text-zinc-500" />}
-                      <CardTitle className="text-sm text-white">{v.label}</CardTitle>
+                      {isWinner ? <Crown className="h-4 w-4 text-emerald-400" /> : <FlaskConical className="h-4 w-4 text-muted-foreground" />}
+                      <CardTitle className="text-sm text-foreground">{v.label}</CardTitle>
                     </div>
                     <Badge variant="outline" className={statusBadgeClass(v.status)}>
                       {v.status.toUpperCase()}
                     </Badge>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-xs leading-relaxed text-zinc-400 italic border-l-2 border-zinc-800 pl-3">
+                    <p className="text-xs leading-relaxed text-muted-foreground italic border-l-2 border-border pl-3">
                       &ldquo;{v.content}&rdquo;
                     </p>
 
@@ -66,35 +66,35 @@ export default function ExperimentsPage() {
                       <>
                         <div className="grid grid-cols-4 gap-3">
                           <div className="flex flex-col items-center">
-                            <Eye className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                            <span className="text-sm font-bold text-white tabular-nums">{v.impressions}</span>
-                            <span className="text-[9px] text-zinc-600">impr</span>
+                            <Eye className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                            <span className="text-sm font-bold text-foreground tabular-nums">{v.impressions}</span>
+                            <span className="text-[9px] text-muted-foreground/60">impr</span>
                           </div>
                           <div className="flex flex-col items-center">
-                            <MousePointerClick className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                            <span className="text-sm font-bold text-white tabular-nums">{v.clicks}</span>
-                            <span className="text-[9px] text-zinc-600">clicks</span>
+                            <MousePointerClick className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                            <span className="text-sm font-bold text-foreground tabular-nums">{v.clicks}</span>
+                            <span className="text-[9px] text-muted-foreground/60">clicks</span>
                           </div>
                           <div className="flex flex-col items-center">
-                            <MessageSquare className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                            <span className="text-sm font-bold text-white tabular-nums">{v.contacts}</span>
-                            <span className="text-[9px] text-zinc-600">contacts</span>
+                            <MessageSquare className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                            <span className="text-sm font-bold text-foreground tabular-nums">{v.contacts}</span>
+                            <span className="text-[9px] text-muted-foreground/60">contacts</span>
                           </div>
                           <div className="flex flex-col items-center">
                             <Trophy className="h-3.5 w-3.5 text-orange-400 mb-1" />
                             <span className={`text-sm font-bold tabular-nums ${rewardColor(v.reward)}`}>
                               {v.reward.toFixed(2)}
                             </span>
-                            <span className="text-[9px] text-zinc-600">reward</span>
+                            <span className="text-[9px] text-muted-foreground/60">reward</span>
                           </div>
                         </div>
 
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] uppercase tracking-wider text-zinc-500">Confidence</span>
-                            <span className="text-xs font-medium text-zinc-300">{(exp.confidence * 100).toFixed(0)}%</span>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</span>
+                            <span className="text-xs font-medium text-foreground/80">{(exp.confidence * 100).toFixed(0)}%</span>
                           </div>
-                          <Progress value={exp.confidence * 100} className="h-1.5 bg-zinc-800" />
+                          <Progress value={exp.confidence * 100} className="h-1.5 bg-accent" />
                         </div>
 
                         <div className="flex items-center gap-2 text-[10px]">

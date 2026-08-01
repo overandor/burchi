@@ -58,10 +58,10 @@ export default function AttributionPage() {
       />
 
       {/* Real-time KPI board */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Activity className="h-5 w-5 text-emerald-400" />
-          <CardTitle className="text-base text-white">Real-Time KPI Board</CardTitle>
+          <CardTitle className="text-base text-foreground">Real-Time KPI Board</CardTitle>
           <Badge
             variant="outline"
             className="ml-auto border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[9px]"
@@ -98,33 +98,33 @@ export default function AttributionPage() {
             />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">CTR</span>
-              <p className="text-lg font-bold text-white">{fmtPct(kpi?.ctr)}</p>
+            <div className="rounded-lg border border-border bg-card/50 p-3">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">CTR</span>
+              <p className="text-lg font-bold text-foreground">{fmtPct(kpi?.ctr)}</p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Conv. Rate</span>
-              <p className="text-lg font-bold text-white">{fmtPct(kpi?.conversion_rate)}</p>
+            <div className="rounded-lg border border-border bg-card/50 p-3">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Conv. Rate</span>
+              <p className="text-lg font-bold text-foreground">{fmtPct(kpi?.conversion_rate)}</p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Revenue</span>
+            <div className="rounded-lg border border-border bg-card/50 p-3">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Revenue</span>
               <p className="text-lg font-bold text-emerald-400">
                 {kpi?.revenue !== undefined ? `$${kpi.revenue.toLocaleString()}` : "—"}
               </p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Visitors</span>
-              <p className="text-lg font-bold text-white">{fmt(kpi?.visitors)}</p>
+            <div className="rounded-lg border border-border bg-card/50 p-3">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Visitors</span>
+              <p className="text-lg font-bold text-foreground">{fmt(kpi?.visitors)}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* AI Impact — experiment variants by reward */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <FlaskConical className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">AI Impact — Variants by Reward</CardTitle>
+          <CardTitle className="text-base text-foreground">AI Impact — Variants by Reward</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {sortedVariants.length > 0 ? (
@@ -133,8 +133,8 @@ export default function AttributionPage() {
               return (
                 <div
                   key={v.id}
-                  className={`rounded-lg border bg-zinc-900/30 px-3 py-3 ${
-                    isLeader ? "border-emerald-500/30 ring-1 ring-emerald-500/20" : "border-zinc-800/60"
+                  className={`rounded-lg border bg-card/30 px-3 py-3 ${
+                    isLeader ? "border-emerald-500/30 ring-1 ring-emerald-500/20" : "border-border/60"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -142,9 +142,9 @@ export default function AttributionPage() {
                       {isLeader ? (
                         <Crown className="h-4 w-4 text-emerald-400" />
                       ) : (
-                        <Award className="h-4 w-4 text-zinc-500" />
+                        <Award className="h-4 w-4 text-muted-foreground" />
                       )}
-                      <span className="text-sm font-medium text-white">{v.label}</span>
+                      <span className="text-sm font-medium text-foreground">{v.label}</span>
                       <Badge
                         variant="outline"
                         className={`text-[9px] ${statusBadgeClass(v.status)}`}
@@ -156,8 +156,8 @@ export default function AttributionPage() {
                       {v.reward.toFixed(3)}
                     </span>
                   </div>
-                  <p className="mt-1.5 line-clamp-2 text-[11px] text-zinc-500">{v.content}</p>
-                  <div className="mt-2 flex items-center gap-4 text-[10px] text-zinc-500">
+                  <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">{v.content}</p>
+                  <div className="mt-2 flex items-center gap-4 text-[10px] text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Eye className="h-3 w-3" /> {fmt(v.impressions)}
                     </span>
@@ -174,14 +174,14 @@ export default function AttributionPage() {
                   <div className="mt-2">
                     <Progress
                       value={maxImpressions > 0 ? (v.impressions / maxImpressions) * 100 : 0}
-                      className="h-1 bg-zinc-800"
+                      className="h-1 bg-accent"
                     />
                   </div>
                 </div>
               )
             })
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No experiment variants available
             </div>
           )}
@@ -189,24 +189,24 @@ export default function AttributionPage() {
       </Card>
 
       {/* Attribution breakdown table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <TrendingUp className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Attribution Breakdown by Variant</CardTitle>
+          <CardTitle className="text-base text-foreground">Attribution Breakdown by Variant</CardTitle>
         </CardHeader>
         <CardContent>
           {allVariants.length > 0 ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-400">Variant</TableHead>
-                  <TableHead className="text-zinc-400">Status</TableHead>
-                  <TableHead className="text-right text-zinc-400">Impressions</TableHead>
-                  <TableHead className="text-right text-zinc-400">Clicks</TableHead>
-                  <TableHead className="text-right text-zinc-400">Contacts</TableHead>
-                  <TableHead className="text-right text-zinc-400">Conversions</TableHead>
-                  <TableHead className="text-right text-zinc-400">CTR</TableHead>
-                  <TableHead className="text-right text-zinc-400">Reward</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Variant</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Impressions</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Clicks</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Contacts</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Conversions</TableHead>
+                  <TableHead className="text-right text-muted-foreground">CTR</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Reward</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,8 +214,8 @@ export default function AttributionPage() {
                   const ctr =
                     v.impressions > 0 ? (v.clicks / v.impressions) * 100 : null
                   return (
-                    <TableRow key={v.id} className="border-zinc-800/60">
-                      <TableCell className="text-zinc-300">{v.label}</TableCell>
+                    <TableRow key={v.id} className="border-border/60">
+                      <TableCell className="text-foreground/80">{v.label}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
@@ -224,19 +224,19 @@ export default function AttributionPage() {
                           {v.status.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right text-white tabular-nums">
+                      <TableCell className="text-right text-foreground tabular-nums">
                         {fmt(v.impressions)}
                       </TableCell>
-                      <TableCell className="text-right text-white tabular-nums">
+                      <TableCell className="text-right text-foreground tabular-nums">
                         {fmt(v.clicks)}
                       </TableCell>
-                      <TableCell className="text-right text-white tabular-nums">
+                      <TableCell className="text-right text-foreground tabular-nums">
                         {fmt(v.contacts)}
                       </TableCell>
-                      <TableCell className="text-right text-white tabular-nums">
+                      <TableCell className="text-right text-foreground tabular-nums">
                         {fmt(v.conversions)}
                       </TableCell>
-                      <TableCell className="text-right text-zinc-300 tabular-nums">
+                      <TableCell className="text-right text-foreground/80 tabular-nums">
                         {fmtPct(ctr)}
                       </TableCell>
                       <TableCell
@@ -250,7 +250,7 @@ export default function AttributionPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No attribution data available
             </div>
           )}
@@ -258,24 +258,24 @@ export default function AttributionPage() {
       </Card>
 
       {/* Experiment context */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <FlaskConical className="h-5 w-5 text-amber-400" />
-          <CardTitle className="text-base text-white">Experiments</CardTitle>
+          <CardTitle className="text-base text-foreground">Experiments</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {exps.length > 0 ? (
             exps.map((e) => (
               <div
                 key={e.id}
-                className="flex items-center justify-between rounded-lg border border-zinc-800/60 bg-zinc-900/30 px-3 py-2"
+                className="flex items-center justify-between rounded-lg border border-border/60 bg-card/30 px-3 py-2"
               >
                 <div className="flex items-center gap-2">
-                  <FlaskConical className="h-3.5 w-3.5 text-zinc-500" />
-                  <span className="text-xs text-zinc-300">{e.name}</span>
+                  <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs text-foreground/80">{e.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-zinc-500">{e.variants?.length ?? 0} variants</span>
+                  <span className="text-[10px] text-muted-foreground">{e.variants?.length ?? 0} variants</span>
                   <Badge
                     variant="outline"
                     className={`text-[9px] ${statusBadgeClass(e.status)}`}
@@ -286,7 +286,7 @@ export default function AttributionPage() {
               </div>
             ))
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No experiments available
             </div>
           )}

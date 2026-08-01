@@ -20,7 +20,7 @@ const typeBadgeClass: Record<string, string> = {
 }
 
 function typeBadgeClassFor(type: string): string {
-  return typeBadgeClass[type.toLowerCase()] || "border-zinc-700 bg-zinc-800/50 text-zinc-400"
+  return typeBadgeClass[type.toLowerCase()] || "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 const barColors: Record<string, string> = {
@@ -82,25 +82,25 @@ export default function ContentPerformancePage() {
 
       {/* Summary stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <TrendingUp className="h-6 w-6 text-emerald-400" />
           <div>
-            <div className="text-xl font-bold text-white">{(overallAvg * 100).toFixed(0)}</div>
-            <div className="text-[10px] text-zinc-500">Avg Performance</div>
+            <div className="text-xl font-bold text-foreground">{(overallAvg * 100).toFixed(0)}</div>
+            <div className="text-[10px] text-muted-foreground">Avg Performance</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <BarChart3 className="h-6 w-6 text-blue-400" />
           <div>
-            <div className="text-xl font-bold text-white">{scoredContent.length}</div>
-            <div className="text-[10px] text-zinc-500">Scored Items</div>
+            <div className="text-xl font-bold text-foreground">{scoredContent.length}</div>
+            <div className="text-[10px] text-muted-foreground">Scored Items</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <Target className="h-6 w-6 text-orange-400" />
           <div>
-            <div className="truncate text-sm font-bold text-white">{topPerformer?.title || "—"}</div>
-            <div className="text-[10px] text-zinc-500">
+            <div className="truncate text-sm font-bold text-foreground">{topPerformer?.title || "—"}</div>
+            <div className="text-[10px] text-muted-foreground">
               {topPerformer ? `Top score: ${(topPerformer.performance_score * 100).toFixed(0)}` : "No scored content"}
             </div>
           </div>
@@ -109,10 +109,10 @@ export default function ContentPerformancePage() {
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <BarChart3 className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">Performance by Content Type</CardTitle>
+            <CardTitle className="text-base text-foreground">Performance by Content Type</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -134,43 +134,43 @@ export default function ContentPerformancePage() {
       )}
 
       {/* Table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <TrendingUp className="h-5 w-5 text-emerald-400" />
-          <CardTitle className="text-base text-white">Content & Experiments</CardTitle>
+          <CardTitle className="text-base text-foreground">Content & Experiments</CardTitle>
         </CardHeader>
         <CardContent>
           {allContent.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-zinc-500">No content available</p>
+              <p className="text-sm text-muted-foreground">No content available</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-500">Title</TableHead>
-                  <TableHead className="text-zinc-500">Type</TableHead>
-                  <TableHead className="text-zinc-500">Experiment</TableHead>
-                  <TableHead className="text-zinc-500">Score</TableHead>
-                  <TableHead className="text-zinc-500">Status</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Title</TableHead>
+                  <TableHead className="text-muted-foreground">Type</TableHead>
+                  <TableHead className="text-muted-foreground">Experiment</TableHead>
+                  <TableHead className="text-muted-foreground">Score</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {allContent.map((item) => {
                   const experiment = item.experiment_id ? experimentMap.get(item.experiment_id) : null
                   return (
-                    <TableRow key={item.id} className="border-zinc-800/50 hover:bg-zinc-800/20">
-                      <TableCell className="max-w-[200px] truncate text-xs text-zinc-200">{item.title}</TableCell>
+                    <TableRow key={item.id} className="border-border/50 hover:bg-accent/20">
+                      <TableCell className="max-w-[200px] truncate text-xs text-foreground/90">{item.title}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={`text-[9px] uppercase ${typeBadgeClassFor(item.type)}`}>
                           {item.type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-400">
+                      <TableCell className="text-xs text-muted-foreground">
                         {experiment ? (
                           <span className="truncate">{experiment.name}</span>
                         ) : (
-                          <span className="text-zinc-600">—</span>
+                          <span className="text-muted-foreground/60">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -179,10 +179,10 @@ export default function ContentPerformancePage() {
                             <span className={`text-xs font-bold tabular-nums ${scoreColor(item.performance_score)}`}>
                               {(item.performance_score * 100).toFixed(0)}
                             </span>
-                            <Progress value={item.performance_score * 100} className="h-1.5 w-16 bg-zinc-800" />
+                            <Progress value={item.performance_score * 100} className="h-1.5 w-16 bg-accent" />
                           </div>
                         ) : (
-                          <span className="text-xs text-zinc-600">—</span>
+                          <span className="text-xs text-muted-foreground/60">—</span>
                         )}
                       </TableCell>
                       <TableCell>

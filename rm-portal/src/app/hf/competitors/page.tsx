@@ -38,37 +38,37 @@ export default function HfCompetitorsPage() {
         <StatCard icon={ExternalLink} value={competitors.filter((c) => c.profile_url).length} label="With Profile URL" color="text-emerald-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Competitor Roster</CardTitle>
+          <CardTitle className="text-base text-foreground">Competitor Roster</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Rank</TableHead>
-                <TableHead className="text-zinc-500">Username</TableHead>
-                <TableHead className="text-zinc-500">Bio Snippet</TableHead>
-                <TableHead className="text-zinc-500">Profile</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Rank</TableHead>
+                <TableHead className="text-muted-foreground">Username</TableHead>
+                <TableHead className="text-muted-foreground">Bio Snippet</TableHead>
+                <TableHead className="text-muted-foreground">Profile</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {competitors.map((c, i) => (
-                <TableRow key={`${c.username}-${i}`} className="border-zinc-800/50">
+                <TableRow key={`${c.username}-${i}`} className="border-border/50">
                   <TableCell className="tabular-nums">
                     <Badge
                       variant="outline"
                       className={
                         c.rank <= 3
                           ? "border-amber-500/30 bg-amber-500/10 text-amber-400 text-[9px]"
-                          : "border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]"
+                          : "border-border/80 bg-accent/30 text-muted-foreground text-[9px]"
                       }
                     >
                       #{c.rank}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium text-white">{c.username ?? "—"}</TableCell>
-                  <TableCell className="max-w-md truncate text-xs text-zinc-400">
+                  <TableCell className="font-medium text-foreground">{c.username ?? "—"}</TableCell>
+                  <TableCell className="max-w-md truncate text-xs text-muted-foreground">
                     {c.bio ? c.bio.slice(0, 120) : "—"}
                   </TableCell>
                   <TableCell>
@@ -77,12 +77,12 @@ export default function HfCompetitorsPage() {
                         href={c.profile_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs text-blue-400 transition-colors hover:bg-zinc-800 hover:text-blue-300"
+                        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs text-blue-400 transition-colors hover:bg-accent hover:text-blue-300"
                       >
                         <ExternalLink className="h-3 w-3" /> View
                       </a>
                     ) : (
-                      <span className="text-zinc-600 text-xs">—</span>
+                      <span className="text-muted-foreground/60 text-xs">—</span>
                     )}
                   </TableCell>
                 </TableRow>

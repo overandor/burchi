@@ -80,31 +80,31 @@ export default function GgufRacingPage() {
       </div>
 
       {/* Race control */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Swords className="h-4 w-4 text-amber-400" />
-            <CardTitle className="text-base text-white">Start a Race</CardTitle>
+            <CardTitle className="text-base text-foreground">Start a Race</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider text-zinc-500">Prompt</label>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Prompt</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={3}
-              className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+              className="w-full resize-none rounded-lg border border-border bg-accent/50 p-3 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
               placeholder="Enter a prompt for the race..."
             />
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider text-zinc-500">Model</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Model</label>
               <select
                 value={modelId}
                 onChange={(e) => setModelId(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none focus:border-zinc-700"
+                className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none focus:border-border/80"
               >
                 {modelList.length === 0 ? (
                   <option value="qwen2-0.5b-q3k">qwen2-0.5b-q3k (default)</option>
@@ -118,7 +118,7 @@ export default function GgufRacingPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider text-zinc-500">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Number of Workers
               </label>
               <input
@@ -127,7 +127,7 @@ export default function GgufRacingPage() {
                 max={16}
                 value={numWorkers}
                 onChange={(e) => setNumWorkers(Number(e.target.value) || 2)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none focus:border-zinc-700"
+                className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none focus:border-border/80"
               />
             </div>
           </div>
@@ -143,12 +143,12 @@ export default function GgufRacingPage() {
 
       {/* Race result */}
       {result && (
-        <Card className="border-zinc-800 bg-zinc-900/50 ring-2 ring-amber-500/40 shadow-[0_0_20px_-5px_rgba(245,158,11,0.4)]">
+        <Card className="border-border bg-card/50 ring-2 ring-amber-500/40 shadow-[0_0_20px_-5px_rgba(245,158,11,0.4)]">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Crown className="h-4 w-4 text-amber-400" />
-                <CardTitle className="text-base text-white">Race Result</CardTitle>
+                <CardTitle className="text-base text-foreground">Race Result</CardTitle>
               </div>
               <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-400">
                 {result.race_id ?? "—"}
@@ -159,7 +159,7 @@ export default function GgufRacingPage() {
             <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
               <Crown className="h-5 w-5 text-amber-400" />
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Winner</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Winner</span>
                 <div className="text-sm font-bold text-amber-400">
                   {result.winner?.node_id ?? result.winner ?? "—"}
                 </div>
@@ -167,23 +167,23 @@ export default function GgufRacingPage() {
             </div>
             {Array.isArray(result.results) && result.results.length > 0 && (
               <div className="space-y-2">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
                   worker results
                 </span>
                 {result.results.map((r: any, i: number) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 text-xs"
+                    className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2.5 text-xs"
                   >
                     <div className="flex items-center gap-2">
                       {r.node_id === (result.winner?.node_id ?? result.winner) ? (
                         <Crown className="h-3.5 w-3.5 text-amber-400" />
                       ) : (
-                        <span className="text-zinc-600 tabular-nums">#{i + 1}</span>
+                        <span className="text-muted-foreground/60 tabular-nums">#{i + 1}</span>
                       )}
-                      <span className="font-medium text-zinc-200">{r.node_id ?? "—"}</span>
+                      <span className="font-medium text-foreground/90">{r.node_id ?? "—"}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-zinc-500">
+                    <div className="flex items-center gap-4 text-muted-foreground">
                       <span className="text-emerald-400">
                         {typeof r.tokens_per_second === "number"
                           ? `${r.tokens_per_second.toFixed(1)} tok/s`
@@ -202,9 +202,9 @@ export default function GgufRacingPage() {
 
       {/* Worker stats */}
       {workerStats.length > 0 && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
-            <CardTitle className="text-base text-white">Worker Leaderboard</CardTitle>
+            <CardTitle className="text-base text-foreground">Worker Leaderboard</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -213,28 +213,28 @@ export default function GgufRacingPage() {
                 .map((w, i) => (
                   <div
                     key={w.node_id ?? i}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5"
+                    className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2.5"
                   >
                     <div className="flex items-center gap-2">
                       {i === 0 ? (
                         <Crown className="h-3.5 w-3.5 text-amber-400" />
                       ) : (
-                        <span className="text-zinc-600 tabular-nums">#{i + 1}</span>
+                        <span className="text-muted-foreground/60 tabular-nums">#{i + 1}</span>
                       )}
-                      <span className="text-xs font-medium text-zinc-200">
+                      <span className="text-xs font-medium text-foreground/90">
                         {w.node_id ?? w.name ?? "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-xs">
                       <div className="text-right">
                         <span className="font-bold text-amber-400 tabular-nums">{w.wins ?? 0}</span>
-                        <span className="ml-1 text-zinc-600">wins</span>
+                        <span className="ml-1 text-muted-foreground/60">wins</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-bold text-white tabular-nums">
+                        <span className="font-bold text-foreground tabular-nums">
                           {w.races ?? 0}
                         </span>
-                        <span className="ml-1 text-zinc-600">races</span>
+                        <span className="ml-1 text-muted-foreground/60">races</span>
                       </div>
                       <div className="text-right">
                         <span className="font-bold text-emerald-400 tabular-nums">
@@ -242,7 +242,7 @@ export default function GgufRacingPage() {
                             ? w.avg_tokens_per_second.toFixed(1)
                             : "—"}
                         </span>
-                        <span className="ml-1 text-zinc-600">avg tok/s</span>
+                        <span className="ml-1 text-muted-foreground/60">avg tok/s</span>
                       </div>
                     </div>
                   </div>
@@ -253,21 +253,21 @@ export default function GgufRacingPage() {
       )}
 
       {/* Recent races */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Recent Races</CardTitle>
+          <CardTitle className="text-base text-foreground">Recent Races</CardTitle>
         </CardHeader>
         <CardContent>
           {racesLoading ? (
             <LoadingState label="Loading races..." />
           ) : raceList.length === 0 ? (
-            <p className="py-8 text-center text-sm text-zinc-500">No races have been run yet.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">No races have been run yet.</p>
           ) : (
             <div className="space-y-2">
               {raceList.slice(0, 10).map((r) => (
                 <div
                   key={r.race_id}
-                  className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs"
+                  className="rounded-lg border border-border bg-card/40 p-3 text-xs"
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
@@ -275,16 +275,16 @@ export default function GgufRacingPage() {
                       <span className="font-bold text-amber-400">
                         {r.winner?.node_id ?? r.winner ?? "—"}
                       </span>
-                      <span className="text-zinc-600">won</span>
+                      <span className="text-muted-foreground/60">won</span>
                     </div>
-                    <span className="text-zinc-600">{r.timestamp ?? ""}</span>
+                    <span className="text-muted-foreground/60">{r.timestamp ?? ""}</span>
                   </div>
-                  <p className="line-clamp-1 text-zinc-400">
-                    <span className="text-zinc-600">prompt:</span> {r.prompt}
+                  <p className="line-clamp-1 text-muted-foreground">
+                    <span className="text-muted-foreground/60">prompt:</span> {r.prompt}
                   </p>
                   <div className="mt-1.5 flex items-center gap-2">
-                    <Users className="h-3 w-3 text-zinc-600" />
-                    <span className="text-zinc-500">
+                    <Users className="h-3 w-3 text-muted-foreground/60" />
+                    <span className="text-muted-foreground">
                       {Array.isArray(r.workers) ? r.workers.length : r.workers ?? 0} workers
                     </span>
                   </div>

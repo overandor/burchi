@@ -57,38 +57,38 @@ export default function HfABTestsPage() {
         <StatCard icon={Calendar} value={tests.length > 0 ? tests[0].test_date ?? "—" : "—"} label="Latest Test" color="text-purple-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Test Scores</CardTitle>
+          <CardTitle className="text-base text-foreground">Test Scores</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Date</TableHead>
-                <TableHead className="text-zinc-500">Strategy</TableHead>
-                <TableHead className="text-zinc-500">Bio Len</TableHead>
-                <TableHead className="text-zinc-500">Phone CTA</TableHead>
-                <TableHead className="text-zinc-500">Urgency</TableHead>
-                <TableHead className="text-zinc-500">Emotion</TableHead>
-                <TableHead className="text-zinc-500">SEO</TableHead>
-                <TableHead className="text-zinc-500">Unique</TableHead>
-                <TableHead className="text-zinc-500">Len Opt</TableHead>
-                <TableHead className="text-zinc-500">Beats Comp</TableHead>
-                <TableHead className="text-zinc-500">Overall</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Date</TableHead>
+                <TableHead className="text-muted-foreground">Strategy</TableHead>
+                <TableHead className="text-muted-foreground">Bio Len</TableHead>
+                <TableHead className="text-muted-foreground">Phone CTA</TableHead>
+                <TableHead className="text-muted-foreground">Urgency</TableHead>
+                <TableHead className="text-muted-foreground">Emotion</TableHead>
+                <TableHead className="text-muted-foreground">SEO</TableHead>
+                <TableHead className="text-muted-foreground">Unique</TableHead>
+                <TableHead className="text-muted-foreground">Len Opt</TableHead>
+                <TableHead className="text-muted-foreground">Beats Comp</TableHead>
+                <TableHead className="text-muted-foreground">Overall</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tests.map((t: any, i: number) => (
-                <TableRow key={i} className="border-zinc-800/50">
-                  <TableCell className="text-xs text-zinc-400">{t.test_date ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-zinc-300">{t.strategy ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-xs text-zinc-400">{t.bio_length ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-xs text-zinc-400">{t.phone_cta_strength ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-xs text-zinc-400">{t.urgency ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-xs text-zinc-400">{t.emotional_hook ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-xs text-zinc-400">{t.seo_keywords ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-xs text-zinc-400">{t.uniqueness ?? "—"}</TableCell>
+                <TableRow key={i} className="border-border/50">
+                  <TableCell className="text-xs text-muted-foreground">{t.test_date ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-foreground/80">{t.strategy ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">{t.bio_length ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">{t.phone_cta_strength ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">{t.urgency ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">{t.emotional_hook ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">{t.seo_keywords ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-xs text-muted-foreground">{t.uniqueness ?? "—"}</TableCell>
                   <TableCell>{boolBadge(t.length_optimal)}</TableCell>
                   <TableCell>{boolBadge(t.beats_competitors)}</TableCell>
                   <TableCell>

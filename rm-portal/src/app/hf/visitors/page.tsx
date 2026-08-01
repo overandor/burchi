@@ -39,47 +39,47 @@ export default function HfVisitorsPage() {
         <StatCard icon={Clock} value={visitors.length} label="Loaded" color="text-amber-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Visitor Log</CardTitle>
+          <CardTitle className="text-base text-foreground">Visitor Log</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Username</TableHead>
-                <TableHead className="text-zinc-500">Visits</TableHead>
-                <TableHead className="text-zinc-500">First Seen</TableHead>
-                <TableHead className="text-zinc-500">Last Seen</TableHead>
-                <TableHead className="text-zinc-500">Last Online</TableHead>
-                <TableHead className="text-zinc-500">Profile</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Username</TableHead>
+                <TableHead className="text-muted-foreground">Visits</TableHead>
+                <TableHead className="text-muted-foreground">First Seen</TableHead>
+                <TableHead className="text-muted-foreground">Last Seen</TableHead>
+                <TableHead className="text-muted-foreground">Last Online</TableHead>
+                <TableHead className="text-muted-foreground">Profile</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visitors.map((v, i) => (
-                <TableRow key={`${v.username}-${i}`} className="border-zinc-800/50">
-                  <TableCell className="font-medium text-white">
+                <TableRow key={`${v.username}-${i}`} className="border-border/50">
+                  <TableCell className="font-medium text-foreground">
                     <div className="flex items-center gap-2">
                       {v.visit_count > 1 && <Repeat className="h-3 w-3 text-purple-400" />}
                       {v.username ?? "—"}
                     </div>
                   </TableCell>
-                  <TableCell className="tabular-nums text-zinc-300">{v.visit_count ?? 0}</TableCell>
-                  <TableCell className="text-xs text-zinc-400">{v.first_seen ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-zinc-400">{v.last_seen ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-zinc-400">{v.last_online ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-foreground/80">{v.visit_count ?? 0}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{v.first_seen ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{v.last_seen ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{v.last_online ?? "—"}</TableCell>
                   <TableCell>
                     {v.profile_url ? (
                       <a
                         href={v.profile_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs text-blue-400 transition-colors hover:bg-zinc-800 hover:text-blue-300"
+                        className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs text-blue-400 transition-colors hover:bg-accent hover:text-blue-300"
                       >
                         <ExternalLink className="h-3 w-3" /> View
                       </a>
                     ) : (
-                      <span className="text-zinc-600 text-xs">—</span>
+                      <span className="text-muted-foreground/60 text-xs">—</span>
                     )}
                   </TableCell>
                 </TableRow>

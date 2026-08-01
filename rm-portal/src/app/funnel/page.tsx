@@ -49,50 +49,50 @@ export default function FunnelPage() {
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <Filter className="h-8 w-8 text-blue-400" />
           <div>
-            <div className="text-2xl font-bold text-white">{stages.length}</div>
-            <div className="text-[10px] text-zinc-500">Funnel Stages</div>
+            <div className="text-2xl font-bold text-foreground">{stages.length}</div>
+            <div className="text-[10px] text-muted-foreground">Funnel Stages</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <TrendingDown className="h-8 w-8 text-emerald-400" />
           <div>
-            <div className="text-2xl font-bold text-white">{available.length}</div>
-            <div className="text-[10px] text-zinc-500">Available Stages</div>
+            <div className="text-2xl font-bold text-foreground">{available.length}</div>
+            <div className="text-[10px] text-muted-foreground">Available Stages</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <AlertCircle className="h-8 w-8 text-amber-400" />
           <div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-foreground">
               {stages.length - available.length}
             </div>
-            <div className="text-[10px] text-zinc-500">No-Data Stages</div>
+            <div className="text-[10px] text-muted-foreground">No-Data Stages</div>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
           <TrendingDown className="h-8 w-8 text-purple-400" />
           <div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-foreground">
               {available[0]?.count?.toLocaleString() ?? "—"}
             </div>
-            <div className="text-[10px] text-zinc-500">Top of Funnel</div>
+            <div className="text-[10px] text-muted-foreground">Top of Funnel</div>
           </div>
         </div>
       </div>
 
       {/* Visual funnel */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Filter className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">Conversion Funnel</CardTitle>
+          <CardTitle className="text-base text-foreground">Conversion Funnel</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {stages.map((stage, i) => {
             const unavailable = stage.observation !== "available"
-            const color = stageColors[stage.stage] ?? "text-zinc-300"
+            const color = stageColors[stage.stage] ?? "text-foreground/80"
             const barColor = stageBarColors[stage.stage] ?? "bg-primary"
             const widthPct =
               !unavailable && maxCount > 0 && stage.count !== null
@@ -115,14 +115,14 @@ export default function FunnelPage() {
                     )}
                   </div>
                   {unavailable ? (
-                    <span className="text-xs text-zinc-600">—</span>
+                    <span className="text-xs text-muted-foreground/60">—</span>
                   ) : (
                     <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-bold text-white tabular-nums">
+                      <span className="text-sm font-bold text-foreground tabular-nums">
                         {stage.count?.toLocaleString()}
                       </span>
                       {stage.conversion_rate !== null && (
-                        <span className="text-[10px] text-zinc-500">
+                        <span className="text-[10px] text-muted-foreground">
                           {stage.conversion_rate}% conv
                         </span>
                       )}
@@ -133,19 +133,19 @@ export default function FunnelPage() {
                 {/* Funnel bar */}
                 {!unavailable && (
                   <div className="mt-2">
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-accent">
                       <div
                         className={`h-full ${barColor} transition-all`}
                         style={{ width: `${widthPct}%` }}
                       />
                     </div>
                     {stage.conversion_rate !== null && (
-                      <Progress value={stage.conversion_rate} className="mt-1.5 h-1 bg-zinc-800" />
+                      <Progress value={stage.conversion_rate} className="mt-1.5 h-1 bg-accent" />
                     )}
                   </div>
                 )}
 
-                {i < stages.length - 1 && <Separator className="mt-4 bg-zinc-800/50" />}
+                {i < stages.length - 1 && <Separator className="mt-4 bg-accent/30" />}
               </div>
             )
           })}
@@ -153,10 +153,10 @@ export default function FunnelPage() {
       </Card>
 
       {/* Stage detail table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <TrendingDown className="h-5 w-5 text-emerald-400" />
-          <CardTitle className="text-base text-white">Stage Breakdown</CardTitle>
+          <CardTitle className="text-base text-foreground">Stage Breakdown</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {stages.map((stage) => {
@@ -164,9 +164,9 @@ export default function FunnelPage() {
             return (
               <div
                 key={stage.stage}
-                className="flex items-center justify-between rounded-lg border border-zinc-800/60 bg-zinc-900/30 px-3 py-2"
+                className="flex items-center justify-between rounded-lg border border-border/60 bg-card/30 px-3 py-2"
               >
-                <span className="text-xs text-zinc-300">{stage.stage}</span>
+                <span className="text-xs text-foreground/80">{stage.stage}</span>
                 <div className="flex items-center gap-3">
                   {unavailable ? (
                     <Badge
@@ -178,10 +178,10 @@ export default function FunnelPage() {
                     </Badge>
                   ) : (
                     <>
-                      <span className="text-sm font-bold text-white tabular-nums">
+                      <span className="text-sm font-bold text-foreground tabular-nums">
                         {stage.count?.toLocaleString()}
                       </span>
-                      <span className="text-[10px] text-zinc-500 tabular-nums w-16 text-right">
+                      <span className="text-[10px] text-muted-foreground tabular-nums w-16 text-right">
                         {stage.conversion_rate !== null
                           ? `${stage.conversion_rate}%`
                           : "—"}

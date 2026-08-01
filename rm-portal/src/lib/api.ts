@@ -354,6 +354,11 @@ export const api = {
     postAPI<any>("/v1/images/generations", { model, prompt, size }),
   v1Inference: (model: string, input: string, task = "auto") =>
     postAPI<any>("/v1/inference", { model, input, task }),
+
+  // ─── Auto-Ingest Pipeline ────────────────────────────────────────
+  autoIngest: () => postAPI<any>("/api/auto/ingest"),
+  autoTick: () => postAPI<any>("/api/auto/tick"),
+  autoStatus: () => fetchAPI<any>("/api/auto/status"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────

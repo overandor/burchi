@@ -30,7 +30,7 @@ function statusClass(status: string): string {
   if (s === "offline" || s === "down" || s === "error") {
     return "border-red-500/30 bg-red-500/10 text-red-400"
   }
-  return statusBadgeClass(s) || "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+  return statusBadgeClass(s) || "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 export default function GgufNodesPage() {
@@ -55,8 +55,8 @@ export default function GgufNodesPage() {
       </div>
 
       {showRegister && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
-          <CardContent className="py-6 text-center text-sm text-zinc-500">
+        <Card className="border-border bg-card/50">
+          <CardContent className="py-6 text-center text-sm text-muted-foreground">
             Node registration is a placeholder. Start a node process pointing at a tracker to join
             the swarm.
           </CardContent>
@@ -64,19 +64,19 @@ export default function GgufNodesPage() {
       )}
 
       {nodes.length === 0 ? (
-        <Card className="border-zinc-800 bg-zinc-900/50">
-          <CardContent className="py-12 text-center text-sm text-zinc-500">
+        <Card className="border-border bg-card/50">
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
             No nodes have joined the network yet.
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {nodes.map((n) => (
-            <Card key={n.node_id} className="border-zinc-800 bg-zinc-900/50">
+            <Card key={n.node_id} className="border-border bg-card/50">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Server className="h-4 w-4 text-blue-400" />
-                  <CardTitle className="text-sm text-white">{n.name ?? n.node_id}</CardTitle>
+                  <CardTitle className="text-sm text-foreground">{n.name ?? n.node_id}</CardTitle>
                 </div>
                 <Badge variant="outline" className={statusClass(n.status)}>
                   {(n.status ?? "unknown").toUpperCase()}
@@ -84,44 +84,44 @@ export default function GgufNodesPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Globe className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white">{n.region ?? "—"}</span>
-                    <span className="text-[9px] text-zinc-600">region</span>
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Globe className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground">{n.region ?? "—"}</span>
+                    <span className="text-[9px] text-muted-foreground/60">region</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Activity className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Activity className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground">
                       {timeAgo(n.last_heartbeat)}
                     </span>
-                    <span className="text-[9px] text-zinc-600">heartbeat</span>
+                    <span className="text-[9px] text-muted-foreground/60">heartbeat</span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <span className="text-zinc-600">inference:</span>
-                    <span className="truncate text-zinc-300">{n.inference_url ?? "—"}</span>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <span className="text-muted-foreground/60">inference:</span>
+                    <span className="truncate text-foreground/80">{n.inference_url ?? "—"}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <span className="text-zinc-600">tracker:</span>
-                    <span className="truncate text-zinc-300">{n.tracker_url ?? "—"}</span>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <span className="text-muted-foreground/60">tracker:</span>
+                    <span className="truncate text-foreground/80">{n.tracker_url ?? "—"}</span>
                   </div>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-3">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+                <div className="border-t border-border pt-3">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
                     capabilities
                   </span>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {(n.capabilities ?? []).length === 0 ? (
-                      <span className="text-xs text-zinc-600">none</span>
+                      <span className="text-xs text-muted-foreground/60">none</span>
                     ) : (
                       (n.capabilities as string[]).map((c) => (
                         <Badge
                           key={c}
                           variant="outline"
-                          className="border-zinc-700 bg-zinc-800/50 text-[10px] text-zinc-300"
+                          className="border-border/80 bg-accent/30 text-[10px] text-foreground/80"
                         >
                           {c}
                         </Badge>
@@ -130,13 +130,13 @@ export default function GgufNodesPage() {
                   </div>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-3">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+                <div className="border-t border-border pt-3">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
                     hosted models
                   </span>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {(n.models ?? []).length === 0 ? (
-                      <span className="text-xs text-zinc-600">none</span>
+                      <span className="text-xs text-muted-foreground/60">none</span>
                     ) : (
                       (n.models as string[]).map((mid) => (
                         <Badge

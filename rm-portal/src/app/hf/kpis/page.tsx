@@ -58,17 +58,17 @@ export default function HfKpisPage() {
 
       {/* Latest snapshot grades */}
       {latest && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <Activity className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">Latest Snapshot</CardTitle>
-            <Badge variant="outline" className="ml-auto border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]">
+            <CardTitle className="text-base text-foreground">Latest Snapshot</CardTitle>
+            <Badge variant="outline" className="ml-auto border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
               {latest.timestamp ?? "—"}
             </Badge>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
                 <InfinityIcon className="h-8 w-8 text-blue-400" />
                 <div>
                   <div className="flex items-center gap-2">
@@ -81,10 +81,10 @@ export default function HfKpisPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="text-[10px] text-zinc-500">Immortality</div>
+                  <div className="text-[10px] text-muted-foreground">Immortality</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
                 <Zap className="h-8 w-8 text-purple-400" />
                 <div>
                   <div className="flex items-center gap-2">
@@ -97,21 +97,21 @@ export default function HfKpisPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="text-[10px] text-zinc-500">Virality</div>
+                  <div className="text-[10px] text-muted-foreground">Virality</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
                 <Eye className="h-8 w-8 text-cyan-400" />
                 <div>
-                  <div className="text-2xl font-bold text-white">{latest.profile_views ?? "—"}</div>
-                  <div className="text-[10px] text-zinc-500">Profile Views</div>
+                  <div className="text-2xl font-bold text-foreground">{latest.profile_views ?? "—"}</div>
+                  <div className="text-[10px] text-muted-foreground">Profile Views</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-4">
                 <Calendar className="h-8 w-8 text-amber-400" />
                 <div>
-                  <div className="text-2xl font-bold text-white">{latest.new_visits ?? "—"}</div>
-                  <div className="text-[10px] text-zinc-500">New Visits</div>
+                  <div className="text-2xl font-bold text-foreground">{latest.new_visits ?? "—"}</div>
+                  <div className="text-[10px] text-muted-foreground">New Visits</div>
                 </div>
               </div>
             </div>
@@ -120,11 +120,11 @@ export default function HfKpisPage() {
       )}
 
       {/* Score trends chart */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <TrendingUp className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">Immortality & Virality Trends</CardTitle>
-          <Badge variant="outline" className="ml-auto border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]">
+          <CardTitle className="text-base text-foreground">Immortality & Virality Trends</CardTitle>
+          <Badge variant="outline" className="ml-auto border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
             {total} POINTS
           </Badge>
         </CardHeader>
@@ -150,7 +150,7 @@ export default function HfKpisPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No KPI history available
             </div>
           )}
@@ -158,10 +158,10 @@ export default function HfKpisPage() {
       </Card>
 
       {/* Views & clicks chart */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Eye className="h-5 w-5 text-cyan-400" />
-          <CardTitle className="text-base text-white">Profile Views & Contact Clicks</CardTitle>
+          <CardTitle className="text-base text-foreground">Profile Views & Contact Clicks</CardTitle>
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
@@ -185,7 +185,7 @@ export default function HfKpisPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No view/click history available
             </div>
           )}

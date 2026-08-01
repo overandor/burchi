@@ -32,10 +32,10 @@ export default function HfBiosPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {bios.map((b: any, i: number) => (
-          <Card key={b.id ?? i} className="border-zinc-800 bg-zinc-900/50">
+          <Card key={b.id ?? i} className="border-border bg-card/50">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-white">{b.filename ?? `Bio #${b.id ?? i}`}</CardTitle>
+                <CardTitle className="text-sm text-foreground">{b.filename ?? `Bio #${b.id ?? i}`}</CardTitle>
                 {b.strategy && (
                   <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-400 text-[9px]">
                     {b.strategy}
@@ -45,10 +45,10 @@ export default function HfBiosPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {b.bio_text && (
-                <p className="line-clamp-4 text-xs text-zinc-400">{b.bio_text}</p>
+                <p className="line-clamp-4 text-xs text-muted-foreground">{b.bio_text}</p>
               )}
               {b.date_generated && (
-                <p className="text-[10px] text-zinc-600">Generated: {b.date_generated}</p>
+                <p className="text-[10px] text-muted-foreground/60">Generated: {b.date_generated}</p>
               )}
             </CardContent>
           </Card>

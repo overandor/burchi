@@ -76,8 +76,8 @@ export default function MissionControlPage() {
       {/* Header with action buttons */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Mission Control</h1>
-          <p className="text-sm text-zinc-500">Autonomous revenue operations — live status</p>
+          <h1 className="text-2xl font-bold text-foreground">Mission Control</h1>
+          <p className="text-sm text-muted-foreground">Autonomous revenue operations — live status</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
@@ -88,7 +88,7 @@ export default function MissionControlPage() {
             variant="outline"
             size="sm"
             onClick={refetch}
-            className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800"
+            className="border-border/80 bg-card text-foreground/80 hover:bg-accent"
           >
             <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
             Refresh
@@ -123,13 +123,13 @@ export default function MissionControlPage() {
           Generate Bios
         </Button>
         <Link href="/flagship">
-          <Button variant="outline" className="w-full border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800">
+          <Button variant="outline" className="w-full border-border/80 bg-card text-foreground/80 hover:bg-accent">
             <Activity className="mr-2 h-4 w-4" />
             Flagship Terminal
           </Button>
         </Link>
         <Link href="/control">
-          <Button variant="outline" className="w-full border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800">
+          <Button variant="outline" className="w-full border-border/80 bg-card text-foreground/80 hover:bg-accent">
             <Cpu className="mr-2 h-4 w-4" />
             Control Center
           </Button>
@@ -145,7 +145,7 @@ export default function MissionControlPage() {
                 <Brain className="mr-2 inline h-4 w-4" />
                 AI Decision: {decisionResult}
               </span>
-              <button onClick={() => setDecisionResult(null)} className="text-zinc-500 hover:text-zinc-300">
+              <button onClick={() => setDecisionResult(null)} className="text-muted-foreground hover:text-foreground/80">
                 <AlertCircle className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -156,7 +156,7 @@ export default function MissionControlPage() {
                 <Sparkles className="mr-2 inline h-4 w-4" />
                 {bioResult}
               </span>
-              <button onClick={() => setBioResult(null)} className="text-zinc-500 hover:text-zinc-300">
+              <button onClick={() => setBioResult(null)} className="text-muted-foreground hover:text-foreground/80">
                 <AlertCircle className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -167,45 +167,45 @@ export default function MissionControlPage() {
       {/* Key Metrics Row */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Link href="/kpis">
-          <Card className="border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 transition-colors cursor-pointer">
+          <Card className="border-border bg-card/50 hover:border-border/80 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 pt-5">
               <DollarSign className="h-8 w-8 text-emerald-400" />
               <div>
-                <div className="text-2xl font-bold text-white">${data.kpi?.revenue?.toLocaleString() || "0"}</div>
-                <div className="text-[10px] text-zinc-500">Revenue</div>
+                <div className="text-2xl font-bold text-foreground">${data.kpi?.revenue?.toLocaleString() || "0"}</div>
+                <div className="text-[10px] text-muted-foreground">Revenue</div>
               </div>
             </CardContent>
           </Card>
         </Link>
         <Link href="/visitors">
-          <Card className="border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 transition-colors cursor-pointer">
+          <Card className="border-border bg-card/50 hover:border-border/80 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 pt-5">
               <Users className="h-8 w-8 text-blue-400" />
               <div>
-                <div className="text-2xl font-bold text-white">{data.kpi?.visitors || 0}</div>
-                <div className="text-[10px] text-zinc-500">Visitors</div>
+                <div className="text-2xl font-bold text-foreground">{data.kpi?.visitors || 0}</div>
+                <div className="text-[10px] text-muted-foreground">Visitors</div>
               </div>
             </CardContent>
           </Card>
         </Link>
         <Link href="/experiments">
-          <Card className="border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 transition-colors cursor-pointer">
+          <Card className="border-border bg-card/50 hover:border-border/80 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 pt-5">
               <FlaskConical className="h-8 w-8 text-purple-400" />
               <div>
-                <div className="text-2xl font-bold text-white">{data.experiments.length}</div>
-                <div className="text-[10px] text-zinc-500">Experiments</div>
+                <div className="text-2xl font-bold text-foreground">{data.experiments.length}</div>
+                <div className="text-[10px] text-muted-foreground">Experiments</div>
               </div>
             </CardContent>
           </Card>
         </Link>
         <Link href="/approvals">
-          <Card className="border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 transition-colors cursor-pointer">
+          <Card className="border-border bg-card/50 hover:border-border/80 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 pt-5">
               <Brain className="h-8 w-8 text-orange-400" />
               <div>
-                <div className="text-2xl font-bold text-white">{pendingDecisions}</div>
-                <div className="text-[10px] text-zinc-500">Pending Approvals</div>
+                <div className="text-2xl font-bold text-foreground">{pendingDecisions}</div>
+                <div className="text-[10px] text-muted-foreground">Pending Approvals</div>
               </div>
             </CardContent>
           </Card>
@@ -214,12 +214,12 @@ export default function MissionControlPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* AI Operator Panel */}
-        <Card className="border-zinc-800 bg-zinc-900/50 lg:col-span-2">
+        <Card className="border-border bg-card/50 lg:col-span-2">
           <CardHeader className="flex flex-row items-center gap-2">
             <Brain className="h-5 w-5 text-orange-400" />
-            <CardTitle className="text-base text-white">AI Operator</CardTitle>
+            <CardTitle className="text-base text-foreground">AI Operator</CardTitle>
             <Link href="/ai-operator" className="ml-auto">
-              <span className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground hover:text-foreground/80 flex items-center gap-1">
                 Details <ArrowRight className="h-3 w-3" />
               </span>
             </Link>
@@ -227,26 +227,26 @@ export default function MissionControlPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Current Bio</span>
-                <p className="text-sm font-medium text-white">{data.current_bio}</p>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Current Bio</span>
+                <p className="text-sm font-medium text-foreground">{data.current_bio}</p>
               </div>
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Strategy</span>
-                <p className="text-sm font-medium text-white">{data.current_strategy}</p>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Strategy</span>
+                <p className="text-sm font-medium text-foreground">{data.current_strategy}</p>
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Confidence</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</span>
                 <span className="text-sm font-bold text-orange-400">{(data.confidence * 100).toFixed(0)}%</span>
               </div>
-              <Progress value={data.confidence * 100} className="h-2 bg-zinc-800" />
+              <Progress value={data.confidence * 100} className="h-2 bg-accent" />
             </div>
 
             {chartData.length > 0 && (
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Reward History</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Reward History</span>
                 <div className="mt-2 h-32">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
@@ -263,21 +263,21 @@ export default function MissionControlPage() {
               </div>
             )}
 
-            <Separator className="bg-zinc-800" />
+            <Separator className="bg-accent" />
 
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <GitBranch className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-400" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Next Experiment</span>
-                  <p className="text-xs text-zinc-300">{data.next_experiment}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Next Experiment</span>
+                  <p className="text-xs text-foreground/80">{data.next_experiment}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
-                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Next Scheduled</span>
-                  <p className="text-xs text-zinc-300">{data.next_scheduled}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Next Scheduled</span>
+                  <p className="text-xs text-foreground/80">{data.next_scheduled}</p>
                 </div>
               </div>
             </div>
@@ -290,8 +290,8 @@ export default function MissionControlPage() {
                     {leaderVariant.status.toUpperCase()}
                   </Badge>
                 </div>
-                <p className="text-xs text-zinc-300 italic">&ldquo;{leaderVariant.content}&rdquo;</p>
-                <div className="mt-2 flex gap-4 text-[10px] text-zinc-500">
+                <p className="text-xs text-foreground/80 italic">&ldquo;{leaderVariant.content}&rdquo;</p>
+                <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
                   <span>Impr: {leaderVariant.impressions}</span>
                   <span>Clicks: {leaderVariant.clicks}</span>
                   <span>Conv: {leaderVariant.conversions}</span>
@@ -303,12 +303,12 @@ export default function MissionControlPage() {
         </Card>
 
         {/* Live Funnel */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <TrendingUp className="h-5 w-5 text-emerald-400" />
-            <CardTitle className="text-base text-white">Live Funnel</CardTitle>
+            <CardTitle className="text-base text-foreground">Live Funnel</CardTitle>
             <Link href="/funnel" className="ml-auto">
-              <span className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground hover:text-foreground/80 flex items-center gap-1">
                 Details <ArrowRight className="h-3 w-3" />
               </span>
             </Link>
@@ -319,7 +319,7 @@ export default function MissionControlPage() {
               return (
                 <div key={stage.stage}>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-400">{stage.stage}</span>
+                    <span className="text-xs text-muted-foreground">{stage.stage}</span>
                     {unavailable ? (
                       <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-400 text-[9px]">
                         <AlertCircle className="mr-1 h-2.5 w-2.5" />
@@ -327,17 +327,17 @@ export default function MissionControlPage() {
                       </Badge>
                     ) : (
                       <div className="flex items-baseline gap-2">
-                        <span className="text-sm font-bold text-white tabular-nums">{stage.count?.toLocaleString()}</span>
+                        <span className="text-sm font-bold text-foreground tabular-nums">{stage.count?.toLocaleString()}</span>
                         {stage.conversion_rate !== null && (
-                          <span className="text-[10px] text-zinc-500">{stage.conversion_rate}%</span>
+                          <span className="text-[10px] text-muted-foreground">{stage.conversion_rate}%</span>
                         )}
                       </div>
                     )}
                   </div>
                   {!unavailable && stage.conversion_rate !== null && (
-                    <Progress value={stage.conversion_rate} className="mt-1 h-1 bg-zinc-800" />
+                    <Progress value={stage.conversion_rate} className="mt-1 h-1 bg-accent" />
                   )}
-                  {i < data.funnel.length - 1 && <Separator className="mt-3 bg-zinc-800/50" />}
+                  {i < data.funnel.length - 1 && <Separator className="mt-3 bg-accent/30" />}
                 </div>
               )
             })}
@@ -346,10 +346,10 @@ export default function MissionControlPage() {
       </div>
 
       {/* Live Events */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Activity className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">Live Telemetry</CardTitle>
+          <CardTitle className="text-base text-foreground">Live Telemetry</CardTitle>
           <Badge variant="outline" className="ml-auto border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[9px]">
             <span className="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             LIVE
@@ -358,11 +358,11 @@ export default function MissionControlPage() {
         <CardContent>
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {data.live_events.map((e) => (
-              <div key={e.id} className="flex items-center gap-3 rounded-lg border border-zinc-800/50 bg-zinc-900/30 px-3 py-2 hover:bg-zinc-900/60 transition-colors">
-                <span className="text-[10px] text-zinc-600 tabular-nums shrink-0">
+              <div key={e.id} className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/30 px-3 py-2 hover:bg-accent/50 transition-colors">
+                <span className="text-[10px] text-muted-foreground/60 tabular-nums shrink-0">
                   {new Date(e.timestamp).toLocaleTimeString("en-US", { hour12: false })}
                 </span>
-                <span className="text-xs text-zinc-300">{e.message}</span>
+                <span className="text-xs text-foreground/80">{e.message}</span>
                 {e.severity === "warning" && <AlertCircle className="h-3 w-3 text-amber-400 shrink-0" />}
               </div>
             ))}
@@ -371,12 +371,12 @@ export default function MissionControlPage() {
       </Card>
 
       {/* Capabilities */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Cpu className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Active Capabilities</CardTitle>
+          <CardTitle className="text-base text-foreground">Active Capabilities</CardTitle>
           <Link href="/control" className="ml-auto">
-            <span className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground hover:text-foreground/80 flex items-center gap-1">
               Manage <ArrowRight className="h-3 w-3" />
             </span>
           </Link>
@@ -387,7 +387,7 @@ export default function MissionControlPage() {
               <Badge
                 key={key}
                 variant="outline"
-                className={enabled ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-zinc-700 bg-zinc-800/50 text-zinc-500"}
+                className={enabled ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-border/80 bg-accent/30 text-muted-foreground"}
               >
                 <Zap className="mr-1 h-3 w-3" />
                 {key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}

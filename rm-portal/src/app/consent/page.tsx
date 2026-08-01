@@ -21,9 +21,9 @@ export default function ConsentOverviewPage() {
       />
 
       {/* Pipeline flow */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Pipeline Flow</CardTitle>
+          <CardTitle className="text-base text-foreground">Pipeline Flow</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -34,13 +34,13 @@ export default function ConsentOverviewPage() {
               { label: "Approval Gate", href: "/consent/messages", color: "text-amber-400" },
               { label: "Send", href: "/consent/messages", color: "text-cyan-400" },
               { label: "Measure", href: "/consent/outcomes", color: "text-pink-400" },
-              { label: "Audit", href: "/consent/audit", color: "text-zinc-400" },
+              { label: "Audit", href: "/consent/audit", color: "text-muted-foreground" },
             ].map((step, i, arr) => (
               <div key={step.label} className="flex items-center gap-2">
-                <Link href={step.href} className={`rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 font-medium ${step.color} hover:bg-zinc-800`}>
+                <Link href={step.href} className={`rounded-lg border border-border bg-card px-3 py-1.5 font-medium ${step.color} hover:bg-accent`}>
                   {step.label}
                 </Link>
-                {i < arr.length - 1 && <span className="text-zinc-600">→</span>}
+                {i < arr.length - 1 && <span className="text-muted-foreground/60">→</span>}
               </div>
             ))}
           </div>
@@ -62,7 +62,7 @@ export default function ConsentOverviewPage() {
       {/* Hard Constraints */}
       <Card className="border-emerald-900/50 bg-emerald-950/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-white">
+          <CardTitle className="flex items-center gap-2 text-base text-foreground">
             <Shield className="h-4 w-4 text-emerald-400" />
             Hard Constraints — Enforced Technically
           </CardTitle>
@@ -77,7 +77,7 @@ export default function ConsentOverviewPage() {
             { rule: "Reward signal: response quality, CSAT, booking completion, retention, helpfulness — not persuasion", constraint: "C6" },
             { rule: "Send path rejects any recipient lacking valid consent — enforced in code, not policy text", constraint: "C7" },
           ].map((item, i) => (
-            <div key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+            <div key={i} className="flex items-start gap-2 text-sm text-foreground/80">
               <Badge variant="outline" className="mt-0.5 shrink-0 border-emerald-700 bg-emerald-900/30 text-[10px] font-mono text-emerald-400">
                 {item.constraint}
               </Badge>
@@ -90,7 +90,7 @@ export default function ConsentOverviewPage() {
       {/* Rejected Consent Bases */}
       <Card className="border-red-900/50 bg-red-950/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-white">
+          <CardTitle className="flex items-center gap-2 text-base text-foreground">
             <Ban className="h-4 w-4 text-red-400" />
             Rejected Consent Bases — Will Never Be Accepted
           </CardTitle>
@@ -107,7 +107,7 @@ export default function ConsentOverviewPage() {
               </Badge>
             ))}
           </div>
-          <p className="mt-3 text-xs text-zinc-500">
+          <p className="mt-3 text-xs text-muted-foreground">
             These sources are rejected at the API layer (400) and database layer (CHECK constraint).
             Any attempt to create a contact with one of these as consent_source returns a descriptive error.
           </p>

@@ -127,41 +127,41 @@ export default function AIOperatorPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Hypothesis & Action */}
-        <Card className="border-zinc-800 bg-zinc-900/50 lg:col-span-2">
+        <Card className="border-border bg-card/50 lg:col-span-2">
           <CardHeader className="flex flex-row items-center gap-2">
             <Brain className="h-5 w-5 text-orange-400" />
-            <CardTitle className="text-base text-white">Current Hypothesis</CardTitle>
+            <CardTitle className="text-base text-foreground">Current Hypothesis</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Current Bio</span>
-                <p className="text-sm font-medium text-white">{status.current_bio}</p>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Current Bio</span>
+                <p className="text-sm font-medium text-foreground">{status.current_bio}</p>
               </div>
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Strategy</span>
-                <p className="text-sm font-medium text-white">{status.strategy}</p>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Strategy</span>
+                <p className="text-sm font-medium text-foreground">{status.strategy}</p>
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Confidence</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</span>
                 <span className="text-sm font-bold text-orange-400">
                   {(status.confidence * 100).toFixed(0)}%
                 </span>
               </div>
-              <Progress value={status.confidence * 100} className="h-2 bg-zinc-800" />
+              <Progress value={status.confidence * 100} className="h-2 bg-accent" />
             </div>
 
-            <Separator className="bg-zinc-800" />
+            <Separator className="bg-accent" />
 
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Current Action</span>
-                  <p className="text-xs text-zinc-300">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Current Action</span>
+                  <p className="text-xs text-foreground/80">
                     {lastDecision
                       ? `${lastDecision.action_type} — ${lastDecision.rationale}`
                       : "No actions yet"}
@@ -169,17 +169,17 @@ export default function AIOperatorPage() {
                 </div>
               </div>
               <div className="flex items-start gap-2">
-                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Next Decision</span>
-                  <p className="text-xs text-zinc-300">{overview.next_scheduled}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Next Decision</span>
+                  <p className="text-xs text-foreground/80">{overview.next_scheduled}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <GitBranch className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-400" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Next Experiment</span>
-                  <p className="text-xs text-zinc-300">{overview.next_experiment}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Next Experiment</span>
+                  <p className="text-xs text-foreground/80">{overview.next_experiment}</p>
                 </div>
               </div>
             </div>
@@ -187,39 +187,39 @@ export default function AIOperatorPage() {
         </Card>
 
         {/* Experiment info */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <FlaskConical className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">Current Experiment</CardTitle>
+            <CardTitle className="text-base text-foreground">Current Experiment</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Experiment</span>
-              <p className="text-sm font-medium text-white">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Experiment</span>
+              <p className="text-sm font-medium text-foreground">
                 {status.current_experiment || "—"}
               </p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Observations</span>
-              <p className="text-sm font-medium text-white tabular-nums">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Observations</span>
+              <p className="text-sm font-medium text-foreground tabular-nums">
                 {status.observations.toLocaleString()}
               </p>
             </div>
-            <Separator className="bg-zinc-800" />
+            <Separator className="bg-accent" />
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Leader Variant</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Leader Variant</span>
               <p className="text-sm font-medium text-emerald-400">
                 {leaderVariant?.label || "—"}
               </p>
               {leaderVariant && (
-                <p className="text-[10px] text-zinc-500 mt-0.5">
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   reward {leaderVariant.reward.toFixed(2)} · {leaderVariant.impressions} impressions
                 </p>
               )}
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Active Variants</span>
-              <p className="text-sm font-medium text-white tabular-nums">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Variants</span>
+              <p className="text-sm font-medium text-foreground tabular-nums">
                 {status.active_variants}
               </p>
             </div>
@@ -228,10 +228,10 @@ export default function AIOperatorPage() {
       </div>
 
       {/* Reward history chart */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Trophy className="h-5 w-5 text-amber-400" />
-          <CardTitle className="text-base text-white">Reward History</CardTitle>
+          <CardTitle className="text-base text-foreground">Reward History</CardTitle>
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
@@ -254,7 +254,7 @@ export default function AIOperatorPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No reward history yet
             </div>
           )}

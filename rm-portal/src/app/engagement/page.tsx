@@ -36,7 +36,7 @@ function actionBadge(action: string) {
     return "border-blue-500/30 bg-blue-500/10 text-blue-400"
   if (action.includes("Responded") || action.includes("nurture"))
     return "border-purple-500/30 bg-purple-500/10 text-purple-400"
-  return "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+  return "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 export default function EngagementPage() {
@@ -86,10 +86,10 @@ export default function EngagementPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Engagement distribution */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <TrendingUp className="h-5 w-5 text-orange-400" />
-            <CardTitle className="text-base text-white">Engagement Distribution</CardTitle>
+            <CardTitle className="text-base text-foreground">Engagement Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -114,14 +114,14 @@ export default function EngagementPage() {
         </Card>
 
         {/* Lifecycle stage breakdown */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <Users className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">Lifecycle Stage Breakdown</CardTitle>
+            <CardTitle className="text-base text-foreground">Lifecycle Stage Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             {stageData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
+              <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
                 No lifecycle stage data available
               </div>
             ) : (
@@ -156,8 +156,8 @@ export default function EngagementPage() {
                     className="h-2.5 w-2.5 rounded-sm"
                     style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
                   />
-                  <span className="text-[10px] text-zinc-400">{s.name}</span>
-                  <span className="text-[10px] font-bold text-zinc-300">{s.value}</span>
+                  <span className="text-[10px] text-muted-foreground">{s.name}</span>
+                  <span className="text-[10px] font-bold text-foreground/80">{s.value}</span>
                 </div>
               ))}
             </div>
@@ -166,66 +166,66 @@ export default function EngagementPage() {
       </div>
 
       {/* Visitor ranking table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Star className="h-5 w-5 text-orange-400" />
-          <CardTitle className="text-base text-white">Visitor Ranking</CardTitle>
-          <Badge variant="outline" className="ml-auto border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]">
+          <CardTitle className="text-base text-foreground">Visitor Ranking</CardTitle>
+          <Badge variant="outline" className="ml-auto border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
             SORTED BY ENGAGEMENT
           </Badge>
         </CardHeader>
         <CardContent>
           {ranked.length === 0 ? (
-            <div className="py-8 text-center text-sm text-zinc-500">No visitors to rank</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">No visitors to rank</div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="w-12 text-zinc-500">Rank</TableHead>
-                  <TableHead className="text-zinc-500">Username</TableHead>
-                  <TableHead className="text-zinc-500">Engagement</TableHead>
-                  <TableHead className="text-zinc-500">Visits</TableHead>
-                  <TableHead className="text-zinc-500">Lifecycle</TableHead>
-                  <TableHead className="text-zinc-500">Converted</TableHead>
-                  <TableHead className="text-zinc-500">Next Action</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="w-12 text-muted-foreground">Rank</TableHead>
+                  <TableHead className="text-muted-foreground">Username</TableHead>
+                  <TableHead className="text-muted-foreground">Engagement</TableHead>
+                  <TableHead className="text-muted-foreground">Visits</TableHead>
+                  <TableHead className="text-muted-foreground">Lifecycle</TableHead>
+                  <TableHead className="text-muted-foreground">Converted</TableHead>
+                  <TableHead className="text-muted-foreground">Next Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {ranked.map((v, i) => {
                   const rank = i + 1
                   return (
-                    <TableRow key={v.username} className="border-zinc-800/50">
+                    <TableRow key={v.username} className="border-border/50">
                       <TableCell>
                         <span
                           className={`text-sm font-bold tabular-nums ${
-                            rank === 1 ? "text-amber-400" : rank <= 3 ? "text-zinc-300" : "text-zinc-500"
+                            rank === 1 ? "text-amber-400" : rank <= 3 ? "text-foreground/80" : "text-muted-foreground"
                           }`}
                         >
                           {rank <= 3 ? `#${rank}` : rank}
                         </span>
                       </TableCell>
-                      <TableCell className="font-medium text-white">{v.username}</TableCell>
+                      <TableCell className="font-medium text-foreground">{v.username}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className={`text-sm font-bold ${scoreColor(v.engagement_score)}`}>
                             {(v.engagement_score * 100).toFixed(0)}
                           </span>
-                          <div className="h-1.5 w-16 rounded-full bg-zinc-800">
+                          <div className="h-1.5 w-16 rounded-full bg-accent">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-zinc-600 to-orange-400"
+                              className="h-full rounded-full bg-gradient-to-r from-muted-foreground to-orange-400"
                               style={{ width: `${v.engagement_score * 100}%` }}
                             />
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="tabular-nums text-zinc-300">{v.visit_count}</TableCell>
+                      <TableCell className="tabular-nums text-foreground/80">{v.visit_count}</TableCell>
                       <TableCell>
                         {v.lifecycle_stage ? (
-                          <Badge variant="outline" className="text-[9px] border-zinc-700 bg-zinc-800/50 text-zinc-300">
+                          <Badge variant="outline" className="text-[9px] border-border/80 bg-accent/30 text-foreground/80">
                             {v.lifecycle_stage}
                           </Badge>
                         ) : (
-                          <span className="text-zinc-600 text-xs">—</span>
+                          <span className="text-muted-foreground/60 text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -235,7 +235,7 @@ export default function EngagementPage() {
                             YES
                           </Badge>
                         ) : (
-                          <span className="text-zinc-600 text-xs">—</span>
+                          <span className="text-muted-foreground/60 text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>

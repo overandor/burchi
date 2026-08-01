@@ -130,13 +130,13 @@ export default function KpiDashboardPage() {
       </div>
 
       {/* Trends chart */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <TrendingUp className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">KPI Trends</CardTitle>
+          <CardTitle className="text-base text-foreground">KPI Trends</CardTitle>
           <Badge
             variant="outline"
-            className="ml-auto border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]"
+            className="ml-auto border-border/80 bg-accent/30 text-muted-foreground text-[9px]"
           >
             30 DAYS
           </Badge>
@@ -199,7 +199,7 @@ export default function KpiDashboardPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No KPI history available
             </div>
           )}
@@ -207,10 +207,10 @@ export default function KpiDashboardPage() {
       </Card>
 
       {/* Line chart for finer trend comparison */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <LineChartIcon className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Impression / Visitor / Click Lines</CardTitle>
+          <CardTitle className="text-base text-foreground">Impression / Visitor / Click Lines</CardTitle>
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
@@ -235,7 +235,7 @@ export default function KpiDashboardPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No KPI history available
             </div>
           )}
@@ -243,45 +243,45 @@ export default function KpiDashboardPage() {
       </Card>
 
       {/* KPI snapshots table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <CalendarCheck className="h-5 w-5 text-emerald-400" />
-          <CardTitle className="text-base text-white">KPI Snapshots</CardTitle>
+          <CardTitle className="text-base text-foreground">KPI Snapshots</CardTitle>
         </CardHeader>
         <CardContent>
           {kpis.length > 0 ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-400">Date</TableHead>
-                  <TableHead className="text-right text-zinc-400">Impressions</TableHead>
-                  <TableHead className="text-right text-zinc-400">Visitors</TableHead>
-                  <TableHead className="text-right text-zinc-400">Clicks</TableHead>
-                  <TableHead className="text-right text-zinc-400">Contacts</TableHead>
-                  <TableHead className="text-right text-zinc-400">Bookings</TableHead>
-                  <TableHead className="text-right text-zinc-400">Revenue</TableHead>
-                  <TableHead className="text-right text-zinc-400">CTR</TableHead>
-                  <TableHead className="text-right text-zinc-400">Conv. Rate</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Date</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Impressions</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Visitors</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Clicks</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Contacts</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Bookings</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Revenue</TableHead>
+                  <TableHead className="text-right text-muted-foreground">CTR</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Conv. Rate</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {kpis.map((k) => (
-                  <TableRow key={k.id ?? k.date} className="border-zinc-800/60">
-                    <TableCell className="text-zinc-300 tabular-nums">{k.date}</TableCell>
-                    <TableCell className="text-right text-white tabular-nums">{fmt(k.impressions)}</TableCell>
-                    <TableCell className="text-right text-white tabular-nums">{fmt(k.visitors)}</TableCell>
-                    <TableCell className="text-right text-white tabular-nums">{fmt(k.clicks)}</TableCell>
-                    <TableCell className="text-right text-white tabular-nums">{fmt(k.contacts)}</TableCell>
-                    <TableCell className="text-right text-white tabular-nums">{fmt(k.bookings)}</TableCell>
+                  <TableRow key={k.id ?? k.date} className="border-border/60">
+                    <TableCell className="text-foreground/80 tabular-nums">{k.date}</TableCell>
+                    <TableCell className="text-right text-foreground tabular-nums">{fmt(k.impressions)}</TableCell>
+                    <TableCell className="text-right text-foreground tabular-nums">{fmt(k.visitors)}</TableCell>
+                    <TableCell className="text-right text-foreground tabular-nums">{fmt(k.clicks)}</TableCell>
+                    <TableCell className="text-right text-foreground tabular-nums">{fmt(k.contacts)}</TableCell>
+                    <TableCell className="text-right text-foreground tabular-nums">{fmt(k.bookings)}</TableCell>
                     <TableCell className="text-right text-emerald-400 tabular-nums">{fmtMoney(k.revenue)}</TableCell>
-                    <TableCell className="text-right text-zinc-300 tabular-nums">{fmtPct(k.ctr)}</TableCell>
-                    <TableCell className="text-right text-zinc-300 tabular-nums">{fmtPct(k.conversion_rate)}</TableCell>
+                    <TableCell className="text-right text-foreground/80 tabular-nums">{fmtPct(k.ctr)}</TableCell>
+                    <TableCell className="text-right text-foreground/80 tabular-nums">{fmtPct(k.conversion_rate)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               No KPI snapshots available
             </div>
           )}

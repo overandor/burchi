@@ -59,32 +59,32 @@ export default function GgufInferencePage() {
       />
 
       {/* Playground */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-blue-400" />
-            <CardTitle className="text-base text-white">Prompt</CardTitle>
+            <CardTitle className="text-base text-foreground">Prompt</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider text-zinc-500">Prompt</label>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Prompt</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
-              className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+              className="w-full resize-none rounded-lg border border-border bg-accent/50 p-3 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
               placeholder="Enter your prompt..."
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider text-zinc-500">Model</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Model</label>
               <select
                 value={modelId}
                 onChange={(e) => setModelId(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none focus:border-zinc-700"
+                className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none focus:border-border/80"
               >
                 {modelList.length === 0 ? (
                   <option value="qwen2-0.5b-q3k">qwen2-0.5b-q3k (default)</option>
@@ -98,7 +98,7 @@ export default function GgufInferencePage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider text-zinc-500">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Max Tokens
               </label>
               <input
@@ -107,7 +107,7 @@ export default function GgufInferencePage() {
                 max={2048}
                 value={maxTokens}
                 onChange={(e) => setMaxTokens(Number(e.target.value) || 128)}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none focus:border-zinc-700"
+                className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none focus:border-border/80"
               />
             </div>
           </div>
@@ -124,12 +124,12 @@ export default function GgufInferencePage() {
 
       {/* Result */}
       {result && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Cpu className="h-4 w-4 text-emerald-400" />
-                <CardTitle className="text-base text-white">Response</CardTitle>
+                <CardTitle className="text-base text-foreground">Response</CardTitle>
               </div>
               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
                 {result.model_id ?? modelId}
@@ -137,39 +137,39 @@ export default function GgufInferencePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-sm leading-relaxed text-zinc-200">
+            <p className="whitespace-pre-wrap rounded-lg border border-border bg-card/40 p-3 text-sm leading-relaxed text-foreground/90">
               {result.response ?? "(empty response)"}
             </p>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+              <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
                 <Gauge className="h-3.5 w-3.5 text-emerald-400 mb-1" />
                 <span className="text-sm font-bold text-emerald-400 tabular-nums">
                   {typeof result.tokens_per_second === "number"
                     ? result.tokens_per_second.toFixed(1)
                     : "—"}
                 </span>
-                <span className="text-[9px] text-zinc-600">tokens/s</span>
+                <span className="text-[9px] text-muted-foreground/60">tokens/s</span>
               </div>
-              <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                <Clock className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                <span className="text-sm font-bold text-white tabular-nums">
+              <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                <span className="text-sm font-bold text-foreground tabular-nums">
                   {result.time_ms ?? "—"} ms
                 </span>
-                <span className="text-[9px] text-zinc-600">latency</span>
+                <span className="text-[9px] text-muted-foreground/60">latency</span>
               </div>
-              <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                <Cpu className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                <span className="text-sm font-bold text-white tabular-nums">
+              <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                <Cpu className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                <span className="text-sm font-bold text-foreground tabular-nums">
                   {result.tokens_generated ?? "—"}
                 </span>
-                <span className="text-[9px] text-zinc-600">generated</span>
+                <span className="text-[9px] text-muted-foreground/60">generated</span>
               </div>
-              <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                <Terminal className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                <span className="text-sm font-bold text-white tabular-nums truncate max-w-full">
+              <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                <Terminal className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                <span className="text-sm font-bold text-foreground tabular-nums truncate max-w-full">
                   {result.node_id ?? "—"}
                 </span>
-                <span className="text-[9px] text-zinc-600">node</span>
+                <span className="text-[9px] text-muted-foreground/60">node</span>
               </div>
             </div>
           </CardContent>
@@ -177,21 +177,21 @@ export default function GgufInferencePage() {
       )}
 
       {/* Recent logs */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Recent Inference Logs</CardTitle>
+          <CardTitle className="text-base text-foreground">Recent Inference Logs</CardTitle>
         </CardHeader>
         <CardContent>
           {logsLoading ? (
             <LoadingState label="Loading logs..." />
           ) : inferenceLogs.length === 0 ? (
-            <p className="py-8 text-center text-sm text-zinc-500">No inference logs yet.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">No inference logs yet.</p>
           ) : (
             <div className="space-y-2">
               {inferenceLogs.slice(0, 10).map((log) => (
                 <div
                   key={log.id}
-                  className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs"
+                  className="rounded-lg border border-border bg-card/40 p-3 text-xs"
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
@@ -201,9 +201,9 @@ export default function GgufInferencePage() {
                       >
                         {log.model_id}
                       </Badge>
-                      <span className="text-zinc-600">{log.node_id}</span>
+                      <span className="text-muted-foreground/60">{log.node_id}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-zinc-500">
+                    <div className="flex items-center gap-3 text-muted-foreground">
                       <span className="text-emerald-400">
                         {typeof log.tokens_per_second === "number"
                           ? `${log.tokens_per_second.toFixed(1)} tok/s`
@@ -213,8 +213,8 @@ export default function GgufInferencePage() {
                       <span>{log.tokens_generated ?? "—"} tok</span>
                     </div>
                   </div>
-                  <p className="line-clamp-2 text-zinc-400">
-                    <span className="text-zinc-600">prompt:</span> {log.prompt}
+                  <p className="line-clamp-2 text-muted-foreground">
+                    <span className="text-muted-foreground/60">prompt:</span> {log.prompt}
                   </p>
                 </div>
               ))}

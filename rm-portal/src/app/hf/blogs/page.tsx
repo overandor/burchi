@@ -32,10 +32,10 @@ export default function HfBlogsPage() {
 
       <div className="space-y-3">
         {blogs.map((b: any, i: number) => (
-          <Card key={b.id ?? i} className="border-zinc-800 bg-zinc-900/50">
+          <Card key={b.id ?? i} className="border-border bg-card/50">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-white">{b.filename ?? `Blog #${b.id ?? i}`}</CardTitle>
+                <CardTitle className="text-sm text-foreground">{b.filename ?? `Blog #${b.id ?? i}`}</CardTitle>
                 {b.topic && (
                   <Badge variant="outline" className="border-purple-500/30 bg-purple-500/10 text-purple-400 text-[9px]">
                     {b.topic}
@@ -45,10 +45,10 @@ export default function HfBlogsPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {b.content && (
-                <p className="line-clamp-3 text-xs text-zinc-400">{b.content}</p>
+                <p className="line-clamp-3 text-xs text-muted-foreground">{b.content}</p>
               )}
               {b.date_generated && (
-                <p className="text-[10px] text-zinc-600">Generated: {b.date_generated}</p>
+                <p className="text-[10px] text-muted-foreground/60">Generated: {b.date_generated}</p>
               )}
             </CardContent>
           </Card>

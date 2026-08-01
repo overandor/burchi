@@ -59,44 +59,44 @@ export default function SettingsPage() {
       <PageHeader title="System Settings" subtitle="Configuration, control state, and environment" />
 
       {/* System Configuration */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Server className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">System Configuration</CardTitle>
+          <CardTitle className="text-base text-foreground">System Configuration</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
+            <div className="rounded-lg border border-border bg-card/30 p-4">
               <div className="flex items-center gap-2">
                 <Server className="h-4 w-4 text-blue-400" />
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">API Base URL</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">API Base URL</span>
               </div>
-              <p className="mt-1.5 text-sm font-mono text-white">{API_BASE_URL}</p>
+              <p className="mt-1.5 text-sm font-mono text-foreground">{API_BASE_URL}</p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
+            <div className="rounded-lg border border-border bg-card/30 p-4">
               <div className="flex items-center gap-2">
                 <Database className="h-4 w-4 text-emerald-400" />
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Database Path</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Database Path</span>
               </div>
-              <p className="mt-1.5 text-sm font-mono text-white">
+              <p className="mt-1.5 text-sm font-mono text-foreground">
                 {controlState?.db_path || "data/revenue_ops.db"}
               </p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
+            <div className="rounded-lg border border-border bg-card/30 p-4">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-orange-400" />
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Operating Mode</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Operating Mode</span>
               </div>
               <p className="mt-1.5 text-sm font-bold text-orange-400">
                 {controlState?.mode?.toUpperCase() || "AUTO"}
               </p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
+            <div className="rounded-lg border border-border bg-card/30 p-4">
               <div className="flex items-center gap-2">
                 <Settings className="h-4 w-4 text-purple-400" />
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">Scheduler Active</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Scheduler Active</span>
               </div>
-              <p className="mt-1.5 text-sm font-bold text-white">
+              <p className="mt-1.5 text-sm font-bold text-foreground">
                 {controlState?.scheduler_active || "true"}
               </p>
             </div>
@@ -105,20 +105,20 @@ export default function SettingsPage() {
       </Card>
 
       {/* Seed Data */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Sprout className="h-5 w-5 text-emerald-400" />
-          <CardTitle className="text-base text-white">Data Management</CardTitle>
+          <CardTitle className="text-base text-foreground">Data Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/30 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-4 py-3">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
                 <Sprout className="h-4 w-4 text-emerald-400" />
               </div>
               <div>
-                <span className="text-sm text-white">Seed Database</span>
-                <p className="text-[10px] text-zinc-500">
+                <span className="text-sm text-foreground">Seed Database</span>
+                <p className="text-[10px] text-muted-foreground">
                   Populate the database with initial demo data (experiments, visitors, telemetry)
                 </p>
               </div>
@@ -161,36 +161,36 @@ export default function SettingsPage() {
       </Card>
 
       {/* Control State Table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Settings className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Control State</CardTitle>
-          <span className="ml-auto text-[10px] text-zinc-500">{controlEntries.length} keys</span>
+          <CardTitle className="text-base text-foreground">Control State</CardTitle>
+          <span className="ml-auto text-[10px] text-muted-foreground">{controlEntries.length} keys</span>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Key</TableHead>
-                <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Value</TableHead>
-                <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider text-right">Actions</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Key</TableHead>
+                <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Value</TableHead>
+                <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {controlEntries.map(([key, value]) => (
-                <TableRow key={key} className="border-zinc-800/50">
-                  <TableCell className="text-xs font-mono text-zinc-300">{key}</TableCell>
+                <TableRow key={key} className="border-border/50">
+                  <TableCell className="text-xs font-mono text-foreground/80">{key}</TableCell>
                   <TableCell>
                     {editingKey === key ? (
                       <input
                         type="text"
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
-                        className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-white outline-none focus:border-blue-500"
+                        className="w-full rounded border border-border/80 bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-blue-500"
                         autoFocus
                       />
                     ) : (
-                      <span className="text-xs font-mono text-white">{value}</span>
+                      <span className="text-xs font-mono text-foreground">{value}</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-6 border-zinc-700 px-2 text-[10px] text-zinc-400"
+                          className="h-6 border-border/80 px-2 text-[10px] text-muted-foreground"
                           onClick={() => {
                             setEditingKey(null)
                             setEditValue("")
@@ -221,7 +221,7 @@ export default function SettingsPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 px-2 text-[10px] text-zinc-400 hover:text-white"
+                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
                         onClick={() => {
                           setEditingKey(key)
                           setEditValue(value)
@@ -239,44 +239,44 @@ export default function SettingsPage() {
       </Card>
 
       {/* Environment Info */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Info className="h-5 w-5 text-amber-400" />
-          <CardTitle className="text-base text-white">Environment Info</CardTitle>
+          <CardTitle className="text-base text-foreground">Environment Info</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Next.js</span>
-              <p className="text-sm font-bold text-white">16 (App Router)</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Next.js</span>
+              <p className="text-sm font-bold text-foreground">16 (App Router)</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Framework</span>
-              <p className="text-sm font-bold text-white">React 19</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Framework</span>
+              <p className="text-sm font-bold text-foreground">React 19</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Styling</span>
-              <p className="text-sm font-bold text-white">Tailwind CSS v4</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Styling</span>
+              <p className="text-sm font-bold text-foreground">Tailwind CSS v4</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">UI Library</span>
-              <p className="text-sm font-bold text-white">shadcn/ui</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">UI Library</span>
+              <p className="text-sm font-bold text-foreground">shadcn/ui</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Icons</span>
-              <p className="text-sm font-bold text-white">lucide-react</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Icons</span>
+              <p className="text-sm font-bold text-foreground">lucide-react</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Runtime</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Runtime</span>
               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[9px]">
                 CLIENT-SIDE
               </Badge>
             </div>
           </div>
-          <Separator className="my-4 bg-zinc-800" />
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Separator className="my-4 bg-accent" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Info className="h-3.5 w-3.5" />
-            Control state changes are sent via POST to <code className="text-zinc-400">/api/control/&#123;key&#125;</code>{" "}
+            Control state changes are sent via POST to <code className="text-muted-foreground">/api/control/&#123;key&#125;</code>{" "}
             and take effect immediately.
           </div>
         </CardContent>

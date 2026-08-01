@@ -40,16 +40,16 @@ export default function ProfileStatePage() {
       <PageHeader title="Profile State" subtitle="Current profile configuration and live metrics" />
 
       {/* Profile Status */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <CircleDot className="h-5 w-5 text-emerald-400" />
-          <CardTitle className="text-base text-white">Profile Status</CardTitle>
+          <CardTitle className="text-base text-foreground">Profile Status</CardTitle>
           <Badge
             variant="outline"
             className={`ml-auto text-[9px] ${
               isOnline
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                : "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+                : "border-border/80 bg-accent/30 text-muted-foreground"
             }`}
           >
             {isOnline ? (
@@ -68,28 +68,28 @@ export default function ProfileStatePage() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Availability</span>
-              <p className={`text-sm font-bold ${isOnline ? "text-emerald-400" : "text-zinc-500"}`}>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Availability</span>
+              <p className={`text-sm font-bold ${isOnline ? "text-emerald-400" : "text-muted-foreground"}`}>
                 {availability.toUpperCase()}
               </p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Visibility</span>
-              <p className="text-sm font-bold text-white">{visibility.toUpperCase()}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Visibility</span>
+              <p className="text-sm font-bold text-foreground">{visibility.toUpperCase()}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Pricing State</span>
-              <p className="text-sm font-bold text-white">{pricingState.toUpperCase()}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Pricing State</span>
+              <p className="text-sm font-bold text-foreground">{pricingState.toUpperCase()}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Mode</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Mode</span>
               <p className="text-sm font-bold text-orange-400">{data.mode}</p>
             </div>
           </div>
-          <Separator className="my-4 bg-zinc-800" />
+          <Separator className="my-4 bg-accent" />
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500">Current Bio</span>
-            <p className="mt-1 text-sm font-medium text-white">{data.current_bio}</p>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Current Bio</span>
+            <p className="mt-1 text-sm font-medium text-foreground">{data.current_bio}</p>
           </div>
         </CardContent>
       </Card>
@@ -108,33 +108,33 @@ export default function ProfileStatePage() {
 
       {/* Current Experiment & Leader Variant */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <GitBranch className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">Current Experiment</CardTitle>
+            <CardTitle className="text-base text-foreground">Current Experiment</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {activeExperiment ? (
               <>
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Experiment Name</span>
-                  <p className="text-sm font-medium text-white">{activeExperiment.name}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Experiment Name</span>
+                  <p className="text-sm font-medium text-foreground">{activeExperiment.name}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Status</span>
-                    <p className="text-sm font-bold text-white">{activeExperiment.status}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</span>
+                    <p className="text-sm font-bold text-foreground">{activeExperiment.status}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Observations</span>
-                    <p className="text-sm font-bold text-white tabular-nums">{activeExperiment.observations}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Observations</span>
+                    <p className="text-sm font-bold text-foreground tabular-nums">{activeExperiment.observations}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Reward Metric</span>
-                    <p className="text-sm font-medium text-white">{activeExperiment.reward_metric}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Reward Metric</span>
+                    <p className="text-sm font-medium text-foreground">{activeExperiment.reward_metric}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Confidence</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</span>
                     <p className="text-sm font-bold text-orange-400">
                       {(activeExperiment.confidence * 100).toFixed(0)}%
                     </p>
@@ -142,100 +142,100 @@ export default function ProfileStatePage() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Experiment Confidence</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Experiment Confidence</span>
                     <span className="text-xs font-bold text-orange-400">
                       {(activeExperiment.confidence * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <Progress value={activeExperiment.confidence * 100} className="h-2 bg-zinc-800" />
+                  <Progress value={activeExperiment.confidence * 100} className="h-2 bg-accent" />
                 </div>
               </>
             ) : (
-              <p className="text-sm text-zinc-500">No active experiment</p>
+              <p className="text-sm text-muted-foreground">No active experiment</p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <TrendingUp className="h-5 w-5 text-emerald-400" />
-            <CardTitle className="text-base text-white">Leader Variant</CardTitle>
+            <CardTitle className="text-base text-foreground">Leader Variant</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {leaderVariant ? (
               <>
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Variant Label</span>
-                  <p className="text-sm font-medium text-white">{leaderVariant.label}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Variant Label</span>
+                  <p className="text-sm font-medium text-foreground">{leaderVariant.label}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Reward</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Reward</span>
                     <p className="text-sm font-bold text-emerald-400 tabular-nums">
                       {leaderVariant.reward.toFixed(3)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Status</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</span>
                     <Badge variant="outline" className={`text-[9px] ${statusBadgeClass(leaderVariant.status)}`}>
                       {leaderVariant.status.toUpperCase()}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Impressions</span>
-                    <p className="text-sm font-bold text-white tabular-nums">{leaderVariant.impressions}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Impressions</span>
+                    <p className="text-sm font-bold text-foreground tabular-nums">{leaderVariant.impressions}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Clicks</span>
-                    <p className="text-sm font-bold text-white tabular-nums">{leaderVariant.clicks}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Clicks</span>
+                    <p className="text-sm font-bold text-foreground tabular-nums">{leaderVariant.clicks}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Contacts</span>
-                    <p className="text-sm font-bold text-white tabular-nums">{leaderVariant.contacts}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Contacts</span>
+                    <p className="text-sm font-bold text-foreground tabular-nums">{leaderVariant.contacts}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Conversions</span>
-                    <p className="text-sm font-bold text-white tabular-nums">{leaderVariant.conversions}</p>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Conversions</span>
+                    <p className="text-sm font-bold text-foreground tabular-nums">{leaderVariant.conversions}</p>
                   </div>
                 </div>
-                <Separator className="bg-zinc-800" />
+                <Separator className="bg-accent" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Bio Content</span>
-                  <p className="mt-1 text-xs text-zinc-400 leading-relaxed">{leaderVariant.content}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Bio Content</span>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{leaderVariant.content}</p>
                 </div>
               </>
             ) : (
-              <p className="text-sm text-zinc-500">No leader variant found</p>
+              <p className="text-sm text-muted-foreground">No leader variant found</p>
             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Additional KPI Metrics */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Activity className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Profile Performance</CardTitle>
+          <CardTitle className="text-base text-foreground">Profile Performance</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Repeat Visitors</span>
-              <p className="text-sm font-bold text-white tabular-nums">{kpi?.repeat_visitors?.toLocaleString() ?? "—"}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Repeat Visitors</span>
+              <p className="text-sm font-bold text-foreground tabular-nums">{kpi?.repeat_visitors?.toLocaleString() ?? "—"}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Contacts</span>
-              <p className="text-sm font-bold text-white tabular-nums">{kpi?.contacts?.toLocaleString() ?? "—"}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Contacts</span>
+              <p className="text-sm font-bold text-foreground tabular-nums">{kpi?.contacts?.toLocaleString() ?? "—"}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">CTR</span>
-              <p className="text-sm font-bold text-white tabular-nums">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">CTR</span>
+              <p className="text-sm font-bold text-foreground tabular-nums">
                 {kpi?.ctr != null ? `${kpi.ctr.toFixed(2)}%` : "—"}
               </p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Conversion Rate</span>
-              <p className="text-sm font-bold text-white tabular-nums">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Conversion Rate</span>
+              <p className="text-sm font-bold text-foreground tabular-nums">
                 {kpi?.conversion_rate != null ? `${kpi.conversion_rate.toFixed(2)}%` : "—"}
               </p>
             </div>

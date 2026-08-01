@@ -45,66 +45,66 @@ export default function PhotoManagerPage() {
       <PageHeader title="Photo Manager" subtitle="Manage profile photos, ordering, and rotation" />
 
       {/* Photo Rotation Capability */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <RefreshCw className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Photo Rotation</CardTitle>
+          <CardTitle className="text-base text-foreground">Photo Rotation</CardTitle>
           <Badge
             variant="outline"
             className={`ml-auto text-[9px] ${
               capPhotoRotation
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                : "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+                : "border-border/80 bg-accent/30 text-muted-foreground"
             }`}
           >
             {capPhotoRotation ? "ENABLED" : "DISABLED"}
           </Badge>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/30 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-4 py-3">
             <div className="flex items-center gap-3">
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                  capPhotoRotation ? "bg-emerald-500/10" : "bg-zinc-800/50"
+                  capPhotoRotation ? "bg-emerald-500/10" : "bg-accent/30"
                 }`}
               >
-                <RefreshCw className={`h-4 w-4 ${capPhotoRotation ? "text-emerald-400" : "text-zinc-600"}`} />
+                <RefreshCw className={`h-4 w-4 ${capPhotoRotation ? "text-emerald-400" : "text-muted-foreground/60"}`} />
               </div>
               <div>
-                <span className="text-sm text-white">Auto Photo Rotation</span>
-                <p className="text-[10px] text-zinc-500">
+                <span className="text-sm text-foreground">Auto Photo Rotation</span>
+                <p className="text-[10px] text-muted-foreground">
                   Allow the system to automatically rotate and reorder profile photos
                 </p>
               </div>
             </div>
             <Switch checked={capPhotoRotation} onCheckedChange={handleToggleRotation} disabled={toggling} />
           </div>
-          <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
             <Info className="h-3.5 w-3.5" />
-            Control key: <code className="text-zinc-400">cap_photo_rotation</code> — currently{" "}
-            <span className="text-zinc-400">{controlState?.cap_photo_rotation || "false"}</span>
+            Control key: <code className="text-muted-foreground">cap_photo_rotation</code> — currently{" "}
+            <span className="text-muted-foreground">{controlState?.cap_photo_rotation || "false"}</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Photo Grid */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <ImageIcon className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">Photo Gallery</CardTitle>
-          <span className="ml-auto text-[10px] text-zinc-500">{PHOTO_SLOTS.length} slots</span>
+          <CardTitle className="text-base text-foreground">Photo Gallery</CardTitle>
+          <span className="ml-auto text-[10px] text-muted-foreground">{PHOTO_SLOTS.length} slots</span>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {PHOTO_SLOTS.map((slot) => (
               <div
                 key={slot.position}
-                className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/30"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-card/30"
               >
                 {/* Placeholder */}
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-                  <ImageIcon className="h-10 w-10 text-zinc-700" />
-                  <span className="text-[10px] text-zinc-600">Photo {slot.position}</span>
+                  <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
+                  <span className="text-[10px] text-muted-foreground/60">Photo {slot.position}</span>
                 </div>
 
                 {/* Position badge */}
@@ -114,7 +114,7 @@ export default function PhotoManagerPage() {
                     className={`text-[9px] ${
                       slot.status === "active"
                         ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                        : "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+                        : "border-border/80 bg-accent/30 text-muted-foreground"
                     }`}
                   >
                     #{slot.position} {slot.label}
@@ -124,13 +124,13 @@ export default function PhotoManagerPage() {
                 {/* Order controls */}
                 <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
-                    className="flex h-6 w-6 items-center justify-center rounded border border-zinc-700 bg-zinc-900/80 text-zinc-400 hover:text-white"
+                    className="flex h-6 w-6 items-center justify-center rounded border border-border/80 bg-card/80 text-muted-foreground hover:text-foreground"
                     disabled={slot.position === 1}
                   >
                     <MoveUp className="h-3 w-3" />
                   </button>
                   <button
-                    className="flex h-6 w-6 items-center justify-center rounded border border-zinc-700 bg-zinc-900/80 text-zinc-400 hover:text-white"
+                    className="flex h-6 w-6 items-center justify-center rounded border border-border/80 bg-card/80 text-muted-foreground hover:text-foreground"
                     disabled={slot.position === PHOTO_SLOTS.length}
                   >
                     <MoveDown className="h-3 w-3" />
@@ -143,21 +143,21 @@ export default function PhotoManagerPage() {
       </Card>
 
       {/* Photo Ordering State */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <MoveUp className="h-5 w-5 text-amber-400" />
-          <CardTitle className="text-base text-white">Photo Ordering State</CardTitle>
+          <CardTitle className="text-base text-foreground">Photo Ordering State</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {PHOTO_SLOTS.map((slot, i) => (
               <div key={slot.position}>
-                <div className="flex items-center justify-between rounded-lg border border-zinc-800/50 bg-zinc-900/30 px-3 py-2">
+                <div className="flex items-center justify-between rounded-lg border border-border/50 bg-card/30 px-3 py-2">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-800 text-[10px] font-bold text-zinc-400">
+                    <span className="flex h-6 w-6 items-center justify-center rounded bg-accent text-[10px] font-bold text-muted-foreground">
                       {slot.position}
                     </span>
-                    <span className="text-sm text-white">{slot.label}</span>
+                    <span className="text-sm text-foreground">{slot.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
@@ -165,14 +165,14 @@ export default function PhotoManagerPage() {
                       className={`text-[9px] ${
                         slot.status === "active"
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                          : "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+                          : "border-border/80 bg-accent/30 text-muted-foreground"
                       }`}
                     >
                       {slot.status === "active" ? "FILLED" : "EMPTY"}
                     </Badge>
                   </div>
                 </div>
-                {i < PHOTO_SLOTS.length - 1 && <Separator className="my-1 bg-zinc-800/30" />}
+                {i < PHOTO_SLOTS.length - 1 && <Separator className="my-1 bg-accent/30" />}
               </div>
             ))}
           </div>

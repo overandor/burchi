@@ -109,11 +109,11 @@ export default function ControlPage() {
       <PageHeader title="Control Center" subtitle="Human authority over autonomous operations" />
 
       {/* Mode selector */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Shield className="h-5 w-5 text-orange-400" />
-          <CardTitle className="text-base text-white">Operating Mode</CardTitle>
-          {updating && <span className="ml-auto text-[10px] text-zinc-500">updating...</span>}
+          <CardTitle className="text-base text-foreground">Operating Mode</CardTitle>
+          {updating && <span className="ml-auto text-[10px] text-muted-foreground">updating...</span>}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
@@ -127,8 +127,8 @@ export default function ControlPage() {
                   onClick={() => changeMode(m)}
                   className={`flex flex-col items-center gap-2 rounded-lg border p-4 transition-all ${
                     active
-                      ? `${modeColors[m]} ring-1 ring-offset-2 ring-offset-zinc-900`
-                      : "border-zinc-800 bg-zinc-900/30 text-zinc-500 hover:bg-zinc-900/60"
+                      ? `${modeColors[m]} ring-1 ring-offset-2 ring-offset-sidebar`
+                      : "border-border bg-card/30 text-muted-foreground hover:bg-accent/50"
                   }`}
                   style={active ? { boxShadow: "0 0 0 1px currentColor" } : {}}
                 >
@@ -160,12 +160,12 @@ export default function ControlPage() {
       </Card>
 
       {/* Capabilities */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Settings className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Capability Permissions</CardTitle>
+          <CardTitle className="text-base text-foreground">Capability Permissions</CardTitle>
           {locked && (
-            <Badge variant="outline" className="ml-auto border-zinc-700 bg-zinc-800/50 text-zinc-500 text-[9px]">
+            <Badge variant="outline" className="ml-auto border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
               LOCKED
             </Badge>
           )}
@@ -175,15 +175,15 @@ export default function ControlPage() {
             {(Object.keys(capabilities) as string[]).map((key) => (
               <div
                 key={key}
-                className={`flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/30 px-4 py-3 ${
+                className={`flex items-center justify-between rounded-lg border border-border bg-card/30 px-4 py-3 ${
                   locked ? "opacity-50" : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${capabilities[key] ? "bg-emerald-500/10" : "bg-zinc-800/50"}`}>
-                    <Zap className={`h-4 w-4 ${capabilities[key] ? "text-emerald-400" : "text-zinc-600"}`} />
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${capabilities[key] ? "bg-emerald-500/10" : "bg-accent/30"}`}>
+                    <Zap className={`h-4 w-4 ${capabilities[key] ? "text-emerald-400" : "text-muted-foreground/60"}`} />
                   </div>
-                  <span className="text-sm text-white">{capabilityLabels[key] || key}</span>
+                  <span className="text-sm text-foreground">{capabilityLabels[key] || key}</span>
                 </div>
                 <Switch
                   checked={capabilities[key] && !locked}
@@ -197,33 +197,33 @@ export default function ControlPage() {
       </Card>
 
       {/* Current state summary */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Active State Summary</CardTitle>
+          <CardTitle className="text-base text-foreground">Active State Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Mode</span>
-              <p className={`text-sm font-bold ${modeLabels[mode]?.color || "text-zinc-400"}`}>{modeLabels[mode]?.label || mode}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Mode</span>
+              <p className={`text-sm font-bold ${modeLabels[mode]?.color || "text-muted-foreground"}`}>{modeLabels[mode]?.label || mode}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Active Capabilities</span>
-              <p className="text-sm font-bold text-white">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Active Capabilities</span>
+              <p className="text-sm font-bold text-foreground">
                 {Object.values(capabilities).filter(Boolean).length} / {Object.keys(capabilities).length}
               </p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Current Bio</span>
-              <p className="text-sm font-medium text-white">{overview?.current_bio || "—"}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Current Bio</span>
+              <p className="text-sm font-medium text-foreground">{overview?.current_bio || "—"}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Confidence</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</span>
               <p className="text-sm font-bold text-orange-400">{overview ? `${(overview.confidence * 100).toFixed(0)}%` : "—"}</p>
             </div>
           </div>
-          <Separator className="my-4 bg-zinc-800" />
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Separator className="my-4 bg-accent" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Shield className="h-3.5 w-3.5" />
             Changes to operating mode take effect immediately. Capability toggles require mode AUTO or APPROVAL.
           </div>

@@ -15,7 +15,7 @@ const RUNTIME_COLORS: Record<string, string> = {
   onnxruntime: "border-purple-500/30 bg-purple-500/10 text-purple-400",
   diffusers: "border-pink-500/30 bg-pink-500/10 text-pink-400",
   sentence_transformers: "border-cyan-500/30 bg-cyan-500/10 text-cyan-400",
-  custom: "border-zinc-700 bg-zinc-800/50 text-zinc-300",
+  custom: "border-border/80 bg-accent/30 text-foreground/80",
 }
 
 function runtimeBadgeClass(runtime: string): string {
@@ -81,10 +81,10 @@ export default function CompilerRegistryPage() {
 
       {/* Models grid */}
       {compiled.length === 0 ? (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardContent className="py-12 text-center space-y-3">
-            <Boxes className="mx-auto h-8 w-8 text-zinc-700" />
-            <p className="text-sm text-zinc-500">No models compiled yet.</p>
+            <Boxes className="mx-auto h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No models compiled yet.</p>
             <Link href="/compiler">
               <Button variant="outline" size="sm">
                 <Plus className="mr-2 h-3.5 w-3.5" />
@@ -99,11 +99,11 @@ export default function CompilerRegistryPage() {
             const runtime = m.runtime ?? m.execution_plan?.runtime ?? "custom"
             const arch = m.architectures?.[0] ?? m.model_type ?? "—"
             return (
-              <Card key={m.registered_model_id ?? m.repo_id ?? i} className="border-zinc-800 bg-zinc-900/50">
+              <Card key={m.registered_model_id ?? m.repo_id ?? i} className="border-border bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Cpu className="h-4 w-4 text-blue-400" />
-                    <CardTitle className="text-sm text-white">
+                    <CardTitle className="text-sm text-foreground">
                       {m.model_name ?? m.repo_id ?? "Unknown"}
                     </CardTitle>
                   </div>
@@ -113,36 +113,36 @@ export default function CompilerRegistryPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                      <Zap className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                      <span className="text-sm font-bold text-white truncate max-w-full">{arch}</span>
-                      <span className="text-[9px] text-zinc-600">architecture</span>
+                    <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                      <Zap className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                      <span className="text-sm font-bold text-foreground truncate max-w-full">{arch}</span>
+                      <span className="text-[9px] text-muted-foreground/60">architecture</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                      <Layers className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                      <span className="text-sm font-bold text-white">
+                    <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                      <Layers className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                      <span className="text-sm font-bold text-foreground">
                         {m.quantization ?? "none"}
                       </span>
-                      <span className="text-[9px] text-zinc-600">quantization</span>
+                      <span className="text-[9px] text-muted-foreground/60">quantization</span>
                     </div>
                   </div>
                   {m.repo_id && (
                     <div className="space-y-1">
-                      <span className="text-[10px] uppercase tracking-wider text-zinc-600">Repo ID</span>
-                      <code className="block truncate text-xs text-zinc-400">{m.repo_id}</code>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Repo ID</span>
+                      <code className="block truncate text-xs text-muted-foreground">{m.repo_id}</code>
                     </div>
                   )}
                   {m.endpoint?.url && (
                     <div className="space-y-1">
-                      <span className="text-[10px] uppercase tracking-wider text-zinc-600">Endpoint</span>
-                      <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-[10px] text-emerald-400">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Endpoint</span>
+                      <pre className="overflow-x-auto rounded-lg border border-border bg-sidebar p-2 text-[10px] text-emerald-400">
                         {m.endpoint.url}
                       </pre>
                     </div>
                   )}
                   {m.endpoint?.status && (
-                    <div className="flex items-center justify-between border-t border-zinc-800 pt-2">
-                      <span className="text-[10px] uppercase tracking-wider text-zinc-600">Status</span>
+                    <div className="flex items-center justify-between border-t border-border pt-2">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Status</span>
                       <Badge
                         variant="outline"
                         className={

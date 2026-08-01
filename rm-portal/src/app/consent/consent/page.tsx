@@ -17,40 +17,40 @@ export default function ConsentRecordsPage() {
     <div className="space-y-6">
       <PageHeader title="Consent Records" subtitle="Provenance for every contact — source, scope, and revocation status" />
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">All Consent Records</CardTitle>
+          <CardTitle className="text-base text-foreground">All Consent Records</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Contact</TableHead>
-                <TableHead className="text-zinc-500">Source</TableHead>
-                <TableHead className="text-zinc-500">Scope</TableHead>
-                <TableHead className="text-zinc-500">Consented At</TableHead>
-                <TableHead className="text-zinc-500">Status</TableHead>
-                <TableHead className="text-zinc-500">Revoked</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Contact</TableHead>
+                <TableHead className="text-muted-foreground">Source</TableHead>
+                <TableHead className="text-muted-foreground">Scope</TableHead>
+                <TableHead className="text-muted-foreground">Consented At</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Revoked</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     No consent records yet.
                   </TableCell>
                 </TableRow>
               ) : (
                 data.map((r) => (
-                  <TableRow key={r.id} className="border-zinc-800/50">
-                    <TableCell className="font-mono text-xs text-zinc-400">{r.contact_id.slice(0, 8)}</TableCell>
+                  <TableRow key={r.id} className="border-border/50">
+                    <TableCell className="font-mono text-xs text-muted-foreground">{r.contact_id.slice(0, 8)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[9px]">{r.consent_source}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[9px]">{r.consent_scope}</Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-zinc-400">{new Date(r.consented_at).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{new Date(r.consented_at).toLocaleString()}</TableCell>
                     <TableCell>
                       {r.revocation_status === "active" ? (
                         <span className="flex items-center gap-1 text-emerald-400 text-xs">
@@ -62,7 +62,7 @@ export default function ConsentRecordsPage() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs text-zinc-500">
+                    <TableCell className="text-xs text-muted-foreground">
                       {r.revoked_at ? new Date(r.revoked_at).toLocaleDateString() : "—"}
                       {r.revocation_reason ? ` (${r.revocation_reason})` : ""}
                     </TableCell>

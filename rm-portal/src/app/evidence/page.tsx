@@ -47,10 +47,10 @@ export default function EvidencePage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Receipt list */}
-        <Card className="border-zinc-800 bg-zinc-900/50 lg:col-span-2">
+        <Card className="border-border bg-card/50 lg:col-span-2">
           <CardHeader className="flex flex-row items-center gap-2">
             <ScrollText className="h-5 w-5 text-orange-400" />
-            <CardTitle className="text-base text-white">Receipt Log</CardTitle>
+            <CardTitle className="text-base text-foreground">Receipt Log</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[550px] pr-4">
@@ -65,16 +65,16 @@ export default function EvidencePage() {
                       className={`flex items-start gap-3 rounded-lg border px-3 py-3 cursor-pointer transition-colors ${
                         selected === r.id
                           ? "border-orange-500/30 bg-orange-500/5"
-                          : "border-zinc-800/50 bg-zinc-900/30 hover:bg-zinc-900/60"
+                          : "border-border/50 bg-card/30 hover:bg-accent/50"
                       }`}
                     >
-                      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zinc-800/50 ${statusColors[r.status] || "text-zinc-400"}`}>
+                      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/30 ${statusColors[r.status] || "text-muted-foreground"}`}>
                         <Icon className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-white">{r.action || r.decision}</span>
-                          <Badge variant="outline" className={`text-[8px] ${statusBadge[r.status] || "border-zinc-700 bg-zinc-800/50 text-zinc-500"}`}>
+                          <span className="text-xs font-medium text-foreground">{r.action || r.decision}</span>
+                          <Badge variant="outline" className={`text-[8px] ${statusBadge[r.status] || "border-border/80 bg-accent/30 text-muted-foreground"}`}>
                             {r.status.toUpperCase()}
                           </Badge>
                           {unavailable && (
@@ -83,11 +83,11 @@ export default function EvidencePage() {
                             </Badge>
                           )}
                         </div>
-                        <span className="text-[10px] text-zinc-600 tabular-nums">
+                        <span className="text-[10px] text-muted-foreground/60 tabular-nums">
                           {new Date(r.timestamp).toLocaleString("en-US", { hour12: false })}
                         </span>
                       </div>
-                      <ArrowRight className="h-3.5 w-3.5 text-zinc-700 shrink-0" />
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
                     </div>
                   )
                 })}
@@ -97,90 +97,90 @@ export default function EvidencePage() {
         </Card>
 
         {/* Detail panel */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="flex flex-row items-center gap-2">
             <FileJson className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">Receipt Detail</CardTitle>
+            <CardTitle className="text-base text-foreground">Receipt Detail</CardTitle>
           </CardHeader>
           <CardContent>
             {selectedReceipt ? (
               <div className="space-y-4">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Action</span>
-                  <p className="text-sm font-medium text-white">{selectedReceipt.action || selectedReceipt.decision}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Action</span>
+                  <p className="text-sm font-medium text-foreground">{selectedReceipt.action || selectedReceipt.decision}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Timestamp</span>
-                  <p className="text-xs text-zinc-400">{new Date(selectedReceipt.timestamp).toLocaleString("en-US", { hour12: false })}</p>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Timestamp</span>
+                  <p className="text-xs text-muted-foreground">{new Date(selectedReceipt.timestamp).toLocaleString("en-US", { hour12: false })}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Status</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</span>
                   <div className="mt-1">
                     <Badge variant="outline" className={statusBadge[selectedReceipt.status] || ""}>
                       {selectedReceipt.status.toUpperCase()}
                     </Badge>
                   </div>
                 </div>
-                <Separator className="bg-zinc-800" />
+                <Separator className="bg-accent" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Evidence Chain</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Evidence Chain</span>
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">1</div>
-                      <span className="text-zinc-500">Input</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
-                      <span className="text-zinc-300">{selectedReceipt.input_observation || "telemetry collected"}</span>
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">1</div>
+                      <span className="text-muted-foreground">Input</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
+                      <span className="text-foreground/80">{selectedReceipt.input_observation || "telemetry collected"}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">2</div>
-                      <span className="text-zinc-500">Source</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
-                      <span className="text-zinc-300">{selectedReceipt.source}</span>
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">2</div>
+                      <span className="text-muted-foreground">Source</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
+                      <span className="text-foreground/80">{selectedReceipt.source}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">3</div>
-                      <span className="text-zinc-500">Model</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
-                      <span className="text-zinc-300">{selectedReceipt.model}</span>
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">3</div>
+                      <span className="text-muted-foreground">Model</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
+                      <span className="text-foreground/80">{selectedReceipt.model}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">4</div>
-                      <span className="text-zinc-500">Decision</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
-                      <span className="text-zinc-300">{selectedReceipt.decision}</span>
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">4</div>
+                      <span className="text-muted-foreground">Decision</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
+                      <span className="text-foreground/80">{selectedReceipt.decision}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">5</div>
-                      <span className="text-zinc-500">Action</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
-                      <span className="text-zinc-300">{selectedReceipt.action}</span>
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">5</div>
+                      <span className="text-muted-foreground">Action</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
+                      <span className="text-foreground/80">{selectedReceipt.action}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">6</div>
-                      <span className="text-zinc-500">Result</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
-                      <span className="text-zinc-300">{selectedReceipt.result}</span>
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">6</div>
+                      <span className="text-muted-foreground">Result</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
+                      <span className="text-foreground/80">{selectedReceipt.result}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-zinc-800 text-[8px] text-zinc-400">7</div>
-                      <span className="text-zinc-500">Reward</span>
-                      <ArrowRight className="h-3 w-3 text-zinc-700" />
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-accent text-[8px] text-muted-foreground">7</div>
+                      <span className="text-muted-foreground">Reward</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/40" />
                       <span className={`font-bold ${selectedReceipt.reward >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                         {selectedReceipt.reward.toFixed(2)}
                       </span>
                     </div>
                   </div>
                 </div>
-                <Separator className="bg-zinc-800" />
+                <Separator className="bg-accent" />
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">Detail Payload</span>
-                  <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-[10px] text-zinc-400">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Detail Payload</span>
+                  <pre className="mt-2 overflow-x-auto rounded-lg border border-border bg-sidebar p-3 text-[10px] text-muted-foreground">
                     {JSON.stringify(selectedReceipt.detail, null, 2)}
                   </pre>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
+              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
                 Select a receipt to view evidence chain
               </div>
             )}

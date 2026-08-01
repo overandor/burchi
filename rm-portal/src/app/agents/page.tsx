@@ -46,10 +46,10 @@ export default function AgentsPage() {
       <PageHeader title="Agent Health" subtitle="System health and automation agent monitoring" />
 
       {/* System Health Status */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Shield className="h-5 w-5 text-orange-400" />
-          <CardTitle className="text-base text-white">System Health</CardTitle>
+          <CardTitle className="text-base text-foreground">System Health</CardTitle>
           <Badge
             variant="outline"
             className={`ml-auto text-[9px] ${
@@ -69,17 +69,17 @@ export default function AgentsPage() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Status</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</span>
               <p className={`text-sm font-bold ${schedulerActive ? "text-emerald-400" : "text-red-400"}`}>
                 {health?.status?.toUpperCase() ?? "UNKNOWN"}
               </p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Mode</span>
-              <p className="text-sm font-bold text-white">{health?.mode ?? "—"}</p>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Mode</span>
+              <p className="text-sm font-bold text-foreground">{health?.mode ?? "—"}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Scheduler</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Scheduler</span>
               <div className="flex items-center gap-1.5">
                 <span
                   className={`h-2 w-2 rounded-full ${schedulerActive ? "bg-emerald-400" : "bg-red-400"}`}
@@ -90,7 +90,7 @@ export default function AgentsPage() {
               </div>
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">Emergency Stop</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Emergency Stop</span>
               <div className="flex items-center gap-1.5">
                 {emergencyStop ? (
                   <>
@@ -106,8 +106,8 @@ export default function AgentsPage() {
               </div>
             </div>
           </div>
-          <Separator className="my-4 bg-zinc-800" />
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Separator className="my-4 bg-accent" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             Last health check: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "—"}
           </div>
@@ -116,25 +116,25 @@ export default function AgentsPage() {
 
       {/* Agent Health Cards */}
       <div>
-        <h2 className="mb-3 text-sm font-bold text-white">Agent Workflows</h2>
+        <h2 className="mb-3 text-sm font-bold text-foreground">Agent Workflows</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {AGENTS.map((agent) => {
             const Icon = agent.icon
             return (
-              <Card key={agent.name} className="border-zinc-800 bg-zinc-900/50">
+              <Card key={agent.name} className="border-border bg-card/50">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
                         className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          agent.running ? "bg-emerald-500/10" : "bg-zinc-800/50"
+                          agent.running ? "bg-emerald-500/10" : "bg-accent/30"
                         }`}
                       >
-                        <Icon className={`h-5 w-5 ${agent.running ? "text-emerald-400" : "text-zinc-600"}`} />
+                        <Icon className={`h-5 w-5 ${agent.running ? "text-emerald-400" : "text-muted-foreground/60"}`} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{agent.name}</p>
-                        <p className="text-[10px] text-zinc-500">{agent.description}</p>
+                        <p className="text-sm font-bold text-foreground">{agent.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{agent.description}</p>
                       </div>
                     </div>
                     <span
@@ -143,9 +143,9 @@ export default function AgentsPage() {
                       }`}
                     />
                   </div>
-                  <Separator className="my-3 bg-zinc-800" />
+                  <Separator className="my-3 bg-accent" />
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">Status</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</span>
                     <Badge
                       variant="outline"
                       className={`text-[9px] ${
@@ -165,11 +165,11 @@ export default function AgentsPage() {
       </div>
 
       {/* Recent Actions Table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Cpu className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">Recent Actions</CardTitle>
-          <span className="ml-auto text-[10px] text-zinc-500">{actions?.length ?? 0} actions</span>
+          <CardTitle className="text-base text-foreground">Recent Actions</CardTitle>
+          <span className="ml-auto text-[10px] text-muted-foreground">{actions?.length ?? 0} actions</span>
         </CardHeader>
         <CardContent>
           {!actions || actions.length === 0 ? (
@@ -177,26 +177,26 @@ export default function AgentsPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Action</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Target</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Mode</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Status</TableHead>
-                  <TableHead className="text-zinc-500 text-[10px] uppercase tracking-wider">Scheduled</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Action</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Target</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Mode</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="text-muted-foreground text-[10px] uppercase tracking-wider">Scheduled</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {actions.map((action) => (
-                  <TableRow key={action.id} className="border-zinc-800/50">
-                    <TableCell className="text-xs text-white">{action.action_type}</TableCell>
-                    <TableCell className="text-xs text-zinc-400">{action.target || "—"}</TableCell>
-                    <TableCell className="text-xs text-zinc-400">{action.mode}</TableCell>
+                  <TableRow key={action.id} className="border-border/50">
+                    <TableCell className="text-xs text-foreground">{action.action_type}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{action.target || "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{action.mode}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`text-[9px] ${statusBadgeClass(action.status)}`}>
                         {action.status.toUpperCase()}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-[10px] text-zinc-500 tabular-nums">
+                    <TableCell className="text-[10px] text-muted-foreground tabular-nums">
                       {action.scheduled_at
                         ? new Date(action.scheduled_at).toLocaleTimeString("en-US", { hour12: false })
                         : "—"}

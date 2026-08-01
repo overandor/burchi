@@ -17,7 +17,7 @@ const typeBadgeClass: Record<string, string> = {
 }
 
 function typeBadgeClassFor(type: string): string {
-  return typeBadgeClass[type.toLowerCase()] || "border-zinc-700 bg-zinc-800/50 text-zinc-400"
+  return typeBadgeClass[type.toLowerCase()] || "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 function dateKey(iso: string): string {
@@ -57,28 +57,28 @@ export default function ContentCalendarPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader title="Content Calendar" subtitle="Content organized by creation date" />
-        <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-300">
+        <Badge variant="outline" className="border-border/80 bg-accent/30 text-foreground/80">
           <CalendarDays className="mr-1 h-3 w-3" />
           {sortedDates.length} days
         </Badge>
       </div>
 
       {/* Type summary */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">Type Distribution</CardTitle>
+          <CardTitle className="text-base text-foreground">Type Distribution</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {Object.entries(typeCounts).map(([type, count]) => (
               <Badge key={type} variant="outline" className={`text-[10px] ${typeBadgeClassFor(type)}`}>
                 {type}
-                <span className="ml-1.5 rounded-full bg-zinc-800 px-1.5 text-[9px] tabular-nums text-zinc-300">{count}</span>
+                <span className="ml-1.5 rounded-full bg-accent px-1.5 text-[9px] tabular-nums text-foreground/80">{count}</span>
               </Badge>
             ))}
             {Object.keys(typeCounts).length === 0 && (
-              <span className="text-xs text-zinc-500">No content available</span>
+              <span className="text-xs text-muted-foreground">No content available</span>
             )}
           </div>
         </CardContent>
@@ -86,10 +86,10 @@ export default function ContentCalendarPage() {
 
       {/* Calendar days */}
       {sortedDates.length === 0 ? (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16">
-            <Calendar className="h-8 w-8 text-zinc-600" />
-            <p className="text-sm text-zinc-500">No content scheduled yet</p>
+            <Calendar className="h-8 w-8 text-muted-foreground/60" />
+            <p className="text-sm text-muted-foreground">No content scheduled yet</p>
           </CardContent>
         </Card>
       ) : (
@@ -103,20 +103,20 @@ export default function ContentCalendarPage() {
             }, {})
 
             return (
-              <Card key={date} className="border-zinc-800 bg-zinc-900/50">
+              <Card key={date} className="border-border bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950">
-                      <span className="text-[8px] uppercase text-zinc-500">
+                    <div className="flex h-9 w-9 flex-col items-center justify-center rounded-lg border border-border bg-sidebar">
+                      <span className="text-[8px] uppercase text-muted-foreground">
                         {new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short" })}
                       </span>
-                      <span className="text-sm font-bold leading-none text-white">
+                      <span className="text-sm font-bold leading-none text-foreground">
                         {new Date(date + "T00:00:00").getDate()}
                       </span>
                     </div>
                     <div>
-                      <CardTitle className="text-sm text-white">{formatDateLabel(date)}</CardTitle>
-                      <p className="text-[10px] text-zinc-500">{items.length} item{items.length !== 1 ? "s" : ""}</p>
+                      <CardTitle className="text-sm text-foreground">{formatDateLabel(date)}</CardTitle>
+                      <p className="text-[10px] text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap justify-end gap-1.5">
@@ -128,18 +128,18 @@ export default function ContentCalendarPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Separator className="mb-3 bg-zinc-800" />
+                  <Separator className="mb-3 bg-accent" />
                   <div className="space-y-2">
                     {items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-3 rounded-lg border border-zinc-800/50 bg-zinc-900/30 px-3 py-2"
+                        className="flex items-center gap-3 rounded-lg border border-border/50 bg-card/30 px-3 py-2"
                       >
                         <Badge variant="outline" className={`shrink-0 text-[9px] uppercase ${typeBadgeClassFor(item.type)}`}>
                           {item.type}
                         </Badge>
-                        <span className="truncate text-xs text-zinc-200">{item.title}</span>
-                        <span className="ml-auto shrink-0 text-[10px] text-zinc-600 tabular-nums">
+                        <span className="truncate text-xs text-foreground/90">{item.title}</span>
+                        <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/60 tabular-nums">
                           {new Date(item.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
                         </span>
                       </div>

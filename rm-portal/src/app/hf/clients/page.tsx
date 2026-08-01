@@ -38,27 +38,27 @@ export default function HfClientsPage() {
         <StatCard icon={MessageSquare} value={totalMasseurs} label="Masseurs Reviewed" color="text-emerald-400" />
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Client Roster</CardTitle>
+          <CardTitle className="text-base text-foreground">Client Roster</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Username</TableHead>
-                <TableHead className="text-zinc-500">Reviews</TableHead>
-                <TableHead className="text-zinc-500">Cities Found</TableHead>
-                <TableHead className="text-zinc-500">Masseurs Reviewed</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Username</TableHead>
+                <TableHead className="text-muted-foreground">Reviews</TableHead>
+                <TableHead className="text-muted-foreground">Cities Found</TableHead>
+                <TableHead className="text-muted-foreground">Masseurs Reviewed</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.map((c: any, i: number) => (
-                <TableRow key={`${c.username}-${i}`} className="border-zinc-800/50">
-                  <TableCell className="font-medium text-white">{c.username ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums text-zinc-300">{c.review_count ?? 0}</TableCell>
-                  <TableCell className="tabular-nums text-zinc-400">{c.cities_found ?? 0}</TableCell>
-                  <TableCell className="tabular-nums text-zinc-400">{c.masseurs_reviewed ?? 0}</TableCell>
+                <TableRow key={`${c.username}-${i}`} className="border-border/50">
+                  <TableCell className="font-medium text-foreground">{c.username ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums text-foreground/80">{c.review_count ?? 0}</TableCell>
+                  <TableCell className="tabular-nums text-muted-foreground">{c.cities_found ?? 0}</TableCell>
+                  <TableCell className="tabular-nums text-muted-foreground">{c.masseurs_reviewed ?? 0}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

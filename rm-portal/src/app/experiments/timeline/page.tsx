@@ -33,18 +33,18 @@ export default function TimelinePage() {
       />
 
       {experiments.length === 0 ? (
-        <Card className="border-zinc-800 bg-zinc-900/50">
-          <CardContent className="py-12 text-center text-sm text-zinc-500">
+        <Card className="border-border bg-card/50">
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
             No experiments recorded yet.
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardContent className="p-6">
             <ol className="relative space-y-8">
               {/* vertical line */}
               <span
-                className="absolute left-[11px] top-2 bottom-2 w-px bg-zinc-800"
+                className="absolute left-[11px] top-2 bottom-2 w-px bg-accent"
                 aria-hidden
               />
               {experiments.map((exp) => (
@@ -71,29 +71,29 @@ function TimelineEntry({ experiment: exp }: { experiment: Experiment }) {
     ? "bg-blue-400"
     : isRunning
       ? "bg-emerald-400"
-      : "bg-zinc-600"
+      : "bg-muted-foreground"
 
   const ringColor = isCompleted
     ? "ring-blue-500/30"
     : isRunning
       ? "ring-emerald-500/30"
-      : "ring-zinc-700"
+      : "ring-border"
 
   return (
     <li className="relative pl-10">
       {/* dot */}
       <span
-        className={`absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full ring-2 ${ringColor} bg-zinc-900`}
+        className={`absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full ring-2 ${ringColor} bg-card`}
       >
         <Circle className={`h-2.5 w-2.5 ${dotColor} fill-current`} />
       </span>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+      <div className="rounded-lg border border-border bg-card/40 p-4">
         {/* header row */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 text-zinc-500" />
-            <span className="text-sm font-semibold text-white">{exp.name}</span>
+            <FlaskConical className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground">{exp.name}</span>
           </div>
           <Badge variant="outline" className={statusBadgeClass(exp.status)}>
             {exp.status.toUpperCase()}
@@ -101,11 +101,11 @@ function TimelineEntry({ experiment: exp }: { experiment: Experiment }) {
         </div>
 
         {/* meta row */}
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-500">
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             {created.toLocaleDateString()}{" "}
-            <span className="text-zinc-600">{created.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            <span className="text-muted-foreground/60">{created.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
           </span>
           <span className="flex items-center gap-1">
             <GitBranch className="h-3 w-3" />
@@ -124,12 +124,12 @@ function TimelineEntry({ experiment: exp }: { experiment: Experiment }) {
         {/* confidence */}
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500">Confidence</span>
-            <span className="text-xs font-medium text-zinc-300">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</span>
+            <span className="text-xs font-medium text-foreground/80">
               {(exp.confidence * 100).toFixed(0)}%
             </span>
           </div>
-          <Progress value={exp.confidence * 100} className="h-1.5 bg-zinc-800" />
+          <Progress value={exp.confidence * 100} className="h-1.5 bg-accent" />
         </div>
 
         {/* winner */}
@@ -139,7 +139,7 @@ function TimelineEntry({ experiment: exp }: { experiment: Experiment }) {
             <span className="text-xs text-emerald-400">
               Winner: <span className="font-semibold">{winner.label}</span>
             </span>
-            <span className="ml-auto flex items-center gap-1 text-[10px] text-zinc-500">
+            <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
               reward {winner.reward.toFixed(2)}
             </span>
@@ -147,7 +147,7 @@ function TimelineEntry({ experiment: exp }: { experiment: Experiment }) {
         )}
 
         {isCompleted && !winner && (
-          <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-xs text-zinc-500">
+          <div className="mt-3 rounded-lg border border-border bg-card/40 px-3 py-2 text-xs text-muted-foreground">
             Completed — no winner recorded.
           </div>
         )}
@@ -165,7 +165,7 @@ function TimelineEntry({ experiment: exp }: { experiment: Experiment }) {
               </Badge>
             ))}
             {variants.length > 5 && (
-              <span className="text-[10px] text-zinc-600">+{variants.length - 5} more</span>
+              <span className="text-[10px] text-muted-foreground/60">+{variants.length - 5} more</span>
             )}
           </div>
         )}

@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 interface NavItem {
   href: string
@@ -144,46 +145,66 @@ const navSections: NavSection[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-zinc-800 bg-zinc-950">
-      <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
-          <Zap className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <div className="text-sm font-bold text-white">RM OPERATOR</div>
-          <div className="text-[10px] text-zinc-500">Autonomous Revenue Ops</div>
-        </div>
+    <aside className={`flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300 ${collapsed ? "w-16" : "w-60"}`}>
+      {/* Logo / Brand */}
+      <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 glow-primary transition-transform hover:scale-105"
+        >
+          <Zap className="h-5 w-5 text-primary-foreground" />
+        </button>
+        {!collapsed && (
+          <div className="overflow-hidden">
+            <div className="text-sm font-semibold tracking-tight text-foreground">Unified Platform</div>
+            <div className="text-[10px] text-muted-foreground">Revenue Operations v2.0</div>
+          </div>
+        )}
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-2 py-3">
         {navSections.map((section) => (
-          <div key={section.title} className="mb-3">
-            <div className="mb-1 px-3 text-[9px] font-semibold uppercase tracking-wider text-zinc-600">
-              {section.title}
-            </div>
+          <div key={section.title} className="mb-4">
+            {!collapsed && (
+              <div className="mb-1.5 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                {section.title}
+              </div>
+            )}
             {section.items.map((item) => {
               const active = pathname === item.href
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${active
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-400 hover:bg-zinc-900/60 hover:text-white"
-                    }`}
+                  title={collapsed ? item.label : undefined}
+                  className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all ${
+                    active
+                      ? "bg-primary/15 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  } ${collapsed ? "justify-center" : ""}`}
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
+                  <item.icon className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-110 ${active ? "text-primary" : ""}`} />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {active && !collapsed && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
                 </Link>
               )
             })}
           </div>
         ))}
       </nav>
-      <div className="border-t border-zinc-800 px-5 py-3">
+
+      {/* Status Footer */}
+      <div className="border-t border-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-zinc-500">System Online</span>
+          <div className="relative">
+            <div className="h-2 w-2 rounded-full bg-emerald-400" />
+            <div className="absolute inset-0 h-2 w-2 rounded-full bg-emerald-400 animate-pulse-live" />
+          </div>
+          {!collapsed && <span className="text-[10px] text-muted-foreground">System Online</span>}
         </div>
       </div>
     </aside>

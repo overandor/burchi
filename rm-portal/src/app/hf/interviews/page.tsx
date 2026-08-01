@@ -32,10 +32,10 @@ export default function HfInterviewsPage() {
 
       <div className="space-y-3">
         {interviews.map((iv: any, i: number) => (
-          <Card key={iv.id ?? i} className="border-zinc-800 bg-zinc-900/50">
+          <Card key={iv.id ?? i} className="border-border bg-card/50">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-white">{iv.filename ?? `Interview #${iv.id ?? i}`}</CardTitle>
+                <CardTitle className="text-sm text-foreground">{iv.filename ?? `Interview #${iv.id ?? i}`}</CardTitle>
                 {iv.angle && (
                   <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-[9px]">
                     {iv.angle}
@@ -45,10 +45,10 @@ export default function HfInterviewsPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {iv.content && (
-                <p className="line-clamp-3 text-xs text-zinc-400">{iv.content}</p>
+                <p className="line-clamp-3 text-xs text-muted-foreground">{iv.content}</p>
               )}
               {iv.date_generated && (
-                <p className="text-[10px] text-zinc-600">Generated: {iv.date_generated}</p>
+                <p className="text-[10px] text-muted-foreground/60">Generated: {iv.date_generated}</p>
               )}
             </CardContent>
           </Card>

@@ -71,7 +71,7 @@ export default function MessagesPage() {
       </div>
 
       {actionResult && (
-        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs text-zinc-300">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-xs text-foreground/80">
           {actionResult.startsWith("Sent") || actionResult.startsWith("Approved") || actionResult.startsWith("Rejected")
             ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
             : <XCircle className="h-3.5 w-3.5 text-red-400" />}
@@ -79,9 +79,9 @@ export default function MessagesPage() {
         </div>
       )}
 
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base text-white">Message Queue</CardTitle>
+          <CardTitle className="text-base text-foreground">Message Queue</CardTitle>
           <div className="flex gap-1">
             {filters.map((f) => (
               <Button
@@ -98,29 +98,29 @@ export default function MessagesPage() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-500">Recipient</TableHead>
-                <TableHead className="text-zinc-500">Subject</TableHead>
-                <TableHead className="text-zinc-500">Type</TableHead>
-                <TableHead className="text-zinc-500">Status</TableHead>
-                <TableHead className="text-zinc-500">Actions</TableHead>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Recipient</TableHead>
+                <TableHead className="text-muted-foreground">Subject</TableHead>
+                <TableHead className="text-muted-foreground">Type</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-zinc-500 py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No messages in this filter.
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((m) => (
-                  <TableRow key={m.id} className="border-zinc-800/50">
+                  <TableRow key={m.id} className="border-border/50">
                     <TableCell className="text-xs">
-                      <div className="text-white">{m.contact_email ?? "—"}</div>
-                      <div className="text-zinc-500">{m.contact_name ?? ""}</div>
+                      <div className="text-foreground">{m.contact_email ?? "—"}</div>
+                      <div className="text-muted-foreground">{m.contact_name ?? ""}</div>
                     </TableCell>
-                    <TableCell className="text-sm text-zinc-300 max-w-xs truncate">{m.subject ?? "(no subject)"}</TableCell>
+                    <TableCell className="text-sm text-foreground/80 max-w-xs truncate">{m.subject ?? "(no subject)"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[9px]">{m.message_type}</Badge>
                     </TableCell>
@@ -156,7 +156,7 @@ export default function MessagesPage() {
                         {m.status === "approved" && (
                           <Button
                             size="xs"
-                            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                            className="bg-cyan-600 hover:bg-cyan-700 text-foreground"
                             onClick={() => handleSend(m.id)}
                             disabled={actionLoading === m.id}
                           >

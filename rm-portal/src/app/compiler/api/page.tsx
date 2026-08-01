@@ -173,54 +173,54 @@ function methodBadgeClass(method: string): string {
     case "PATCH":
       return "border-blue-500/30 bg-blue-500/10 text-blue-400"
     default:
-      return "border-zinc-700 bg-zinc-800/50 text-zinc-300"
+      return "border-border/80 bg-accent/30 text-foreground/80"
   }
 }
 
 function EndpointCard({ doc }: { doc: EndpointDoc }) {
   const Icon = doc.icon
   return (
-    <Card className="border-zinc-800 bg-zinc-900/50">
+    <Card className="border-border bg-card/50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Icon className={`h-4 w-4 ${doc.color}`} />
-            <CardTitle className="text-base text-white">{doc.title}</CardTitle>
+            <CardTitle className="text-base text-foreground">{doc.title}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={methodBadgeClass(doc.method)}>
               {doc.method}
             </Badge>
-            <code className="text-xs text-zinc-400">{doc.path}</code>
+            <code className="text-xs text-muted-foreground">{doc.path}</code>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-zinc-400">{doc.description}</p>
+        <p className="text-sm text-muted-foreground">{doc.description}</p>
 
         {Object.keys(doc.schema).length > 0 && (
           <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-600">Request Body</span>
-            <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Request Body</span>
+            <div className="overflow-x-auto rounded-lg border border-border bg-sidebar">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-left">
-                    <th className="px-3 py-2 font-medium text-zinc-500">Field</th>
-                    <th className="px-3 py-2 font-medium text-zinc-500">Type</th>
-                    <th className="px-3 py-2 font-medium text-zinc-500">Description</th>
+                  <tr className="border-b border-border text-left">
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Field</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Type</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(doc.schema).map(([field, info]) => (
-                    <tr key={field} className="border-b border-zinc-800/50 last:border-0">
+                    <tr key={field} className="border-b border-border/50 last:border-0">
                       <td className="px-3 py-2">
                         <code className="text-emerald-400">{field}</code>
                         {info.required && (
                           <span className="ml-1 text-[9px] text-red-400">*required</span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-zinc-400">{info.type}</td>
-                      <td className="px-3 py-2 text-zinc-500">{info.description}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{info.type}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{info.description}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -230,8 +230,8 @@ function EndpointCard({ doc }: { doc: EndpointDoc }) {
         )}
 
         <div className="space-y-2">
-          <span className="text-[10px] uppercase tracking-wider text-zinc-600">Example Request</span>
-          <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-emerald-400">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Example Request</span>
+          <pre className="overflow-x-auto rounded-lg border border-border bg-sidebar p-3 text-xs text-emerald-400">
             {Object.keys(doc.example).length > 0
               ? JSON.stringify(doc.example, null, 2)
               : "// No request body required"}
@@ -254,11 +254,11 @@ export default function CompilerApiReferencePage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-amber-400" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Universal Inference — /v1/*
           </h2>
         </div>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           All inference endpoints are OpenAI-compatible. Pass any compiled model name or HF repo ID as the{" "}
           <code className="text-emerald-400">model</code> field. The compiler automatically routes to the
           correct runtime (llama.cpp, vLLM, transformers, ONNX, diffusers, etc.).
@@ -274,11 +274,11 @@ export default function CompilerApiReferencePage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Boxes className="h-4 w-4 text-blue-400" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Model Compiler — /api/compiler/*
           </h2>
         </div>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Use these endpoints to inspect Hugging Face repos and compile them into running inference
           endpoints.
         </p>
@@ -290,29 +290,29 @@ export default function CompilerApiReferencePage() {
       </div>
 
       {/* Quick start */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-emerald-400" />
-            <CardTitle className="text-base text-white">Quick Start</CardTitle>
+            <CardTitle className="text-base text-foreground">Quick Start</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
               1. Compile a model
             </span>
-            <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-emerald-400">
+            <pre className="overflow-x-auto rounded-lg border border-border bg-sidebar p-3 text-xs text-emerald-400">
 {`curl -X POST /api/compiler/compile \\
   -H "Content-Type: application/json" \\
   -d '{"repo_id": "TheBloke/TinyLlama-1.1B-Chat-v0.3-GGUF"}'`}
             </pre>
           </div>
           <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
               2. Call the inference endpoint
             </span>
-            <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-emerald-400">
+            <pre className="overflow-x-auto rounded-lg border border-border bg-sidebar p-3 text-xs text-emerald-400">
 {`curl -X POST /v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -d '{

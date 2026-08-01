@@ -14,17 +14,17 @@ function actionBadge(action: string) {
     return "border-blue-500/30 bg-blue-500/10 text-blue-400"
   if (action.includes("Responded") || action.includes("nurture"))
     return "border-purple-500/30 bg-purple-500/10 text-purple-400"
-  return "border-zinc-700 bg-zinc-800/50 text-zinc-500"
+  return "border-border/80 bg-accent/30 text-muted-foreground"
 }
 
 function heatColor(count: number, max: number) {
-  if (max === 0) return "bg-zinc-800/50 text-zinc-600"
+  if (max === 0) return "bg-accent/30 text-muted-foreground/60"
   const ratio = count / max
-  if (ratio >= 0.8) return "bg-orange-500/80 text-white"
-  if (ratio >= 0.6) return "bg-orange-500/60 text-white"
-  if (ratio >= 0.4) return "bg-orange-500/40 text-zinc-100"
-  if (ratio >= 0.2) return "bg-orange-500/20 text-zinc-300"
-  return "bg-orange-500/10 text-zinc-400"
+  if (ratio >= 0.8) return "bg-orange-500/80 text-foreground"
+  if (ratio >= 0.6) return "bg-orange-500/60 text-foreground"
+  if (ratio >= 0.4) return "bg-orange-500/40 text-foreground"
+  if (ratio >= 0.2) return "bg-orange-500/20 text-foreground/80"
+  return "bg-orange-500/10 text-muted-foreground"
 }
 
 export default function RepeatVisitorPage() {
@@ -56,14 +56,14 @@ export default function RepeatVisitorPage() {
       </div>
 
       {/* Heatmap grid */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader className="flex flex-row items-center gap-2">
           <Repeat className="h-5 w-5 text-purple-400" />
-          <CardTitle className="text-base text-white">Visit Count Heatmap</CardTitle>
+          <CardTitle className="text-base text-foreground">Visit Count Heatmap</CardTitle>
         </CardHeader>
         <CardContent>
           {repeatVisitors.length === 0 ? (
-            <div className="py-8 text-center text-sm text-zinc-500">No repeat visitors yet</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">No repeat visitors yet</div>
           ) : (
             <div className="flex flex-wrap gap-2">
               {repeatVisitors
@@ -81,7 +81,7 @@ export default function RepeatVisitorPage() {
                 ))}
             </div>
           )}
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500">
+          <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground">
             <span>Less</span>
             <div className="h-3 w-6 rounded bg-orange-500/10" />
             <div className="h-3 w-6 rounded bg-orange-500/20" />
@@ -94,24 +94,24 @@ export default function RepeatVisitorPage() {
       </Card>
 
       {/* Repeat visitor table */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Repeat Visitor Roster</CardTitle>
+          <CardTitle className="text-base text-foreground">Repeat Visitor Roster</CardTitle>
         </CardHeader>
         <CardContent>
           {repeatVisitors.length === 0 ? (
-            <div className="py-8 text-center text-sm text-zinc-500">No repeat visitors yet</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">No repeat visitors yet</div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-500">Username</TableHead>
-                  <TableHead className="text-zinc-500">Visits</TableHead>
-                  <TableHead className="text-zinc-500">Last Seen</TableHead>
-                  <TableHead className="text-zinc-500">Location</TableHead>
-                  <TableHead className="text-zinc-500">Engagement</TableHead>
-                  <TableHead className="text-zinc-500">Messaged</TableHead>
-                  <TableHead className="text-zinc-500">Next Action</TableHead>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Username</TableHead>
+                  <TableHead className="text-muted-foreground">Visits</TableHead>
+                  <TableHead className="text-muted-foreground">Last Seen</TableHead>
+                  <TableHead className="text-muted-foreground">Location</TableHead>
+                  <TableHead className="text-muted-foreground">Engagement</TableHead>
+                  <TableHead className="text-muted-foreground">Messaged</TableHead>
+                  <TableHead className="text-muted-foreground">Next Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -119,8 +119,8 @@ export default function RepeatVisitorPage() {
                   .slice()
                   .sort((a, b) => b.visit_count - a.visit_count)
                   .map((v) => (
-                    <TableRow key={v.username} className="border-zinc-800/50">
-                      <TableCell className="font-medium text-white">
+                    <TableRow key={v.username} className="border-border/50">
+                      <TableCell className="font-medium text-foreground">
                         <div className="flex items-center gap-2">
                           <Repeat className="h-3 w-3 text-purple-400" />
                           {v.username}
@@ -129,17 +129,17 @@ export default function RepeatVisitorPage() {
                       <TableCell>
                         <span className="text-sm font-bold tabular-nums text-purple-400">{v.visit_count}</span>
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-400">
+                      <TableCell className="text-xs text-muted-foreground">
                         {v.last_online}
                       </TableCell>
-                      <TableCell className="text-xs text-zinc-400">
+                      <TableCell className="text-xs text-muted-foreground">
                         {v.location ? (
                           <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-zinc-600" />
+                            <MapPin className="h-3 w-3 text-muted-foreground/60" />
                             {v.location}
                           </span>
                         ) : (
-                          <span className="text-zinc-600">—</span>
+                          <span className="text-muted-foreground/60">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -147,9 +147,9 @@ export default function RepeatVisitorPage() {
                           <span className={`text-sm font-bold ${scoreColor(v.engagement_score)}`}>
                             {(v.engagement_score * 100).toFixed(0)}
                           </span>
-                          <div className="h-1.5 w-12 rounded-full bg-zinc-800">
+                          <div className="h-1.5 w-12 rounded-full bg-accent">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-zinc-600 to-orange-400"
+                              className="h-full rounded-full bg-gradient-to-r from-muted-foreground to-orange-400"
                               style={{ width: `${v.engagement_score * 100}%` }}
                             />
                           </div>
@@ -162,7 +162,7 @@ export default function RepeatVisitorPage() {
                             {v.messaged_count}
                           </Badge>
                         ) : (
-                          <span className="text-zinc-600 text-xs">—</span>
+                          <span className="text-muted-foreground/60 text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>

@@ -43,17 +43,17 @@ export default function HfReviewsPage() {
 
       <div className="space-y-3">
         {reviews.map((r: any, i: number) => (
-          <Card key={r.id ?? i} className="border-zinc-800 bg-zinc-900/50">
+          <Card key={r.id ?? i} className="border-border bg-card/50">
             <CardContent className="space-y-2 pt-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-white">{r.reviewer ?? "Anonymous"}</span>
-                  <span className="text-xs text-zinc-600">→</span>
-                  <span className="text-sm text-zinc-400">{r.masseur ?? "—"}</span>
+                  <span className="font-medium text-foreground">{r.reviewer ?? "Anonymous"}</span>
+                  <span className="text-xs text-muted-foreground/60">→</span>
+                  <span className="text-sm text-muted-foreground">{r.masseur ?? "—"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {r.source && (
-                    <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-400 text-[9px]">
+                    <Badge variant="outline" className="border-border/80 bg-accent/30 text-muted-foreground text-[9px]">
                       {r.source}
                     </Badge>
                   )}
@@ -66,10 +66,10 @@ export default function HfReviewsPage() {
                 </div>
               </div>
               {r.review_text && (
-                <p className="text-sm text-zinc-400">{r.review_text}</p>
+                <p className="text-sm text-muted-foreground">{r.review_text}</p>
               )}
               {r.scraped_at && (
-                <p className="text-[10px] text-zinc-600">Scraped: {r.scraped_at}</p>
+                <p className="text-[10px] text-muted-foreground/60">Scraped: {r.scraped_at}</p>
               )}
             </CardContent>
           </Card>

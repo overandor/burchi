@@ -83,11 +83,11 @@ export default function GgufP2pPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Tracker health */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Radio className="h-4 w-4 text-cyan-400" />
-              <CardTitle className="text-base text-white">Tracker Health</CardTitle>
+              <CardTitle className="text-base text-foreground">Tracker Health</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -95,8 +95,8 @@ export default function GgufP2pPage() {
               <LoadingState label="Loading tracker..." />
             ) : (
               <>
-                <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5">
-                  <span className="text-xs text-zinc-500">Status</span>
+                <div className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2.5">
+                  <span className="text-xs text-muted-foreground">Status</span>
                   <Badge
                     variant="outline"
                     className={
@@ -110,17 +110,17 @@ export default function GgufP2pPage() {
                   </Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <span className="text-lg font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <span className="text-lg font-bold text-foreground tabular-nums">
                       {tr.models ?? "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">tracked models</span>
+                    <span className="text-[9px] text-muted-foreground/60">tracked models</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <span className="text-lg font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <span className="text-lg font-bold text-foreground tabular-nums">
                       {tr.total_chunks ?? "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">total chunks</span>
+                    <span className="text-[9px] text-muted-foreground/60">total chunks</span>
                   </div>
                 </div>
               </>
@@ -129,11 +129,11 @@ export default function GgufP2pPage() {
         </Card>
 
         {/* Topology summary */}
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader>
             <div className="flex items-center gap-2">
               <GitBranch className="h-4 w-4 text-violet-400" />
-              <CardTitle className="text-base text-white">Swarm Topology</CardTitle>
+              <CardTitle className="text-base text-foreground">Swarm Topology</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -142,43 +142,43 @@ export default function GgufP2pPage() {
             ) : (
               <>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Users className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-lg font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-lg font-bold text-foreground tabular-nums">
                       {topoPeers.length}
                     </span>
-                    <span className="text-[9px] text-zinc-600">peers</span>
+                    <span className="text-[9px] text-muted-foreground/60">peers</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Boxes className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-lg font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Boxes className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-lg font-bold text-foreground tabular-nums">
                       {topoChunks.length}
                     </span>
-                    <span className="text-[9px] text-zinc-600">chunks</span>
+                    <span className="text-[9px] text-muted-foreground/60">chunks</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <GitBranch className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-lg font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <GitBranch className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-lg font-bold text-foreground tabular-nums">
                       {connections.length}
                     </span>
-                    <span className="text-[9px] text-zinc-600">links</span>
+                    <span className="text-[9px] text-muted-foreground/60">links</span>
                   </div>
                 </div>
                 {connections.length > 0 && (
                   <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
                       connections
                     </span>
                     {connections.slice(0, 8).map((c, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-2 rounded border border-zinc-800 bg-zinc-900/40 px-2.5 py-1.5 text-[11px] text-zinc-400"
+                        className="flex items-center gap-2 rounded border border-border bg-card/40 px-2.5 py-1.5 text-[11px] text-muted-foreground"
                       >
                         <span className="text-blue-400">{c.from ?? c.source}</span>
-                        <span className="text-zinc-600">→</span>
+                        <span className="text-muted-foreground/60">→</span>
                         <span className="text-emerald-400">{c.to ?? c.target}</span>
                         {c.chunks != null && (
-                          <span className="ml-auto text-zinc-600">{c.chunks} chunks</span>
+                          <span className="ml-auto text-muted-foreground/60">{c.chunks} chunks</span>
                         )}
                       </div>
                     ))}
@@ -191,44 +191,44 @@ export default function GgufP2pPage() {
       </div>
 
       {/* Peer list */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Peers</CardTitle>
+          <CardTitle className="text-base text-foreground">Peers</CardTitle>
         </CardHeader>
         <CardContent>
           {peersLoading ? (
             <LoadingState label="Loading peers..." />
           ) : peerList.length === 0 ? (
-            <p className="py-8 text-center text-sm text-zinc-500">No peers connected to the swarm.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">No peers connected to the swarm.</p>
           ) : (
             <div className="space-y-2">
               {peerList.map((p) => (
                 <div
                   key={p.peer_id}
-                  className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5"
+                  className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2.5"
                 >
                   <div className="flex items-center gap-3">
-                    <Users className="h-3.5 w-3.5 text-zinc-500" />
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
                     <div>
-                      <div className="text-xs font-medium text-zinc-200">
+                      <div className="text-xs font-medium text-foreground/90">
                         {p.peer_id?.slice(0, 16) ?? "—"}
                         {p.peer_id && p.peer_id.length > 16 ? "…" : ""}
                       </div>
-                      <div className="text-[10px] text-zinc-600">
+                      <div className="text-[10px] text-muted-foreground/60">
                         {p.ip ?? "—"}:{p.port ?? "—"}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="text-xs font-bold text-white tabular-nums">
+                      <div className="text-xs font-bold text-foreground tabular-nums">
                         {Array.isArray(p.chunks) ? p.chunks.length : p.chunks ?? 0}
                       </div>
-                      <div className="text-[9px] text-zinc-600">chunks</div>
+                      <div className="text-[9px] text-muted-foreground/60">chunks</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-zinc-400">{timeAgo(p.last_seen)}</div>
-                      <div className="text-[9px] text-zinc-600">last seen</div>
+                      <div className="text-xs text-muted-foreground">{timeAgo(p.last_seen)}</div>
+                      <div className="text-[9px] text-muted-foreground/60">last seen</div>
                     </div>
                   </div>
                 </div>

@@ -40,7 +40,7 @@ const RUNTIME_COLORS: Record<string, string> = {
   onnxruntime: "border-purple-500/30 bg-purple-500/10 text-purple-400",
   diffusers: "border-pink-500/30 bg-pink-500/10 text-pink-400",
   sentence_transformers: "border-cyan-500/30 bg-cyan-500/10 text-cyan-400",
-  custom: "border-zinc-700 bg-zinc-800/50 text-zinc-300",
+  custom: "border-border/80 bg-accent/30 text-foreground/80",
 }
 
 function runtimeBadgeClass(runtime: string): string {
@@ -151,10 +151,10 @@ export default function CompilerPage() {
       />
 
       {/* Hero input */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardContent className="space-y-4 pt-6">
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider text-zinc-500">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
               Hugging Face Repo ID
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -163,7 +163,7 @@ export default function CompilerPage() {
                 onChange={(e) => setRepoId(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCompile()}
                 placeholder="e.g. TheBloke/TinyLlama-1.1B-Chat-v0.3-GGUF"
-                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+                className="flex-1 rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
               />
               <Button onClick={() => handleCompile()} disabled={loading || !repoId.trim()} size="lg">
                 <Play className="mr-2 h-4 w-4" />
@@ -174,14 +174,14 @@ export default function CompilerPage() {
 
           {/* Example chips */}
           <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-600">Try an example</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Try an example</span>
             <div className="flex flex-wrap gap-2">
               {EXAMPLE_MODELS.map((m) => (
                 <button
                   key={m}
                   onClick={() => handleCompile(m)}
                   disabled={loading}
-                  className="rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-50"
+                  className="rounded-full border border-border bg-accent/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-border/80 hover:text-foreground/90 disabled:opacity-50"
                 >
                   {m}
                 </button>
@@ -193,7 +193,7 @@ export default function CompilerPage() {
 
       {/* Loading */}
       {loading && (
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardContent className="py-6">
             <LoadingState label={`Compiling ${repoId}...`} />
           </CardContent>
@@ -214,12 +214,12 @@ export default function CompilerPage() {
       {result && !loading && (
         <div className="space-y-6">
           {/* Model metadata */}
-          <Card className="border-zinc-800 bg-zinc-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Boxes className="h-4 w-4 text-blue-400" />
-                  <CardTitle className="text-base text-white">Model Metadata</CardTitle>
+                  <CardTitle className="text-base text-foreground">Model Metadata</CardTitle>
                 </div>
                 <div className="flex items-center gap-2">
                   {result.gated && (
@@ -229,7 +229,7 @@ export default function CompilerPage() {
                     </Badge>
                   )}
                   {result.private && (
-                    <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-400">
+                    <Badge variant="outline" className="border-border/80 bg-accent/30 text-muted-foreground">
                       <Lock className="mr-1 h-2.5 w-2.5" />
                       PRIVATE
                     </Badge>
@@ -240,36 +240,36 @@ export default function CompilerPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">Repo ID</span>
-                  <code className="block truncate text-sm text-zinc-200">{result.repo_id}</code>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Repo ID</span>
+                  <code className="block truncate text-sm text-foreground/90">{result.repo_id}</code>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">Author</span>
-                  <span className="text-sm text-zinc-200">{result.author}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Author</span>
+                  <span className="text-sm text-foreground/90">{result.author}</span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">Model Name</span>
-                  <span className="text-sm text-zinc-200">{result.model_name}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Model Name</span>
+                  <span className="text-sm text-foreground/90">{result.model_name}</span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">Pipeline Tag</span>
-                  <span className="text-sm text-zinc-200">{result.pipeline_tag ?? "—"}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Pipeline Tag</span>
+                  <span className="text-sm text-foreground/90">{result.pipeline_tag ?? "—"}</span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">Library</span>
-                  <span className="text-sm text-zinc-200">{result.library_name ?? "—"}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Library</span>
+                  <span className="text-sm text-foreground/90">{result.library_name ?? "—"}</span>
                 </div>
                 <div className="flex gap-6">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Downloads</span>
-                    <div className="flex items-center gap-1 text-sm text-zinc-200">
-                      <Gauge className="h-3 w-3 text-zinc-500" />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Downloads</span>
+                    <div className="flex items-center gap-1 text-sm text-foreground/90">
+                      <Gauge className="h-3 w-3 text-muted-foreground" />
                       {formatNum(result.downloads)}
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Likes</span>
-                    <div className="flex items-center gap-1 text-sm text-zinc-200">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Likes</span>
+                    <div className="flex items-center gap-1 text-sm text-foreground/90">
                       <Heart className="h-3 w-3 text-pink-400" />
                       {formatNum(result.likes)}
                     </div>
@@ -277,10 +277,10 @@ export default function CompilerPage() {
                 </div>
               </div>
               {result.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 border-t border-zinc-800 pt-3">
-                  <Tag className="h-3 w-3 text-zinc-600" />
+                <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
+                  <Tag className="h-3 w-3 text-muted-foreground/60" />
                   {result.tags.slice(0, 12).map((t) => (
-                    <Badge key={t} variant="outline" className="border-zinc-700 bg-zinc-800/30 text-[10px] text-zinc-400">
+                    <Badge key={t} variant="outline" className="border-border/80 bg-accent/30 text-[10px] text-muted-foreground">
                       {t}
                     </Badge>
                   ))}
@@ -291,66 +291,66 @@ export default function CompilerPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Architecture */}
-            <Card className="border-zinc-800 bg-zinc-900/50">
+            <Card className="border-border bg-card/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Cpu className="h-4 w-4 text-purple-400" />
-                  <CardTitle className="text-base text-white">Architecture</CardTitle>
+                  <CardTitle className="text-base text-foreground">Architecture</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Cpu className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Cpu className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground">
                       {result.architectures.length > 0 ? result.architectures.join(", ") : "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">architectures</span>
+                    <span className="text-[9px] text-muted-foreground/60">architectures</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Layers className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white">{result.model_type ?? "—"}</span>
-                    <span className="text-[9px] text-zinc-600">model type</span>
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Layers className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground">{result.model_type ?? "—"}</span>
+                    <span className="text-[9px] text-muted-foreground/60">model type</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Terminal className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Terminal className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground tabular-nums">
                       {formatNum(result.vocab_size)}
                     </span>
-                    <span className="text-[9px] text-zinc-600">vocab size</span>
+                    <span className="text-[9px] text-muted-foreground/60">vocab size</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <MemoryStick className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <MemoryStick className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground tabular-nums">
                       {result.hidden_size ?? "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">hidden size</span>
+                    <span className="text-[9px] text-muted-foreground/60">hidden size</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Layers className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white tabular-nums">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Layers className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground tabular-nums">
                       {result.num_hidden_layers ?? "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">layers</span>
+                    <span className="text-[9px] text-muted-foreground/60">layers</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Zap className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white">{result.torch_dtype ?? "—"}</span>
-                    <span className="text-[9px] text-zinc-600">dtype</span>
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Zap className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground">{result.torch_dtype ?? "—"}</span>
+                    <span className="text-[9px] text-muted-foreground/60">dtype</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Files */}
-            <Card className="border-zinc-800 bg-zinc-900/50">
+            <Card className="border-border bg-card/50">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FileBox className="h-4 w-4 text-emerald-400" />
-                    <CardTitle className="text-base text-white">Files & Formats</CardTitle>
+                    <CardTitle className="text-base text-foreground">Files & Formats</CardTitle>
                   </div>
-                  <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-300">
+                  <Badge variant="outline" className="border-border/80 bg-accent/30 text-foreground/80">
                     {result.files.length} files
                   </Badge>
                 </div>
@@ -368,38 +368,38 @@ export default function CompilerPage() {
                       </Badge>
                     ))
                   ) : (
-                    <span className="text-xs text-zinc-500">No formats detected</span>
+                    <span className="text-xs text-muted-foreground">No formats detected</span>
                   )}
                 </div>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto">
                   {result.files.slice(0, 12).map((f) => (
                     <div
                       key={f.filename}
-                      className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-xs"
+                      className="flex items-center justify-between rounded-lg border border-border bg-card/40 px-3 py-2 text-xs"
                     >
-                      <span className="truncate text-zinc-300">{f.filename}</span>
+                      <span className="truncate text-foreground/80">{f.filename}</span>
                       <div className="flex items-center gap-2">
                         {f.format && (
-                          <Badge variant="outline" className="border-zinc-700 bg-zinc-800/30 text-[9px] text-zinc-400">
+                          <Badge variant="outline" className="border-border/80 bg-accent/30 text-[9px] text-muted-foreground">
                             {f.format}
                           </Badge>
                         )}
-                        <span className="tabular-nums text-zinc-500">{formatBytes(f.size)}</span>
+                        <span className="tabular-nums text-muted-foreground">{formatBytes(f.size)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
                 {result.total_size_bytes !== null && (
-                  <div className="flex items-center justify-between border-t border-zinc-800 pt-3 text-xs">
-                    <span className="text-zinc-600">Total size</span>
-                    <span className="font-bold text-zinc-200 tabular-nums">
+                  <div className="flex items-center justify-between border-t border-border pt-3 text-xs">
+                    <span className="text-muted-foreground/60">Total size</span>
+                    <span className="font-bold text-foreground/90 tabular-nums">
                       {formatBytes(result.total_size_bytes)}
                     </span>
                   </div>
                 )}
                 {result.quantization && (
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-600">Quantization</span>
+                    <span className="text-muted-foreground/60">Quantization</span>
                     <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-400">
                       {result.quantization}
                     </Badge>
@@ -411,71 +411,71 @@ export default function CompilerPage() {
 
           {/* Execution plan */}
           {result.execution_plan && (
-            <Card className="border-zinc-800 bg-zinc-900/50">
+            <Card className="border-border bg-card/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-amber-400" />
-                  <CardTitle className="text-base text-white">Execution Plan</CardTitle>
+                  <CardTitle className="text-base text-foreground">Execution Plan</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Runtime</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Runtime</span>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className={runtimeBadgeClass(result.execution_plan.runtime)}>
                         {result.execution_plan.runtime}
                       </Badge>
-                      <span className="text-xs text-zinc-500">{result.execution_plan.api_style}</span>
+                      <span className="text-xs text-muted-foreground">{result.execution_plan.api_style}</span>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Target Endpoint</span>
-                    <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-xs text-emerald-400">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Target Endpoint</span>
+                    <pre className="overflow-x-auto rounded-lg border border-border bg-sidebar p-2.5 text-xs text-emerald-400">
                       {result.execution_plan.target_endpoint}
                     </pre>
                   </div>
                 </div>
 
-                <p className="text-sm text-zinc-400">{result.execution_plan.runtime_description}</p>
+                <p className="text-sm text-muted-foreground">{result.execution_plan.runtime_description}</p>
 
                 {/* Resource estimates */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
                     <HardDrive className="h-3.5 w-3.5 text-blue-400 mb-1" />
-                    <span className="text-sm font-bold text-white tabular-nums">
+                    <span className="text-sm font-bold text-foreground tabular-nums">
                       {result.execution_plan.estimated_vram_mb !== null
                         ? `${result.execution_plan.estimated_vram_mb} MB`
                         : "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">VRAM</span>
+                    <span className="text-[9px] text-muted-foreground/60">VRAM</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
                     <MemoryStick className="h-3.5 w-3.5 text-amber-400 mb-1" />
-                    <span className="text-sm font-bold text-white tabular-nums">
+                    <span className="text-sm font-bold text-foreground tabular-nums">
                       {result.execution_plan.estimated_ram_mb !== null
                         ? `${result.execution_plan.estimated_ram_mb} MB`
                         : "—"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">RAM</span>
+                    <span className="text-[9px] text-muted-foreground/60">RAM</span>
                   </div>
-                  <div className="flex flex-col items-center rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                    <Cpu className="h-3.5 w-3.5 text-zinc-500 mb-1" />
-                    <span className="text-sm font-bold text-white">
+                  <div className="flex flex-col items-center rounded-lg border border-border bg-card/40 p-3">
+                    <Cpu className="h-3.5 w-3.5 text-muted-foreground mb-1" />
+                    <span className="text-sm font-bold text-foreground">
                       {result.execution_plan.requires_gpu ? "Required" : "Optional"}
                     </span>
-                    <span className="text-[9px] text-zinc-600">GPU</span>
+                    <span className="text-[9px] text-muted-foreground/60">GPU</span>
                   </div>
                 </div>
 
                 {/* Notes */}
                 {result.execution_plan.notes.length > 0 && (
                   <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Notes</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Notes</span>
                     <ul className="space-y-1">
                       {result.execution_plan.notes.map((n, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-zinc-400">
-                          <span className="mt-0.5 text-zinc-600">•</span>
+                        <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="mt-0.5 text-muted-foreground/60">•</span>
                           <span>{n}</span>
                         </li>
                       ))}
@@ -508,7 +508,7 @@ export default function CompilerPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Link2 className="h-4 w-4 text-emerald-400" />
-                    <CardTitle className="text-base text-white">Compiled Endpoint</CardTitle>
+                    <CardTitle className="text-base text-foreground">Compiled Endpoint</CardTitle>
                   </div>
                   <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
                     {result.endpoint.status}
@@ -517,25 +517,25 @@ export default function CompilerPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-600">Endpoint URL</span>
-                  <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-emerald-400">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Endpoint URL</span>
+                  <pre className="overflow-x-auto rounded-lg border border-border bg-sidebar p-3 text-xs text-emerald-400">
                     {result.endpoint.url}
                   </pre>
                 </div>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Runtime</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Runtime</span>
                     <Badge variant="outline" className={runtimeBadgeClass(result.endpoint.runtime)}>
                       {result.endpoint.runtime}
                     </Badge>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">API Style</span>
-                    <span className="text-sm text-zinc-200">{result.endpoint.api_style}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">API Style</span>
+                    <span className="text-sm text-foreground/90">{result.endpoint.api_style}</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-600">Registered Model ID</span>
-                    <code className="text-xs text-zinc-300">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Registered Model ID</span>
+                    <code className="text-xs text-foreground/80">
                       {result.registered_model_id ?? "—"}
                     </code>
                   </div>
@@ -548,7 +548,7 @@ export default function CompilerPage() {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 border-t border-zinc-800 pt-3">
+                <div className="flex items-center gap-3 border-t border-border pt-3">
                   <Link href="/compiler/playground">
                     <Button variant="outline" size="sm">
                       <Terminal className="mr-2 h-3.5 w-3.5" />

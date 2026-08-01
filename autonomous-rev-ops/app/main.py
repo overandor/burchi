@@ -1046,6 +1046,114 @@ async def seed_data():
     return {"status": "seeded"}
 
 
+# ─── Auto-Ingest Pipeline ────────────────────────────────────────
+
+@app.post("/api/auto/ingest")
+async def auto_ingest():
+    """
+    Full auto-ingestion pipeline for autonomous operations.
+    Runs the complete cycle: ingest data → run AI decision → generate content → record telemetry.
+    This is the single endpoint that drives the entire platform autonomously.
+    """
+    results = {"steps": [], "errors": []}
+
+    # Step 1: Ensure data is seeded
+    try:
+        store.seed_data()
+        results["steps"].append({"step": "seed", "status": "ok"})
+    except Exception as e:
+        results["errors"].append({"step": "seed", "error": str(e)})
+
+    # Step 2: Run AI decision cycle
+    try:
+        decision = ai_engine.run_decision_cycle()
+        results["steps"].append({
+            "step": "ai_decision",
+            "status": "ok",
+            "action": decision.get("action"),
+            "variant": decision.get("variant"),
+            "confidence": decision.get("confidence"),
+        })
+    except Exception as e:
+        results["errors"].append({"step": "ai_decision", "error": str(e)})
+
+    # Step 3: Generate fresh content
+    try:
+        bios = ai_engine.generate_bio_candidates(count=2)
+        results["steps"].append({
+            "step": "generate_bios",
+            "status": "ok",
+            "count": len(bios),
+        })
+    except Exception as e:
+        results["errors"].append({"step": "generate_bios", "error": str(e)})
+
+    # Step 4: Record telemetry event
+    try:
+        store.log_live_event("auto_ingest", f"Auto-ingest cycle completed: {len(results['steps'])} steps", "info")
+        results["steps"].append({"step": "telemetry", "status": "ok"})
+    except Exception as e:
+        results["errors"].append({"step": "telemetry", "error": str(e)})
+
+    # Step 5: Record receipt
+    try:
+        store.create_receipt(
+            f"auto_ingest_{store.utc_now()}",
+            "auto_ingest_cycle",
+            "ai_engine",
+            "internal",
+            "run_full_pipeline",
+            "auto_ingest",
+            "PASS" if not results["errors"] else "FAIL",
+            0.0,
+        )
+        results["steps"].append({"step": "receipt", "status": "ok"})
+    except Exception as e:
+        results["errors"].append({"step": "receipt", "error": str(e)})
+
+    results["success"] = len(results["errors"]) == 0
+    results["timestamp"] = store.utc_now()
+    return results
+
+
+@app.post("/api/auto/tick")
+async def auto_tick():
+    """
+    Single autonomous tick — runs one AI decision cycle and records the result.
+    Designed to be called periodically by a scheduler or cron job.
+    """
+    decision = ai_engine.run_decision_cycle()
+    store.log_live_event("auto_tick", f"Decision: {decision.get('action', 'none')} — {decision.get('variant', '')}", "info")
+    store.create_receipt(
+        f"tick_{store.utc_now()}",
+        "auto_tick_cycle",
+        "ai_engine",
+        "internal",
+        "run_decision",
+        "auto_tick",
+        "PASS",
+        float(decision.get("confidence", 0)),
+    )
+    return {"status": "ok", "decision": decision, "timestamp": store.utc_now()}
+
+
+@app.get("/api/auto/status")
+async def auto_status():
+    """Check the status of the auto-ingest pipeline."""
+    return {
+        "scheduler_active": store.get_control_state("scheduler_active") or "true",
+        "mode": store.get_control_state("mode") or "AUTO",
+        "last_tick": store.get_control_state("last_auto_tick") or "never",
+        "pipeline": {
+            "seed": "available",
+            "ai_decision": "available",
+            "content_generation": "available",
+            "telemetry": "available",
+            "receipts": "available",
+        },
+    }
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -1071,6 +1179,7 @@ async def root():
                             "/api/compiler/models",
                             "/v1/chat/completions", "/v1/completions", "/v1/embeddings",
                             "/v1/images/generations", "/v1/inference"],
+            "auto_pipeline": ["/api/auto/ingest", "/api/auto/tick", "/api/auto/status"],
         },
     }
 

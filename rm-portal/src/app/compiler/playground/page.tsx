@@ -136,23 +136,23 @@ export default function CompilerPlaygroundPage() {
       />
 
       {/* Model + API style selector */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
-          <CardTitle className="text-base text-white">Configuration</CardTitle>
+          <CardTitle className="text-base text-foreground">Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider text-zinc-500">Model / HF Repo ID</label>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Model / HF Repo ID</label>
             <input
               value={model}
               onChange={(e) => setModel(e.target.value)}
               placeholder="e.g. TheBloke/TinyLlama-1.1B-Chat-v0.3-GGUF"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+              className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-wider text-zinc-500">API Style</label>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">API Style</label>
             <div className="flex flex-wrap gap-2">
               {API_STYLES.map((s) => {
                 const Icon = s.icon
@@ -167,8 +167,8 @@ export default function CompilerPlaygroundPage() {
                     }}
                     className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                       active
-                        ? "border-zinc-600 bg-zinc-800 text-white"
-                        : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                        ? "border-muted-foreground/40 bg-accent text-foreground"
+                        : "border-border bg-accent/50 text-muted-foreground hover:border-border/80 hover:text-foreground/90"
                     }`}
                   >
                     <Icon className={`h-3.5 w-3.5 ${active ? s.color : ""}`} />
@@ -182,7 +182,7 @@ export default function CompilerPlaygroundPage() {
       </Card>
 
       {/* Request builder */}
-      <Card className="border-zinc-800 bg-zinc-900/50">
+      <Card className="border-border bg-card/50">
         <CardHeader>
           <div className="flex items-center gap-2">
             {(() => {
@@ -190,7 +190,7 @@ export default function CompilerPlaygroundPage() {
               const Icon = s.icon
               return <Icon className={`h-4 w-4 ${s.color}`} />
             })()}
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {API_STYLES.find((s) => s.key === apiStyle)?.label} Request
             </CardTitle>
           </div>
@@ -199,26 +199,26 @@ export default function CompilerPlaygroundPage() {
           {(apiStyle === "chat" || apiStyle === "completions") && (
             <>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider text-zinc-500">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {apiStyle === "chat" ? "User Message" : "Prompt"}
                 </label>
                 <textarea
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   rows={4}
-                  className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+                  className="w-full resize-none rounded-lg border border-border bg-accent/50 p-3 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
                   placeholder="Enter your message..."
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider text-zinc-500">Max Tokens</label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Max Tokens</label>
                 <input
                   type="number"
                   min={1}
                   max={4096}
                   value={maxTokens}
                   onChange={(e) => setMaxTokens(Number(e.target.value) || 128)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none focus:border-zinc-700"
+                  className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none focus:border-border/80"
                 />
               </div>
             </>
@@ -226,12 +226,12 @@ export default function CompilerPlaygroundPage() {
 
           {apiStyle === "embeddings" && (
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-wider text-zinc-500">Input Text</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Input Text</label>
               <textarea
                 value={embedInput}
                 onChange={(e) => setEmbedInput(e.target.value)}
                 rows={3}
-                className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+                className="w-full resize-none rounded-lg border border-border bg-accent/50 p-3 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
                 placeholder="Text to embed..."
               />
             </div>
@@ -240,17 +240,17 @@ export default function CompilerPlaygroundPage() {
           {apiStyle === "images" && (
             <>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider text-zinc-500">Prompt</label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Prompt</label>
                 <textarea
                   value={imagePrompt}
                   onChange={(e) => setImagePrompt(e.target.value)}
                   rows={3}
-                  className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+                  className="w-full resize-none rounded-lg border border-border bg-accent/50 p-3 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
                   placeholder="Describe the image to generate..."
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider text-zinc-500">Size</label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Size</label>
                 <div className="flex gap-2">
                   {IMAGE_SIZES.map((s) => (
                     <button
@@ -258,8 +258,8 @@ export default function CompilerPlaygroundPage() {
                       onClick={() => setImageSize(s)}
                       className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                         imageSize === s
-                          ? "border-zinc-600 bg-zinc-800 text-white"
-                          : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                          ? "border-muted-foreground/40 bg-accent text-foreground"
+                          : "border-border bg-accent/50 text-muted-foreground hover:border-border/80 hover:text-foreground/90"
                       }`}
                     >
                       {s}
@@ -273,22 +273,22 @@ export default function CompilerPlaygroundPage() {
           {apiStyle === "generic" && (
             <>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider text-zinc-500">Input</label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Input</label>
                 <textarea
                   value={genericInput}
                   onChange={(e) => setGenericInput(e.target.value)}
                   rows={4}
-                  className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+                  className="w-full resize-none rounded-lg border border-border bg-accent/50 p-3 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
                   placeholder="Input for the model..."
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-wider text-zinc-500">Task</label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Task</label>
                 <input
                   value={genericTask}
                   onChange={(e) => setGenericTask(e.target.value)}
                   placeholder="auto"
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-700"
+                  className="w-full rounded-lg border border-border bg-accent/50 p-2.5 text-sm text-foreground/90 outline-none placeholder:text-muted-foreground/60 focus:border-border/80"
                 />
               </div>
             </>
@@ -330,9 +330,9 @@ export default function CompilerPlaygroundPage() {
         <div className="space-y-4">
           {/* Meta */}
           {meta && (
-            <Card className="border-zinc-800 bg-zinc-900/50">
+            <Card className="border-border bg-card/50">
               <CardHeader>
-                <CardTitle className="text-sm text-white">Response Metadata</CardTitle>
+                <CardTitle className="text-sm text-foreground">Response Metadata</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -347,7 +347,7 @@ export default function CompilerPlaygroundPage() {
                     </Badge>
                   )}
                   {meta.model && (
-                    <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-300">
+                    <Badge variant="outline" className="border-border/80 bg-accent/30 text-foreground/80">
                       {meta.model}
                     </Badge>
                   )}
@@ -360,7 +360,7 @@ export default function CompilerPlaygroundPage() {
                     </Badge>
                   )}
                   {meta.latency_ms !== undefined && (
-                    <Badge variant="outline" className="border-zinc-700 bg-zinc-800/50 text-zinc-400">
+                    <Badge variant="outline" className="border-border/80 bg-accent/30 text-muted-foreground">
                       {meta.latency_ms} ms
                     </Badge>
                   )}
@@ -371,9 +371,9 @@ export default function CompilerPlaygroundPage() {
 
           {/* Display content */}
           {displayContent && (
-            <Card className="border-zinc-800 bg-zinc-900/50">
+            <Card className="border-border bg-card/50">
               <CardHeader>
-                <CardTitle className="text-sm text-white">Response</CardTitle>
+                <CardTitle className="text-sm text-foreground">Response</CardTitle>
               </CardHeader>
               <CardContent>
                 {apiStyle === "images" && result.data?.[0]?.url ? (
@@ -381,10 +381,10 @@ export default function CompilerPlaygroundPage() {
                   <img
                     src={result.data[0].url}
                     alt="Generated"
-                    className="max-w-full rounded-lg border border-zinc-800"
+                    className="max-w-full rounded-lg border border-border"
                   />
                 ) : (
-                  <pre className="whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-sm leading-relaxed text-zinc-200">
+                  <pre className="whitespace-pre-wrap rounded-lg border border-border bg-card/40 p-3 text-sm leading-relaxed text-foreground/90">
                     {displayContent}
                   </pre>
                 )}
@@ -393,15 +393,15 @@ export default function CompilerPlaygroundPage() {
           )}
 
           {/* Raw JSON */}
-          <Card className="border-zinc-800 bg-zinc-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-zinc-500" />
-                <CardTitle className="text-sm text-white">Raw JSON Response</CardTitle>
+                <Terminal className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm text-foreground">Raw JSON Response</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <pre className="max-h-96 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-emerald-400">
+              <pre className="max-h-96 overflow-auto rounded-lg border border-border bg-sidebar p-3 text-xs text-emerald-400">
                 {JSON.stringify(result, null, 2)}
               </pre>
             </CardContent>

@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "RM Operator — Autonomous Revenue Operations",
-  description: "Mission control for autonomous massage business operations",
+  title: "Unified Revenue Operations Platform",
+  description: "Autonomous revenue operations, consent engagement, market intelligence, and AI inference",
 }
 
 export default function RootLayout({
@@ -28,15 +28,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-900 text-zinc-100">
+      <body className="min-h-full bg-background text-foreground">
         <TooltipProvider>
-          <div className="flex h-screen">
+          <div className="flex h-screen overflow-hidden">
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
               <TelemetryRibbon />
-              <main className="flex-1 overflow-y-auto p-6">{children}</main>
+              <main className="flex-1 overflow-y-auto">
+                <div className="mx-auto max-w-7xl px-6 py-6 animate-fade-in">
+                  {children}
+                </div>
+              </main>
             </div>
           </div>
         </TooltipProvider>
