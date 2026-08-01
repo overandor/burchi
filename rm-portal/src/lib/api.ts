@@ -385,6 +385,44 @@ export const api = {
   marketIntelPricing: () => fetchAPI<any>("/api/market-intel/pricing"),
   marketIntelPipeline: () => postAPI<any>("/api/market-intel/pipeline"),
   marketIntelStatus: () => fetchAPI<any>("/api/market-intel/status"),
+
+  // ─── Multi-Tenant Architecture ──────────────────────────────────
+  listTenants: () => fetchAPI<any[]>("/api/tenants"),
+  createTenant: (name: string, slug: string, plan = "free") =>
+    postAPI<any>("/api/tenants", { name, slug, plan }),
+  getTenant: (tid: string) => fetchAPI<any>(`/api/tenants/${tid}`),
+  updateTenant: (tid: string, data: Record<string, unknown>) =>
+    fetchAPI<any>(`/api/tenants/${tid}`, { method: "PATCH", body: JSON.stringify(data) }),
+  getTenantUsage: (tid: string) => fetchAPI<any>(`/api/tenants/${tid}/usage`),
+  getTenantUsageHistory: (tid: string, limit = 100) =>
+    fetchAPI<any[]>(`/api/tenants/${tid}/usage/history?limit=${limit}`),
+  createApiKey: (tid: string, label: string, scopes: string[] = ["read", "write"]) =>
+    postAPI<any>(`/api/tenants/${tid}/api-keys`, { tenant_id: tid, label, scopes }),
+  listApiKeys: (tid: string) => fetchAPI<any[]>(`/api/tenants/${tid}/api-keys`),
+  billingOverview: () => fetchAPI<any>("/api/billing/overview"),
+
+  // ─── Inference Marketplace ──────────────────────────────────────
+  marketplaceRegister: (data: {
+    node_id: string; name: string; inference_url: string;
+    models?: string[]; region?: string; capabilities?: Record<string, unknown>;
+    pricing_per_1k_tokens?: number;
+  }) => postAPI<any>("/api/marketplace/register", data),
+  marketplaceOverview: () => fetchAPI<any>("/api/marketplace/overview"),
+  marketplaceReputation: (nodeId: string) => fetchAPI<any>(`/api/marketplace/nodes/${nodeId}/reputation`),
+  marketplaceLeaderboard: () => fetchAPI<any[]>("/api/marketplace/reputation/leaderboard"),
+  marketplaceCredits: (nodeId: string) => fetchAPI<any[]>(`/api/marketplace/nodes/${nodeId}/credits`),
+  marketplaceSelectNode: (modelId = "", region = "") =>
+    postAPI<any>(`/api/marketplace/select-node?model_id=${modelId}&region=${region}`),
+  marketplaceStatus: () => fetchAPI<any>("/api/marketplace/status"),
+
+  // ─── Real-Time Visitor Intent Scoring ───────────────────────────
+  intentIngestEvent: (event: {
+    visitor_id: string; event_type: string; event_data?: Record<string, unknown>;
+    ip?: string; geo?: string;
+  }) => postAPI<any>("/api/intent/ingest-event", event),
+  intentScoreVisitor: (visitorId: string) => fetchAPI<any>(`/api/intent/score/${visitorId}`),
+  intentScoreAll: () => fetchAPI<any>("/api/intent/score-all"),
+  intentStatus: () => fetchAPI<any>("/api/intent/status"),
 }
 
 // ─── Hooks (lightweight polling) ─────────────────────────────────

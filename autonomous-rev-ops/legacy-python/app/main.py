@@ -1357,6 +1357,295 @@ async def market_intel_status():
     }
 
 
+# ─── Multi-Tenant Architecture ──────────────────────────────────────
+# Per-tenant data isolation, billing, and API key management
+
+class TenantCreate(BaseModel):
+    name: str
+    slug: str
+    plan: str = "free"
+
+
+class TenantUpdate(BaseModel):
+    name: str | None = None
+    plan: str | None = None
+    status: str | None = None
+    stripe_customer_id: str | None = None
+    stripe_subscription_id: str | None = None
+    inference_quota: int | None = None
+
+
+class ApiKeyCreate(BaseModel):
+    tenant_id: str = "default"
+    label: str = ""
+    scopes: list[str] = Field(default_factory=lambda: ["read", "write"])
+
+
+@app.get("/api/tenants")
+async def list_tenants():
+    """List all tenants."""
+    from . import tenant
+    return tenant.list_tenants()
+
+
+@app.post("/api/tenants")
+async def create_tenant(body: TenantCreate):
+    """Create a new tenant."""
+    from . import tenant
+    try:
+        return tenant.create_tenant(body.name, body.slug, body.plan)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/tenants/{tid}")
+async def get_tenant(tid: str):
+    """Get a tenant by ID."""
+    from . import tenant
+    t = tenant.get_tenant(tid)
+    if not t:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    return t
+
+
+@app.patch("/api/tenants/{tid}")
+async def update_tenant(tid: str, body: TenantUpdate):
+    """Update a tenant."""
+    from . import tenant
+    data = {k: v for k, v in body.dict().items() if v is not None}
+    t = tenant.update_tenant(tid, data)
+    if not t:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    return t
+
+
+@app.delete("/api/tenants/{tid}")
+async def delete_tenant(tid: str):
+    """Delete a tenant (cannot delete default)."""
+    from . import tenant
+    try:
+        tenant.delete_tenant(tid)
+        return {"ok": True, "deleted": tid}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/tenants/{tid}/usage")
+async def get_tenant_usage(tid: str):
+    """Get usage summary for a tenant."""
+    from . import tenant
+    return tenant.get_tenant_usage_summary(tid)
+
+
+@app.get("/api/tenants/{tid}/usage/history")
+async def get_tenant_usage_history(tid: str, limit: int = 100):
+    """Get usage history for a tenant."""
+    from . import tenant
+    return tenant.get_tenant_usage(tid, limit=limit)
+
+
+@app.post("/api/tenants/{tid}/api-keys")
+async def create_api_key(tid: str, body: ApiKeyCreate):
+    """Create an API key for a tenant."""
+    from . import tenant
+    return tenant.create_api_key(tid, body.label, body.scopes)
+
+
+@app.get("/api/tenants/{tid}/api-keys")
+async def list_api_keys(tid: str):
+    """List API keys for a tenant."""
+    from . import tenant
+    return tenant.list_api_keys(tid)
+
+
+@app.get("/api/billing/overview")
+async def billing_overview():
+    """Billing overview across all tenants."""
+    from . import tenant
+    tenants = tenant.list_tenants()
+    overview = []
+    for t in tenants:
+        summary = tenant.get_tenant_usage_summary(t["id"])
+        overview.append({
+            "tenant_id": t["id"],
+            "tenant_name": t["name"],
+            "plan": t["plan"],
+            "status": t["status"],
+            "inference_used": t["inference_used"],
+            "inference_quota": t["inference_quota"],
+            "usage_percentage": summary.get("usage_percentage", 0),
+        })
+    return {
+        "total_tenants": len(tenants),
+        "active_tenants": len([t for t in tenants if t["status"] == "active"]),
+        "total_inference_used": sum(t["inference_used"] for t in tenants),
+        "total_inference_quota": sum(t["inference_quota"] for t in tenants),
+        "tenants": overview,
+    }
+
+
+# ─── Inference Marketplace ──────────────────────────────────────────
+# Open the P2P network to third-party operators with reputation and credits
+
+class OperatorNodeRegistration(BaseModel):
+    node_id: str
+    name: str
+    inference_url: str
+    models: list[str] = Field(default_factory=list)
+    region: str = "unknown"
+    capabilities: dict = Field(default_factory=dict)
+    pricing_per_1k_tokens: float = 0.001
+
+
+@app.post("/api/marketplace/register")
+async def marketplace_register(body: OperatorNodeRegistration):
+    """Register a third-party node operator in the marketplace."""
+    from . import marketplace
+    return marketplace.register_operator_node(
+        node_id=body.node_id,
+        name=body.name,
+        inference_url=body.inference_url,
+        models=body.models,
+        region=body.region,
+        capabilities=body.capabilities,
+        pricing_per_1k_tokens=body.pricing_per_1k_tokens,
+    )
+
+
+@app.get("/api/marketplace/overview")
+async def marketplace_overview():
+    """Get an overview of the inference marketplace."""
+    from . import marketplace
+    return marketplace.get_marketplace_overview()
+
+
+@app.get("/api/marketplace/nodes/{node_id}/reputation")
+async def marketplace_reputation(node_id: str):
+    """Get a node's reputation score and stats."""
+    from . import marketplace
+    return marketplace.get_reputation(node_id)
+
+
+@app.get("/api/marketplace/reputation/leaderboard")
+async def marketplace_leaderboard():
+    """Get the reputation leaderboard."""
+    from . import marketplace
+    return marketplace.get_all_reputations()
+
+
+@app.get("/api/marketplace/nodes/{node_id}/credits")
+async def marketplace_credits(node_id: str):
+    """Get credit history for a node operator."""
+    from . import marketplace
+    return marketplace.get_credit_history(node_id)
+
+
+@app.post("/api/marketplace/select-node")
+async def marketplace_select_node(model_id: str = "", region: str = ""):
+    """Select the best node for inference using reputation-weighted load balancing."""
+    from . import marketplace
+    node = marketplace.select_best_node(model_id=model_id, preferred_region=region)
+    if not node:
+        raise HTTPException(status_code=503, detail="No available nodes for inference")
+    return node
+
+
+@app.get("/api/marketplace/status")
+async def marketplace_status():
+    """Status of the inference marketplace."""
+    return {
+        "marketplace": "inference",
+        "status": "active",
+        "endpoints": [
+            "POST /api/marketplace/register",
+            "GET /api/marketplace/overview",
+            "GET /api/marketplace/nodes/{node_id}/reputation",
+            "GET /api/marketplace/reputation/leaderboard",
+            "GET /api/marketplace/nodes/{node_id}/credits",
+            "POST /api/marketplace/select-node",
+            "GET /api/marketplace/status",
+        ],
+        "description": "Open P2P inference marketplace with reputation scoring, load balancing, and operator credits",
+    }
+
+
+# ─── Real-Time Visitor Intent Scoring ────────────────────────────────
+# Predictive booking model + SSE event stream
+
+class VisitorEvent(BaseModel):
+    visitor_id: str
+    event_type: str  # page_view, click, message_sent, scroll, conversion
+    event_data: dict = Field(default_factory=dict)
+    ip: str = ""
+    geo: str = ""
+
+
+@app.post("/api/intent/ingest-event")
+async def intent_ingest_event(body: VisitorEvent):
+    """Ingest a real-time visitor event and update the intent score."""
+    from . import intent_scoring
+    return intent_scoring.ingest_visitor_event(
+        visitor_id=body.visitor_id,
+        event_type=body.event_type,
+        event_data=body.event_data,
+        ip=body.ip,
+        geo=body.geo,
+    )
+
+
+@app.get("/api/intent/score/{visitor_id}")
+async def intent_score_visitor(visitor_id: str):
+    """Score a single visitor's booking likelihood."""
+    from . import intent_scoring, store
+    visitor = store.upsert_visitor(visitor_id)  # Get or create
+    return intent_scoring.score_visitor_intent(visitor)
+
+
+@app.get("/api/intent/score-all")
+async def intent_score_all():
+    """Score all visitors and return a ranked list by booking probability."""
+    from . import intent_scoring
+    return intent_scoring.score_all_visitors()
+
+
+@app.get("/api/intent/stream")
+async def intent_stream():
+    """Server-Sent Events stream of real-time visitor intent scores."""
+    from . import intent_scoring
+    from fastapi.responses import StreamingResponse
+
+    def generate():
+        yield from intent_scoring.generate_event_stream()
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.get("/api/intent/status")
+async def intent_status():
+    """Status of the intent scoring system."""
+    return {
+        "system": "visitor_intent_scoring",
+        "status": "active",
+        "model": "logistic_v1",
+        "endpoints": [
+            "POST /api/intent/ingest-event",
+            "GET /api/intent/score/{visitor_id}",
+            "GET /api/intent/score-all",
+            "GET /api/intent/stream (SSE)",
+            "GET /api/intent/status",
+        ],
+        "description": "Real-time visitor intent scoring with predictive booking model and SSE streaming",
+    }
+
+
 # ─── Root ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -1388,6 +1677,12 @@ async def root():
             "market_intel": ["/api/market-intel/scrape", "/api/market-intel/changes",
                              "/api/market-intel/pricing", "/api/market-intel/pipeline",
                              "/api/market-intel/status"],
+            "multi_tenant": ["/api/tenants", "/api/tenants/{tid}", "/api/tenants/{tid}/usage",
+                             "/api/tenants/{tid}/api-keys", "/api/billing/overview"],
+            "marketplace": ["/api/marketplace/register", "/api/marketplace/overview",
+                            "/api/marketplace/reputation", "/api/marketplace/select-node"],
+            "intent_scoring": ["/api/intent/ingest-event", "/api/intent/score/{visitor_id}",
+                               "/api/intent/score-all", "/api/intent/stream", "/api/intent/status"],
         },
     }
 

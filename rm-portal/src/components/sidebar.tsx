@@ -54,6 +54,7 @@ const navSections: NavSection[] = [
       { href: "/visitors", label: "Visitor Feed", icon: Users },
       { href: "/visitors/high-intent", label: "High-Intent Queue", icon: Users },
       { href: "/visitors/repeat", label: "Repeat Visitors", icon: Users },
+      { href: "/visitors/intent", label: "Intent Scoring", icon: Activity },
       { href: "/engagement", label: "Engagement Analytics", icon: Activity },
     ],
   },
@@ -132,6 +133,7 @@ const navSections: NavSection[] = [
       { href: "/gguf/analytics", label: "Network Analytics", icon: Gauge },
       { href: "/gguf/p2p", label: "P2P Swarm", icon: Wifi },
       { href: "/gguf/racing", label: "Competitive Racing", icon: Swords },
+      { href: "/gguf/marketplace", label: "Node Marketplace", icon: DollarSign },
     ],
   },
   {
@@ -141,6 +143,13 @@ const navSections: NavSection[] = [
       { href: "/compiler/registry", label: "Compiled Models", icon: Boxes },
       { href: "/compiler/playground", label: "Universal Playground", icon: Terminal },
       { href: "/compiler/api", label: "API Reference", icon: Code },
+    ],
+  },
+  {
+    title: "Platform",
+    items: [
+      { href: "/tenants", label: "Tenants & Billing", icon: Users },
+      { href: "/settings", label: "System Settings", icon: Settings },
     ],
   },
 ]
