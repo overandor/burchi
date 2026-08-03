@@ -337,10 +337,9 @@ export default function DashboardPage() {
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
       if (!res.ok) {
-        setError(data.error || "Failed to seed demo data");
+        setError(data.error || "Failed to load sample data");
       } else {
-        setSyncResult(data.message || `Loaded ${data.seeded} demo emails`);
-        // Store records in localStorage as fallback for serverless environments
+        setSyncResult(data.message || `Loaded ${data.seeded} sample emails`);
         if (data.records) {
           localStorage.setItem("processed-emails", JSON.stringify(data.records));
           setRecords(data.records);
@@ -359,6 +358,18 @@ export default function DashboardPage() {
     }
   };
 
+  // Auto-seed sample data in demo mode with no records
+  const isDemo = process.env.NEXT_PUBLIC_DEMO === "true";
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isDemo) return;
+    if (records.length > 0 || status?.totalEmails) return;
+    const seeded = sessionStorage.getItem("demo-auto-seeded");
+    if (seeded) return;
+    sessionStorage.setItem("demo-auto-seeded", "true");
+    handleSeedDemo();
+  }, [isDemo, records.length, status?.totalEmails, handleSeedDemo]);
+
   const saveLLMConfig = () => {
     localStorage.setItem("llm-config", JSON.stringify(llmConfig));
   };
@@ -372,9 +383,19 @@ export default function DashboardPage() {
     setRotateInfo(null);
     setRotateProgress("Sending prompt to inference endpoint...");
 
+    // Build context from selected email (if any) so the LLM has the data
+    let emailContext = "";
+    if (selectedRecord) {
+      const r = selectedRecord;
+      const fields = r.extractedData?.fields?.map(f => `  - ${f.key}: ${f.value} (${f.type}, confidence: ${f.confidence})`).join("\n") || "";
+      const tables = r.extractedData?.tables?.map(t => `  Table: ${t.name} (${t.headers?.length || 0} cols, ${t.rows?.length || 0} rows)\n  Headers: ${t.headers?.join(", ")}\n  Sample: ${JSON.stringify(t.rows?.[0] || {})}`).join("\n") || "";
+      const summary = r.extractedData?.summary || "";
+      emailContext = `\n\n--- SELECTED EMAIL CONTEXT ---\nSubject: ${r.subject}\nFrom: ${r.sender || "Unknown"}\nDate: ${r.receivedDate || "Unknown"}\nCategory: ${r.category}\nSummary: ${summary}\n\nExtracted Fields:\n${fields || "  (none)"}\n\nExtracted Tables:\n${tables || "  (none)"}\n--- END EMAIL CONTEXT ---\n`;
+    }
+
     const messages = [
-      { role: "system", content: llmSystem },
-      { role: "user", content: llmPrompt },
+      { role: "system", content: llmSystem + (emailContext ? `\nYou have access to the following email context. Use it to answer the user's question:` : "") },
+      { role: "user", content: emailContext + llmPrompt },
     ];
 
     // If using LLM7 (free, no API key, CORS-enabled), call directly from client
@@ -490,18 +511,6 @@ export default function DashboardPage() {
     setCheckingAll(false);
   };
 
-  // Auto-seed demo data when running in public demo mode with no records
-  const isDemo = process.env.NEXT_PUBLIC_DEMO === "true";
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!isDemo) return;
-    if (records.length > 0 || status?.totalEmails) return;
-    const seeded = sessionStorage.getItem("demo-auto-seeded");
-    if (seeded) return;
-    sessionStorage.setItem("demo-auto-seeded", "true");
-    handleSeedDemo();
-  }, [isDemo, records.length, status?.totalEmails, handleSeedDemo]);
-
   return (
     <div className="container mx-auto max-w-7xl space-y-6 px-6 py-8">
       {/* Header section */}
@@ -515,13 +524,15 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handleSeedDemo}
-            disabled={isSeeding}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
-          >
-            {isSeeding ? "Loading..." : "Load Demo Data"}
-          </button>
+          {isDemo && (
+            <button
+              onClick={handleSeedDemo}
+              disabled={isSeeding}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {isSeeding ? "Loading..." : "Load Sample Data"}
+            </button>
+          )}
           {!gmailConnected && (
             <button onClick={handleConnectGmail} className="btn btn-outline !h-10 text-sm">
               Connect Gmail
@@ -550,12 +561,11 @@ export default function DashboardPage() {
       {isDemo && (
         <div className="rounded-xl border border-indigo-200/60 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 text-sm text-indigo-800 animate-fade-in-up">
           <div className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] font-bold">D</div>
-            <p className="font-semibold">Public Demo Mode</p>
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] font-bold">AI</div>
+            <p className="font-semibold">Demo Mode — LLM7 Powered</p>
           </div>
           <p className="mt-1.5 pl-7">
-            This is a non-local demo using pre-generated sample data. Connect Gmail or Microsoft 365, or set
-            OPENAI_API_KEY, to use live features.
+            Sample data is pre-loaded. AI inference runs via the free LLM7 endpoint (gpt-oss:20b). Connect Gmail or Microsoft 365 for live email processing.
           </p>
         </div>
       )}
