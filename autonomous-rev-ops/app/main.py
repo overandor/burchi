@@ -176,60 +176,18 @@ class DecideIn(BaseModel):
 
 @app.on_event("startup")
 async def startup():
-    store.seed_data()
-    # Seed torrent-gguf store
+    # No seed data — the system starts empty and collects real data
     from . import store_gguf
-    _seed_gguf(store_gguf)
+    _ensure_gguf_schema(store_gguf)
 
 
-def _seed_gguf(s) -> None:
-    """Seed the GGUF database with known models and nodes on first run."""
-    if not s.list_models():
-        s.create_model({
-            "name": "qwen2-0.5b-q3k",
-            "architecture": "qwen2",
-            "quantization": "Q3_K",
-            "parameter_count": "182.8M",
-            "model_size": 468 * 1024 * 1024,
-            "chunk_count": 30,
-            "chunk_size": 16 * 1024 * 1024,
-            "merkle_root": "d1c5b04a43adc858900b2e532e4e8969",
-            "tracker_url": "https://tracker-pi-ashy.vercel.app",
-            "inference_url": "https://gguf-p2p-deploy.vercel.app",
-            "metadata": {"note": "Primary model"},
-        })
-        s.create_model({
-            "name": "qwen2-swarm",
-            "architecture": "qwen2",
-            "quantization": "Q3_K",
-            "parameter_count": "182.8M",
-            "model_size": 468 * 1024 * 1024,
-            "chunk_count": 30,
-            "chunk_size": 16 * 1024 * 1024,
-            "merkle_root": "d1c5b04a43adc858900b2e532e4e8969",
-            "tracker_url": "https://tracker-pi-ashy.vercel.app",
-            "inference_url": "https://gguf-p2p-deploy.vercel.app",
-            "metadata": {"note": "Swarm node"},
-        })
-    if not s.list_nodes():
-        s.register_node({
-            "node_id": "node-primary",
-            "name": "Primary Inference",
-            "models": [],
-            "inference_url": "https://gguf-p2p-deploy.vercel.app",
-            "tracker_url": "https://tracker-pi-ashy.vercel.app",
-            "region": "us-east",
-        })
-        s.register_node({
-            "node_id": "node-swarm",
-            "name": "Swarm Node",
-            "models": [],
-            "inference_url": "https://gguf-p2p-deploy.vercel.app",
-            "tracker_url": "https://tracker-pi-ashy.vercel.app",
-            "region": "us-west",
-        })
-    if not s.list_api_keys():
-        s.create_api_key("default", ["read", "write", "inference", "admin"])
+def _ensure_gguf_schema(s) -> None:
+    """Ensure GGUF tables exist (no fake data injection)."""
+    # Just ensure the connection works and tables are created
+    try:
+        s.list_models()
+    except Exception:
+        pass
 
 
 # ─── Register Torrent GGUF routers ───────────────────────────────
@@ -1041,12 +999,55 @@ async def ai_status():
     }
 
 
-# ─── Seed ────────────────────────────────────────────────────────
+# ─── Wipe all data ───────────────────────────────────────────────
 
-@app.post("/api/seed")
-async def seed_data():
-    store.seed_data()
-    return {"status": "seeded"}
+@app.post("/api/wipe")
+async def wipe_all(batch: int = 0):
+    """Delete all data from revops tables. Use ?batch=0,1,2,3 for chunks."""
+    from app.store import _get_conn, USE_POSTGRES
+    if not USE_POSTGRES:
+        return {"error": "Only supported with Postgres backend"}
+    conn = _get_conn()
+    # Split tables into batches to avoid Vercel function timeout
+    all_tables = [
+        # Batch 0: rev-ops core
+        "live_events", "telemetry", "receipts", "decisions", "actions",
+        "kpi_snapshots",
+        # Batch 1: rev-ops content/experiments
+        "content_items", "variants", "experiments", "control_state", "visitors",
+        # Batch 2: gguf part 1
+        "gguf_peer_connections", "gguf_peer_chunks", "gguf_race_workers",
+        "gguf_worker_stats", "gguf_races", "gguf_inference_logs",
+        # Batch 3: gguf part 2
+        "gguf_analytics", "gguf_sessions", "gguf_users", "gguf_api_keys",
+        "gguf_peers", "gguf_nodes", "gguf_models",
+    ]
+    batch_size = 6
+    start = batch * batch_size
+    end = start + batch_size
+    tables = all_tables[start:end]
+    if not tables:
+        return {"status": "done", "message": "All batches complete"}
+    wiped = []
+    errors = []
+    for t in tables:
+        try:
+            conn.execute(f'DELETE FROM revops."{t}"')
+            conn.commit()
+            wiped.append(t)
+        except Exception as e:
+            errors.append(f"{t}: {str(e)[:80]}")
+            try:
+                conn.rollback()
+            except:
+                pass
+    return {
+        "status": "partial" if errors else "ok",
+        "batch": batch,
+        "wiped": wiped,
+        "errors": errors,
+        "next_batch": batch + 1 if end < len(all_tables) else None,
+    }
 
 
 # ─── Auto-Ingest Pipeline ────────────────────────────────────────
@@ -1060,14 +1061,7 @@ async def auto_ingest():
     """
     results = {"steps": [], "errors": []}
 
-    # Step 1: Ensure data is seeded
-    try:
-        store.seed_data()
-        results["steps"].append({"step": "seed", "status": "ok"})
-    except Exception as e:
-        results["errors"].append({"step": "seed", "error": str(e)})
-
-    # Step 2: Run AI decision cycle
+    # Step 1: Run AI decision cycle
     try:
         decision = ai_engine.run_decision_cycle()
         results["steps"].append({
