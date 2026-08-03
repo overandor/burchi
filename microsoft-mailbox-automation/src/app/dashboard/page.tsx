@@ -15,6 +15,10 @@ export default function DashboardPage() {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailError, setGmailError] = useState<string | null>(null);
   const [gmailServerConfigured, setGmailServerConfigured] = useState(false);
+  const [azureServerConfigured, setAzureServerConfigured] = useState(false);
+  const [azureMailbox, setAzureMailbox] = useState<string>("");
+  const [imapConnected, setImapConnected] = useState(false);
+  const [telemetrySummary, setTelemetrySummary] = useState<{ totalRevenue: number; timeSaved: number; efficiency: number; dataPoints: number } | null>(null);
   const [view, setView] = useState<"value" | "mindmap" | "execution" | "data">("value");
   const [isSeeding, setIsSeeding] = useState(false);
   const [swipeMode, setSwipeMode] = useState(false);
@@ -22,8 +26,8 @@ export default function DashboardPage() {
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const [swipeDecisions, setSwipeDecisions] = useState<Record<string, "keep" | "skip">>({});
 
-  // LLM inference state — default to OpenAI (non-local, persistent endpoint)
-  const [llmConfig, setLLMConfig] = useState({ endpoint: "https://api.openai.com/v1", apiKey: "", model: "gpt-4o-mini" });
+  // LLM inference state — default to LLM7 (free, no API key, OpenAI-compatible)
+  const [llmConfig, setLLMConfig] = useState({ endpoint: "https://api.llm7.io/v1/chat/completions", apiKey: "", model: "gpt-oss:20b" });
   const [llmPrompt, setLLMPrompt] = useState("");
   const [llmSystem, setLLMSystem] = useState("You are a data extraction assistant. Analyze email content and attachments to produce structured summaries, wikitrees, mindmaps, and execution plans.");
   const [inferencing, setInferencing] = useState(false);
@@ -119,6 +123,19 @@ export default function DashboardPage() {
       // Clean the URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+
+    // Check Azure config status
+    fetch("/api/azure/config")
+      .then((r) => r.text())
+      .then((text) => { if (text) { const data = JSON.parse(text); setAzureServerConfigured(!!data.configured); setAzureMailbox(data.mailbox || ""); } })
+      .catch(() => { });
+
+    // Check IMAP connection state
+    const imapLocal = localStorage.getItem("imap-config");
+    if (imapLocal) {
+      try { const parsed = JSON.parse(imapLocal); setImapConnected(!!(parsed.email && parsed.password)); } catch {}
+    }
+
     // Load cached records from localStorage immediately (works on serverless)
     try {
       const cachedRecords = localStorage.getItem("processed-emails");
@@ -193,6 +210,20 @@ export default function DashboardPage() {
           localStorage.setItem("sync-status", JSON.stringify(data.status));
           setStatus(data.status);
         }
+        // Auto-display telemetry from sync result
+        if (data.telemetry) {
+          const t = data.telemetry;
+          const revenueMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_revenue" || m.key === "total_revenue");
+          const timeMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_time_saved" || m.key === "time_saved");
+          const effMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_efficiency" || m.key === "efficiency_score");
+          const dataMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_emails" || m.key === "data_points");
+          setTelemetrySummary({
+            totalRevenue: revenueMetric?.value || 0,
+            timeSaved: timeMetric?.value || 0,
+            efficiency: effMetric?.value || 0,
+            dataPoints: dataMetric?.value || 0,
+          });
+        }
         fetchRecords();
         fetchStatus();
       }
@@ -202,6 +233,100 @@ export default function DashboardPage() {
       setIsSyncing(false);
     }
   };
+
+  const handleImapSync = async () => {
+    setIsSyncing(true);
+    setError(null);
+    setSyncResult(null);
+    try {
+      const local = localStorage.getItem("imap-config");
+      if (!local) {
+        setError("Microsoft 365 not connected. Go to Settings to connect.");
+        setIsSyncing(false);
+        return;
+      }
+      const creds = JSON.parse(local);
+      const res = await fetch("/api/imap/fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: creds.email, password: creds.password, host: creds.host, maxEmails: 50 }),
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) {
+        setError(data.error || "IMAP sync failed");
+        setIsSyncing(false);
+        return;
+      }
+      // Convert IMAP messages to processed records
+      const newRecords: ProcessedEmailRecord[] = (data.messages || []).map((msg: any) => ({
+        id: msg.id,
+        subject: msg.subject,
+        from: msg.from,
+        fromAddress: msg.fromAddress,
+        receivedDateTime: msg.receivedDateTime,
+        bodyPreview: msg.bodyPreview,
+        hasAttachments: msg.hasAttachments,
+        category: "Other",
+        extractedData: { fields: [], tables: [], summary: msg.bodyPreview, confidence: 0.5 },
+        processedAt: new Date().toISOString(),
+      }));
+      // Merge with existing records
+      const existing = localStorage.getItem("processed-emails");
+      const existingRecords: ProcessedEmailRecord[] = existing ? JSON.parse(existing) : [];
+      const merged = [...newRecords, ...existingRecords.filter(r => !newRecords.some(n => n.id === r.id))];
+      localStorage.setItem("processed-emails", JSON.stringify(merged));
+      setRecords(merged);
+      const newStatus: SyncStatus = {
+        lastSync: new Date().toISOString(),
+        totalEmails: merged.length,
+        processedEmails: merged.length,
+        pendingEmails: 0,
+        isSyncing: false,
+        errors: [],
+      };
+      localStorage.setItem("sync-status", JSON.stringify(newStatus));
+      setStatus(newStatus);
+      setSyncResult(`Fetched ${data.count} emails from ${creds.email}`);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const fetchTelemetry = useCallback(async () => {
+    try {
+      const local = localStorage.getItem("processed-emails");
+      const records = local ? JSON.parse(local) : [];
+      if (records.length === 0) return;
+      const res = await fetch("/api/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records }),
+      });
+      const text = await res.text();
+      if (text) {
+        const t = JSON.parse(text);
+        const revenueMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_revenue" || m.key === "total_revenue");
+        const timeMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_time_saved" || m.key === "time_saved");
+        const effMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_efficiency" || m.key === "efficiency_score");
+        const dataMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_emails" || m.key === "data_points");
+        setTelemetrySummary({
+          totalRevenue: revenueMetric?.value || 0,
+          timeSaved: timeMetric?.value || 0,
+          efficiency: effMetric?.value || 0,
+          dataPoints: dataMetric?.value || 0,
+        });
+      }
+    } catch { }
+  }, []);
+
+  useEffect(() => {
+    if (records.length > 0 && !telemetrySummary) {
+      fetchTelemetry();
+    }
+  }, [records, telemetrySummary, fetchTelemetry]);
 
   const handleSeedDemo = async () => {
     setIsSeeding(true);
@@ -246,8 +371,56 @@ export default function DashboardPage() {
     setLLMError(null);
     setRotateInfo(null);
     setRotateProgress("Sending prompt to inference endpoint...");
+
+    const messages = [
+      { role: "system", content: llmSystem },
+      { role: "user", content: llmPrompt },
+    ];
+
+    // If using LLM7 (free, no API key, CORS-enabled), call directly from client
+    // to avoid Netlify serverless function timeout
+    if (llmConfig.endpoint.includes("api.llm7.io") && !llmConfig.apiKey) {
+      try {
+        setRotateProgress("Querying LLM7...");
+        const res = await fetch("https://api.llm7.io/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: llmConfig.model || "gpt-oss:20b",
+            messages,
+            max_tokens: 1024,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content;
+          if (content) {
+            setLLMResults((prev) => [
+              { role: "user", content: llmPrompt, timestamp: new Date().toISOString() },
+              { role: "assistant", content, timestamp: new Date().toISOString() },
+              ...prev,
+            ]);
+            setLLMPrompt("");
+            setRotateProgress(null);
+            setInferencing(false);
+            return;
+          }
+        }
+        const errText = await res.text().catch(() => "");
+        setLLMError(`LLM7 returned ${res.status}. ${errText.slice(0, 200)}`);
+        setRotateProgress(null);
+        setInferencing(false);
+        return;
+      } catch (e: any) {
+        setLLMError(`Client-side inference failed: ${e.message}`);
+        setRotateProgress(null);
+        setInferencing(false);
+        return;
+      }
+    }
+
+    // For other endpoints (OpenAI, Ollama, etc.), use server-side proxy
     try {
-      // Direct single-shot inference (works with Ollama, Pollinations, OpenAI)
       const res = await fetch("/api/llm/infer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -255,10 +428,7 @@ export default function DashboardPage() {
           endpoint: llmConfig.endpoint,
           apiKey: llmConfig.apiKey,
           model: llmConfig.model,
-          messages: [
-            { role: "system", content: llmSystem },
-            { role: "user", content: llmPrompt },
-          ],
+          messages,
           temperature: 0.7,
           max_tokens: 2048,
         }),
@@ -355,6 +525,15 @@ export default function DashboardPage() {
           {!gmailConnected && (
             <button onClick={handleConnectGmail} className="btn btn-outline !h-10 text-sm">
               Connect Gmail
+            </button>
+          )}
+          {imapConnected && (
+            <button
+              onClick={handleImapSync}
+              disabled={isSyncing}
+              className="btn btn-outline !h-10 text-sm !border-[#0078d4] !text-[#0078d4] hover:!bg-[#0078d4] hover:!text-white"
+            >
+              {isSyncing ? "Syncing..." : "Sync Outlook"}
             </button>
           )}
           <button
@@ -457,6 +636,101 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Connection status + LLM + Telemetry summary */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* Mailbox connections */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-sm font-bold text-slate-900">Mailbox Connections</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className={`h-2.5 w-2.5 rounded-full ${gmailConnected ? "bg-emerald-500" : "bg-slate-300"}`} />
+                <span className="text-sm font-medium text-slate-700">Gmail</span>
+              </div>
+              <span className={`text-xs font-semibold ${gmailConnected ? "text-emerald-600" : "text-slate-400"}`}>
+                {gmailConnected ? "Connected" : gmailServerConfigured ? "Ready to connect" : "Not configured"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className={`h-2.5 w-2.5 rounded-full ${azureServerConfigured ? "bg-emerald-500" : "bg-slate-300"}`} />
+                <span className="text-sm font-medium text-slate-700">Microsoft 365</span>
+              </div>
+              <span className={`text-xs font-semibold ${azureServerConfigured ? "text-emerald-600" : "text-slate-400"}`}>
+                {azureServerConfigured ? `Connected (${azureMailbox || "configured"})` : "Needs credentials"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* LLM status */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-sm font-bold text-slate-900">LLM Engine</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-sm font-medium text-slate-700">Endpoint</span>
+              <span className="text-xs font-mono text-slate-500 truncate max-w-[160px]">{llmConfig.endpoint || "default"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-sm font-medium text-slate-700">Model</span>
+              <span className="text-xs font-mono text-slate-500">{llmConfig.model || "default"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-sm font-medium text-slate-700">Status</span>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/llm/infer", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ messages: [{ role: "user", content: "ping" }], max_tokens: 5 }),
+                    });
+                    if (res.ok) {
+                      setLLMError(null);
+                      setSyncResult("LLM is responding.");
+                    } else {
+                      setLLMError("LLM returned an error.");
+                    }
+                  } catch (e: any) {
+                    setLLMError(e.message);
+                  }
+                }}
+                className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-200"
+              >
+                Test
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Telemetry summary */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-sm font-bold text-slate-900">Telemetry Summary</h3>
+          {telemetrySummary ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-emerald-50 px-3 py-2">
+                <p className="text-xs text-slate-500">Est. Revenue</p>
+                <p className="text-lg font-bold text-emerald-600">${telemetrySummary.totalRevenue.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg bg-blue-50 px-3 py-2">
+                <p className="text-xs text-slate-500">Time Saved</p>
+                <p className="text-lg font-bold text-blue-600">{telemetrySummary.timeSaved}h</p>
+              </div>
+              <div className="rounded-lg bg-violet-50 px-3 py-2">
+                <p className="text-xs text-slate-500">Efficiency</p>
+                <p className="text-lg font-bold text-violet-600">{telemetrySummary.efficiency}/100</p>
+              </div>
+              <div className="rounded-lg bg-amber-50 px-3 py-2">
+                <p className="text-xs text-slate-500">Data Points</p>
+                <p className="text-lg font-bold text-amber-600">{telemetrySummary.dataPoints}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 py-4 text-center">Sync emails to generate telemetry</p>
+          )}
         </div>
       </div>
 

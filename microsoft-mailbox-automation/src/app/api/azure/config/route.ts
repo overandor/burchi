@@ -11,19 +11,26 @@ export async function GET() {
   const config = loadConfig();
 
   const clientId =
+    process.env.AZURE_AD_CLIENT_ID ||
     process.env.AZURE_CLIENT_ID ||
     process.env.MICROSOFT_CLIENT_ID ||
     config.graph?.clientId ||
     "";
   const tenantId =
+    process.env.AZURE_AD_TENANT_ID ||
     process.env.AZURE_TENANT_ID ||
     process.env.MICROSOFT_TENANT_ID ||
     config.graph?.tenantId ||
     "";
   const clientSecret =
+    process.env.AZURE_AD_CLIENT_SECRET ||
     process.env.AZURE_CLIENT_SECRET ||
     process.env.MICROSOFT_CLIENT_SECRET ||
     config.graph?.clientSecret ||
+    "";
+  const mailbox =
+    process.env.MAILBOX_EMAIL ||
+    config.graph?.mailbox ||
     "";
 
   return NextResponse.json({
@@ -31,5 +38,6 @@ export async function GET() {
     clientId,
     tenantId,
     hasSecret: !!clientSecret,
+    mailbox,
   });
 }

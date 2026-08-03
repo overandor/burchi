@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncAndProcessGmail } from "@/lib/gmail/pipeline";
 import { loadConfig } from "@/lib/config";
 import { normalizeOrigin } from "@/lib/utils";
+import { generateTelemetry } from "@/lib/telemetry/engine";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +32,15 @@ export async function POST(request: NextRequest) {
       maxEmails
     );
 
-    return NextResponse.json(result);
+    // Auto-generate telemetry report from synced records
+    let telemetry = null;
+    try {
+      telemetry = generateTelemetry(result.records);
+    } catch (e: any) {
+      console.error("Telemetry generation failed:", e.message);
+    }
+
+    return NextResponse.json({ ...result, telemetry });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

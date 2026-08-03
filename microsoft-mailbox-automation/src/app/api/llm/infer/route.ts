@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loadConfig, loadProcessedEmails } from "@/lib/config";
-import { generateTelemetry } from "@/lib/telemetry/engine";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -8,11 +6,17 @@ export const maxDuration = 120;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const config = loadConfig();
 
-    const endpoint = body.endpoint || config.llm.endpoint || process.env.LLM_ENDPOINT || "";
-    const apiKey = body.apiKey || config.llm.apiKey || process.env.OPENAI_API_KEY || "";
-    const model = body.model || config.llm.model || process.env.LLM_MODEL || "";
+    // Load config defensively — may fail on read-only serverless filesystems
+    let config: any = { llm: {} };
+    try {
+      const { loadConfig } = await import("@/lib/config");
+      config = loadConfig();
+    } catch {}
+
+    const endpoint = body.endpoint || config.llm?.endpoint || process.env.LLM_ENDPOINT || "";
+    const apiKey = body.apiKey || config.llm?.apiKey || process.env.OPENAI_API_KEY || "";
+    const model = body.model || config.llm?.model || process.env.LLM_MODEL || "";
 
     if (!endpoint) {
       return NextResponse.json({ error: "No LLM endpoint configured. Set it in Settings or provide in request." }, { status: 400 });
@@ -26,38 +30,48 @@ export async function POST(request: NextRequest) {
     // If useTelemetry is true (or auto-detected), inject telemetry context
     // into the system prompt so the LLM has mailbox intelligence data
     if (body.useTelemetry || body.injectTelemetry) {
-      let records: any[] = [];
-      if (body.records && Array.isArray(body.records)) {
-        records = body.records;
-      } else {
-        try { records = loadProcessedEmails(); } catch {}
-      }
-
-      const report = generateTelemetry(records, body.user || "dr.gilead@mailbox.local");
-      const telemetryContext = formatTelemetryForLLM(report);
-
-      // Inject telemetry into the system message
-      messages = messages.map((m: any) => {
-        if (m.role === "system") {
-          return {
-            ...m,
-            content: `${m.content}\n\n--- MAILBOX TELEMETRY CONTEXT ---\n${telemetryContext}`,
-          };
+      try {
+        let records: any[] = [];
+        if (body.records && Array.isArray(body.records)) {
+          records = body.records;
+        } else {
+          try {
+            const { loadProcessedEmails } = await import("@/lib/config");
+            records = loadProcessedEmails();
+          } catch {}
         }
-        return m;
-      });
 
-      // If no system message, prepend one
-      if (!messages.some((m: any) => m.role === "system")) {
-        messages.unshift({
-          role: "system",
-          content: `You are a revenue intelligence assistant. Use the mailbox telemetry context below to answer questions and generate insights.\n\n--- MAILBOX TELEMETRY CONTEXT ---\n${telemetryContext}`,
+        const { generateTelemetry } = await import("@/lib/telemetry/engine");
+        const report = generateTelemetry(records, body.user || "dr.gilead@mailbox.local");
+        const telemetryContext = formatTelemetryForLLM(report);
+
+        // Inject telemetry into the system message
+        messages = messages.map((m: any) => {
+          if (m.role === "system") {
+            return {
+              ...m,
+              content: `${m.content}\n\n--- MAILBOX TELEMETRY CONTEXT ---\n${telemetryContext}`,
+            };
+          }
+          return m;
         });
+
+        // If no system message, prepend one
+        if (!messages.some((m: any) => m.role === "system")) {
+          messages.unshift({
+            role: "system",
+            content: `You are a revenue intelligence assistant. Use the mailbox telemetry context below to answer questions and generate insights.\n\n--- MAILBOX TELEMETRY CONTEXT ---\n${telemetryContext}`,
+          });
+        }
+      } catch (e) {
+        // Telemetry injection is optional — continue without it
       }
     }
 
     // Detect API format: Ollama vs Torrent GGUF vs OpenAI-compatible
-    const isOllama = endpoint.includes("/api/chat") || endpoint.includes(":11434");
+    // Note: if endpoint contains /v1, it's Ollama's OpenAI-compatible mode —
+    // treat it as OpenAI-compatible, not native Ollama /api/chat.
+    const isOllama = (endpoint.includes("/api/chat") || endpoint.includes(":11434")) && !endpoint.includes("/v1");
     const isTorrentGGUF = endpoint.includes("/api/inference") || endpoint.includes("backend-five-eta");
 
     if (isOllama) {
@@ -145,24 +159,44 @@ export async function POST(request: NextRequest) {
     }
 
     // OpenAI-compatible format
-    const url = endpoint.endsWith("/chat/completions")
+    // Pollinations.ai uses /openai as the full endpoint (no /chat/completions suffix)
+    const isPollinations = endpoint.includes("text.pollinations.ai");
+    const url = endpoint.endsWith("/chat/completions") || isPollinations
       ? endpoint
       : `${endpoint.replace(/\/$/, "")}/chat/completions`;
 
+    if (isPollinations) {
+      // For Pollinations, try GET then POST with retries
+      // to handle rate limiting (429/402).
+      // Use "openai" model (free anonymous tier) instead of "openai-fast" (paid).
+      const pollModel = model === "openai-fast" ? "openai" : model;
+      const result = await tryPollinationsDirect(messages, pollModel || "openai");
+      if (result) return NextResponse.json(result);
+      return NextResponse.json({ error: "Pollinations inference timed out. Try again." }, { status: 504 });
+    }
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
     const llmRes = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-      },
+      headers,
+      signal: controller.signal,
       body: JSON.stringify({
         model,
         messages,
         temperature: body.temperature ?? 0.7,
-        max_tokens: body.max_tokens ?? 2048,
+        max_tokens: body.max_tokens ?? 1024,
         stream: false,
       }),
+    }).catch((e) => {
+      clearTimeout(timeout);
+      throw new Error(`Fetch to ${url} failed: ${e.message}`);
     });
+    clearTimeout(timeout);
 
     const text = await llmRes.text();
     if (!llmRes.ok) {
@@ -231,34 +265,45 @@ function formatTelemetryForLLM(report: any): string {
 }
 
 async function tryPollinations(messages: any[]): Promise<any | null> {
+  return tryPollinationsDirect(messages, "openai");
+}
+
+async function tryPollinationsDirect(messages: any[], model: string): Promise<any | null> {
+  const referrer = (process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE || "mailbox-sci-data.netlify.app").replace(/^https?:\/\//, "");
+
+  // POST only — GET endpoint returns 402 Payment Required for most models now.
+  // Single attempt with 8s timeout to stay within Netlify's 10s function limit.
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch("https://text.pollinations.ai/openai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0",
-        "Referer": "https://pollinations.ai/",
-        "Origin": "https://pollinations.ai",
       },
+      signal: controller.signal,
       body: JSON.stringify({
-        model: "openai-fast",
+        model: "openai",
         messages,
-        max_tokens: 2048,
+        max_tokens: 512,
         seed: Math.floor(Math.random() * 99999),
+        referrer,
       }),
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.choices?.[0]?.message?.content) {
-      return {
-        choices: data.choices,
-        model: "openai-fast (pollinations)",
-        _provider: "pollinations",
-      };
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.choices?.[0]?.message?.content) {
+        return {
+          choices: data.choices,
+          model: `${model} (pollinations)`,
+          _provider: "pollinations",
+        };
+      }
     }
-    return null;
-  } catch {
-    return null;
-  }
+  } catch {}
+
+  return null;
 }
 

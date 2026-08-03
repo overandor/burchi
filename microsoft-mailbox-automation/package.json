@@ -18,6 +18,7 @@
     "date-fns": "^3.6.0",
     "exceljs": "^4.4.0",
     "googleapis": "^173.0.0",
+    "imapflow": "^1.6.5",
     "isomorphic-fetch": "^3.0.0",
     "lucide-react": "^0.408.0",
     "mermaid": "^11.16.0",
