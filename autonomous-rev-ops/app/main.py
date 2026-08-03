@@ -45,6 +45,7 @@ from app.routers import analytics as gguf_analytics
 from app.routers import auth_routes as gguf_auth
 from app.routers import competitive as gguf_competitive
 from app.routers import p2p as gguf_p2p
+from app.routers import router_routes as gguf_router
 
 app = FastAPI(
     title="Autonomous Revenue Operations Platform",
@@ -242,6 +243,8 @@ app.include_router(gguf_analytics.router)
 app.include_router(gguf_auth.router)
 app.include_router(gguf_competitive.router)
 app.include_router(gguf_p2p.router)
+app.include_router(gguf_router.router)
+app.include_router(gguf_router.pref_router)
 
 
 # ─── hfdashboard endpoints (RentMasseur Unified Dashboard) ───────

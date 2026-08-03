@@ -1,4 +1,4 @@
-"""Data store — SQLite with in-memory fallback for serverless."""
+"""Data store — Postgres (Neon) with SQLite fallback for local dev."""
 
 from __future__ import annotations
 
@@ -12,26 +12,113 @@ from pathlib import Path
 from typing import Any, Optional
 from uuid import uuid4
 
+# Import Postgres support from store.py
+from app.store import (
+    DATABASE_URL, USE_POSTGRES, PgConnWrapper, PgCursorWrapper,
+    _pg_host, _pg_db, _pg_user, _pg_pw, _ph, _scalar,
+)
+
 # Use /tmp on Vercel, local dir otherwise
-DB_PATH = os.environ.get("DATABASE_URL", "")
+DB_PATH = os.environ.get("GGUF_DATABASE_URL", "")
 if not DB_PATH:
-    if os.path.exists("/tmp"):
-        DB_PATH = "/tmp/torrent_gguf.db"
-    else:
-        DB_PATH = str(Path(__file__).parent / "data" / "torrent_gguf.db")
+    if not USE_POSTGRES:
+        if os.path.exists("/tmp"):
+            DB_PATH = "/tmp/torrent_gguf.db"
+        else:
+            DB_PATH = str(Path(__file__).parent / "data" / "torrent_gguf.db")
 
 _lock = threading.Lock()
 _initialized = False
 
 
+_conn: Optional[sqlite3.Connection] = None
+
 def _get_conn() -> sqlite3.Connection:
-    global _initialized
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
+    global _initialized, _conn
+    if USE_POSTGRES:
+        # Use Postgres with revops schema (same as store.py)
+        import pg8000
+        conn = pg8000.connect(
+            host=_pg_host,
+            database=_pg_db,
+            user=_pg_user,
+            password=_pg_pw,
+            ssl_context=True,
+            timeout=30,
+        )
+        wrapped = PgConnWrapper(conn)
+        if not _initialized:
+            _init_db_pg(wrapped)
+            _initialized = True
+        return wrapped
+    # SQLite fallback (local dev)
+    if _conn is not None:
+        return _conn
+    _conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    _conn.row_factory = sqlite3.Row
+    # Enable WAL mode for better concurrent access
+    try:
+        __exec(conn, "PRAGMA journal_mode=WAL")
+        __exec(conn, "PRAGMA busy_timeout=5000")
+    except Exception:
+        pass
     if not _initialized:
-        _init_db(conn)
+        _init_db(_conn)
         _initialized = True
-    return conn
+    return _conn
+
+
+# Table name mapping: SQLite name → Postgres (revops schema) name
+_TABLE_MAP = {
+    "models": "revops.gguf_models",
+    "nodes": "revops.gguf_nodes",
+    "peers": "revops.gguf_peers",
+    "api_keys": "revops.gguf_api_keys",
+    "users": "revops.gguf_users",
+    "sessions": "revops.gguf_sessions",
+    "analytics": "revops.gguf_analytics",
+    "inference_logs": "revops.gguf_inference_logs",
+    "race_workers": "revops.gguf_race_workers",
+    "peer_chunks": "revops.gguf_peer_chunks",
+    "peer_connections": "revops.gguf_peer_connections",
+    "races": "revops.gguf_races",
+    "worker_stats": "revops.gguf_worker_stats",
+    "models": "revops.gguf_models",
+    "nodes": "revops.gguf_nodes",
+    "peers": "revops.gguf_peers",
+    "api_keys": "revops.gguf_api_keys",
+    "users": "revops.gguf_users",
+    "sessions": "revops.gguf_sessions",
+    "analytics": "revops.gguf_analytics",
+    "inference_logs": "revops.gguf_inference_logs",
+    "race_workers": "revops.gguf_race_workers",
+    "peer_chunks": "revops.gguf_peer_chunks",
+    "peer_connections": "revops.gguf_peer_connections",
+}
+
+
+def _q(sql: str) -> str:
+    """Convert a SQL query for both SQLite and Postgres.
+    - Replaces ? with %s for Postgres
+    - Replaces table names with revops.gguf_* for Postgres
+    """
+    if not USE_POSTGRES:
+        return sql
+    # Convert placeholders
+    sql = sql.replace("?", "%s")
+    # Replace table names (word-boundary aware)
+    import re
+    for sqlite_name, pg_name in _TABLE_MAP.items():
+        sql = re.sub(rf'\b{sqlite_name}\b', pg_name, sql)
+    return sql
+
+
+def _exec(conn, sql, params=None):
+    """Execute a query with automatic Postgres conversion."""
+    if params:
+        return conn.execute(_q(sql), params)
+    return conn.execute(_q(sql))
+
 
 
 def _init_db(conn: sqlite3.Connection) -> None:
@@ -192,6 +279,161 @@ def _init_db(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _init_db_pg(conn) -> None:
+    """Initialize GGUF schema for Postgres in the 'revops' schema."""
+    schema_sql = """
+    CREATE TABLE IF NOT EXISTS revops.gguf_models (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        architecture TEXT DEFAULT 'unknown',
+        quantization TEXT DEFAULT 'unknown',
+        parameter_count TEXT DEFAULT 'unknown',
+        model_size INTEGER DEFAULT 0,
+        chunk_count INTEGER DEFAULT 0,
+        chunk_size INTEGER DEFAULT 16777216,
+        merkle_root TEXT DEFAULT '',
+        tracker_url TEXT DEFAULT '',
+        inference_url TEXT DEFAULT '',
+        chunks TEXT DEFAULT '[]',
+        metadata TEXT DEFAULT '{}',
+        status TEXT DEFAULT 'registered',
+        created_at TEXT,
+        updated_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_nodes (
+        node_id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        models TEXT DEFAULT '[]',
+        inference_url TEXT DEFAULT '',
+        tracker_url TEXT DEFAULT '',
+        capabilities TEXT DEFAULT '{}',
+        region TEXT DEFAULT 'unknown',
+        status TEXT DEFAULT 'active',
+        last_heartbeat TEXT,
+        registered_at TEXT,
+        metrics TEXT DEFAULT '{}'
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_peers (
+        peer_id TEXT PRIMARY KEY,
+        chunks TEXT DEFAULT '[]',
+        ip TEXT DEFAULT '',
+        port INTEGER DEFAULT 0,
+        last_seen TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_api_keys (
+        key TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        scopes TEXT DEFAULT '["read"]',
+        user_id TEXT,
+        created_at TEXT,
+        last_used TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        username TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
+        created_at TEXT,
+        updated_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_sessions (
+        token TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        created_at TEXT,
+        expires_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_analytics (
+        id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL,
+        model_id TEXT,
+        node_id TEXT,
+        metadata TEXT DEFAULT '{}',
+        timestamp TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_inference_logs (
+        id TEXT PRIMARY KEY,
+        model_id TEXT,
+        node_id TEXT,
+        prompt TEXT,
+        response TEXT,
+        elapsed_ms INTEGER,
+        tokens_prompt INTEGER DEFAULT 0,
+        tokens_completion INTEGER DEFAULT 0,
+        gen_tok_per_sec REAL DEFAULT 0,
+        prompt_tok_per_sec REAL DEFAULT 0,
+        success INTEGER DEFAULT 1,
+        error TEXT,
+        timestamp TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_race_workers (
+        id TEXT PRIMARY KEY,
+        race_id TEXT NOT NULL,
+        worker_url TEXT NOT NULL,
+        worker_id TEXT NOT NULL,
+        partial_text TEXT DEFAULT '',
+        races_won INTEGER DEFAULT 0,
+        races_lost INTEGER DEFAULT 0,
+        total_score REAL DEFAULT 0,
+        avg_score REAL DEFAULT 0,
+        avg_latency_ms REAL DEFAULT 0,
+        user_preferences INTEGER DEFAULT 0,
+        alpha REAL DEFAULT 1.0,
+        beta REAL DEFAULT 1.0,
+        last_race TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_peer_chunks (
+        id TEXT PRIMARY KEY,
+        peer_id TEXT NOT NULL,
+        chunk_hash TEXT NOT NULL,
+        model_id TEXT DEFAULT '',
+        announced_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_peer_connections (
+        id TEXT PRIMARY KEY,
+        from_peer TEXT NOT NULL,
+        to_peer TEXT NOT NULL,
+        chunk_hash TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        bytes_transferred INTEGER DEFAULT 0,
+        started_at TEXT,
+        completed_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_races (
+        id TEXT PRIMARY KEY,
+        prompt TEXT NOT NULL,
+        model_id TEXT DEFAULT '',
+        num_workers INTEGER DEFAULT 2,
+        partial_tokens INTEGER DEFAULT 32,
+        winner_worker_id TEXT DEFAULT '',
+        final_response TEXT DEFAULT '',
+        status TEXT DEFAULT 'pending',
+        user_preference TEXT DEFAULT '',
+        total_elapsed_ms INTEGER DEFAULT 0,
+        tokens_saved INTEGER DEFAULT 0,
+        created_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS revops.gguf_worker_stats (
+        worker_id TEXT PRIMARY KEY,
+        worker_url TEXT NOT NULL,
+        races_won INTEGER DEFAULT 0,
+        races_lost INTEGER DEFAULT 0,
+        total_score REAL DEFAULT 0,
+        avg_score REAL DEFAULT 0,
+        avg_latency_ms REAL DEFAULT 0,
+        user_preferences INTEGER DEFAULT 0,
+        alpha REAL DEFAULT 1.0,
+        beta REAL DEFAULT 1.0,
+        last_race TEXT
+    );
+    """
+    for stmt in schema_sql.strip().split(';'):
+        stmt = stmt.strip()
+        if stmt:
+            conn.execute(stmt)
+    conn.commit()
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -203,7 +445,7 @@ def create_model(data: dict) -> dict:
         conn = _get_conn()
         model_id = str(uuid4())
         now = utc_now()
-        conn.execute(
+        _exec(conn, 
             """INSERT INTO models (id, name, architecture, quantization, parameter_count,
                model_size, chunk_count, chunk_size, merkle_root, tracker_url, inference_url,
                chunks, metadata, status, created_at, updated_at)
@@ -222,7 +464,7 @@ def create_model(data: dict) -> dict:
 
 def get_model(model_id: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM models WHERE id = ?", (model_id,)).fetchone()
+    row = _exec(conn, "SELECT * FROM models WHERE id = ?", (model_id,)).fetchone()
     if not row:
         return None
     return _row_to_model(row)
@@ -230,7 +472,7 @@ def get_model(model_id: str) -> Optional[dict]:
 
 def get_model_by_name(name: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM models WHERE name = ?", (name,)).fetchone()
+    row = _exec(conn, "SELECT * FROM models WHERE name = ?", (name,)).fetchone()
     if not row:
         return None
     return _row_to_model(row)
@@ -238,7 +480,7 @@ def get_model_by_name(name: str) -> Optional[dict]:
 
 def list_models() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM models ORDER BY created_at DESC").fetchall()
+    rows = _exec(conn, "SELECT * FROM models ORDER BY created_at DESC").fetchall()
     return [_row_to_model(r) for r in rows]
 
 
@@ -260,7 +502,7 @@ def update_model(model_id: str, data: dict) -> Optional[dict]:
         fields.append("updated_at = ?")
         values.append(utc_now())
         values.append(model_id)
-        conn.execute(f"UPDATE models SET {', '.join(fields)} WHERE id = ?", values)
+        _exec(conn, f"UPDATE models SET {', '.join(fields)} WHERE id = ?", values)
         conn.commit()
         return get_model(model_id)
 
@@ -268,7 +510,7 @@ def update_model(model_id: str, data: dict) -> Optional[dict]:
 def delete_model(model_id: str) -> bool:
     with _lock:
         conn = _get_conn()
-        cur = conn.execute("DELETE FROM models WHERE id = ?", (model_id,))
+        cur = _exec(conn, "DELETE FROM models WHERE id = ?", (model_id,))
         conn.commit()
         return cur.rowcount > 0
 
@@ -300,22 +542,37 @@ def register_node(data: dict) -> dict:
     with _lock:
         conn = _get_conn()
         now = utc_now()
-        conn.execute(
-            """INSERT OR REPLACE INTO nodes (node_id, name, models, inference_url, tracker_url,
-               capabilities, region, status, last_heartbeat, registered_at, metrics)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-            (data["node_id"], data["name"], json.dumps(data.get("models", [])),
-             data.get("inference_url", ""), data.get("tracker_url", ""),
-             json.dumps(data.get("capabilities", {})), data.get("region", "unknown"),
-             "active", now, now, json.dumps({}))
-        )
+        if not USE_POSTGRES:
+            _exec(conn,
+                """INSERT OR REPLACE INTO nodes (node_id, name, models, inference_url, tracker_url,
+                   capabilities, region, status, last_heartbeat, registered_at, metrics)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                (data["node_id"], data["name"], json.dumps(data.get("models", [])),
+                 data.get("inference_url", ""), data.get("tracker_url", ""),
+                 json.dumps(data.get("capabilities", {})), data.get("region", "unknown"),
+                 "active", now, now, json.dumps({}))
+            )
+        else:
+            conn.execute(
+                """INSERT INTO revops.gguf_nodes (node_id, name, models, inference_url, tracker_url,
+                   capabilities, region, status, last_heartbeat, registered_at, metrics)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                   ON CONFLICT (node_id) DO UPDATE SET name=EXCLUDED.name, models=EXCLUDED.models,
+                   inference_url=EXCLUDED.inference_url, tracker_url=EXCLUDED.tracker_url,
+                   capabilities=EXCLUDED.capabilities, region=EXCLUDED.region, status=EXCLUDED.status,
+                   last_heartbeat=EXCLUDED.last_heartbeat, metrics=EXCLUDED.metrics""",
+                (data["node_id"], data["name"], json.dumps(data.get("models", [])),
+                 data.get("inference_url", ""), data.get("tracker_url", ""),
+                 json.dumps(data.get("capabilities", {})), data.get("region", "unknown"),
+                 "active", now, now, json.dumps({}))
+            )
         conn.commit()
         return get_node(data["node_id"])
 
 
 def get_node(node_id: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM nodes WHERE node_id = ?", (node_id,)).fetchone()
+    row = _exec(conn, "SELECT * FROM nodes WHERE node_id = ?", (node_id,)).fetchone()
     if not row:
         return None
     return _row_to_node(row)
@@ -323,7 +580,7 @@ def get_node(node_id: str) -> Optional[dict]:
 
 def list_nodes() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM nodes ORDER BY registered_at DESC").fetchall()
+    rows = _exec(conn, "SELECT * FROM nodes ORDER BY registered_at DESC").fetchall()
     return [_row_to_node(r) for r in rows]
 
 
@@ -333,7 +590,7 @@ def heartbeat(node_id: str, data: dict) -> Optional[dict]:
         existing = get_node(node_id)
         if not existing:
             return None
-        conn.execute(
+        _exec(conn, 
             "UPDATE nodes SET status = ?, last_heartbeat = ?, metrics = ? WHERE node_id = ?",
             (data.get("status", "active"), utc_now(),
              json.dumps(data.get("metrics", {})), node_id)
@@ -345,7 +602,7 @@ def heartbeat(node_id: str, data: dict) -> Optional[dict]:
 def deregister_node(node_id: str) -> bool:
     with _lock:
         conn = _get_conn()
-        cur = conn.execute("DELETE FROM nodes WHERE node_id = ?", (node_id,))
+        cur = _exec(conn, "DELETE FROM nodes WHERE node_id = ?", (node_id,))
         conn.commit()
         return cur.rowcount > 0
 
@@ -372,12 +629,22 @@ def announce_peer(data: dict) -> dict:
     with _lock:
         conn = _get_conn()
         now = utc_now()
-        conn.execute(
-            """INSERT OR REPLACE INTO peers (peer_id, chunks, ip, port, last_seen)
-               VALUES (?,?,?,?,?)""",
-            (data["peer_id"], json.dumps(data.get("chunks", [])),
-             data.get("ip", ""), data.get("port", 0), now)
-        )
+        if not USE_POSTGRES:
+            _exec(conn,
+                """INSERT OR REPLACE INTO peers (peer_id, chunks, ip, port, last_seen)
+                   VALUES (?,?,?,?,?)""",
+                (data["peer_id"], json.dumps(data.get("chunks", [])),
+                 data.get("ip", ""), data.get("port", 0), now)
+            )
+        else:
+            conn.execute(
+                """INSERT INTO revops.gguf_peers (peer_id, chunks, ip, port, last_seen)
+                   VALUES (%s,%s,%s,%s,%s)
+                   ON CONFLICT (peer_id) DO UPDATE SET chunks=EXCLUDED.chunks, ip=EXCLUDED.ip,
+                   port=EXCLUDED.port, last_seen=EXCLUDED.last_seen""",
+                (data["peer_id"], json.dumps(data.get("chunks", [])),
+                 data.get("ip", ""), data.get("port", 0), now)
+            )
         conn.commit()
         return {
             "peer_id": data["peer_id"],
@@ -390,7 +657,7 @@ def announce_peer(data: dict) -> dict:
 
 def get_peers_for_chunk(chunk_hash: str) -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM peers").fetchall()
+    rows = _exec(conn, "SELECT * FROM peers").fetchall()
     result = []
     for row in rows:
         chunks = json.loads(row["chunks"])
@@ -406,7 +673,7 @@ def get_peers_for_chunk(chunk_hash: str) -> list[dict]:
 
 def list_peers() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM peers ORDER BY last_seen DESC").fetchall()
+    rows = _exec(conn, "SELECT * FROM peers ORDER BY last_seen DESC").fetchall()
     return [
         {
             "peer_id": r["peer_id"],
@@ -426,7 +693,7 @@ def create_api_key(name: str, scopes: list[str], user_id: str = None) -> dict:
         conn = _get_conn()
         key = f"tg_{uuid4().hex}"
         now = utc_now()
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO api_keys (key, name, scopes, user_id, created_at) VALUES (?,?,?,?,?)",
             (key, name, json.dumps(scopes), user_id, now)
         )
@@ -436,11 +703,11 @@ def create_api_key(name: str, scopes: list[str], user_id: str = None) -> dict:
 
 def validate_api_key(key: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM api_keys WHERE key = ?", (key,)).fetchone()
+    row = _exec(conn, "SELECT * FROM api_keys WHERE key = ?", (key,)).fetchone()
     if not row:
         return None
     with _lock:
-        conn.execute("UPDATE api_keys SET last_used = ? WHERE key = ?", (utc_now(), key))
+        _exec(conn, "UPDATE api_keys SET last_used = ? WHERE key = ?", (utc_now(), key))
         conn.commit()
     return {
         "key": row["key"],
@@ -454,7 +721,7 @@ def validate_api_key(key: str) -> Optional[dict]:
 
 def list_api_keys() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM api_keys ORDER BY created_at DESC").fetchall()
+    rows = _exec(conn, "SELECT * FROM api_keys ORDER BY created_at DESC").fetchall()
     return [
         {
             "key": r["key"],
@@ -471,14 +738,14 @@ def list_api_keys() -> list[dict]:
 def revoke_api_key(key: str) -> bool:
     with _lock:
         conn = _get_conn()
-        cur = conn.execute("DELETE FROM api_keys WHERE key = ?", (key,))
+        cur = _exec(conn, "DELETE FROM api_keys WHERE key = ?", (key,))
         conn.commit()
         return cur.rowcount > 0
 
 
 def list_api_keys_for_user(user_id: str) -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM api_keys WHERE user_id = ? ORDER BY created_at DESC", (user_id,)).fetchall()
+    rows = _exec(conn, "SELECT * FROM api_keys WHERE user_id = ? ORDER BY created_at DESC", (user_id,)).fetchall()
     return [
         {
             "key": r["key"],
@@ -499,7 +766,7 @@ def create_user(email: str, username: str, password_hash: str) -> dict:
         conn = _get_conn()
         user_id = str(uuid4())
         now = utc_now()
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO users (id, email, username, password_hash, role, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
             (user_id, email, username, password_hash, "user", now, now)
         )
@@ -509,7 +776,7 @@ def create_user(email: str, username: str, password_hash: str) -> dict:
 
 def get_user_by_id(user_id: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    row = _exec(conn, "SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     if not row:
         return None
     return _row_to_user(row)
@@ -517,7 +784,7 @@ def get_user_by_id(user_id: str) -> Optional[dict]:
 
 def get_user_by_email(email: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    row = _exec(conn, "SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     if not row:
         return None
     return _row_to_user(row)
@@ -525,7 +792,7 @@ def get_user_by_email(email: str) -> Optional[dict]:
 
 def list_users() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM users ORDER BY created_at DESC").fetchall()
+    rows = _exec(conn, "SELECT * FROM users ORDER BY created_at DESC").fetchall()
     return [_row_to_user(r) for r in rows]
 
 
@@ -550,7 +817,7 @@ def create_session(user_id: str, expires_hours: int = 24 * 7) -> dict:
         now = datetime.now(timezone.utc)
         from datetime import timedelta
         expires = now + timedelta(hours=expires_hours)
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?,?,?,?)",
             (token, user_id, now.isoformat(), expires.isoformat())
         )
@@ -560,7 +827,7 @@ def create_session(user_id: str, expires_hours: int = 24 * 7) -> dict:
 
 def validate_session(token: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM sessions WHERE token = ?", (token,)).fetchone()
+    row = _exec(conn, "SELECT * FROM sessions WHERE token = ?", (token,)).fetchone()
     if not row:
         return None
     # Check expiry
@@ -568,7 +835,7 @@ def validate_session(token: str) -> Optional[dict]:
         expires = datetime.fromisoformat(row["expires_at"])
         if datetime.now(timezone.utc) > expires:
             with _lock:
-                conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+                _exec(conn, "DELETE FROM sessions WHERE token = ?", (token,))
                 conn.commit()
             return None
     except Exception:
@@ -582,7 +849,7 @@ def validate_session(token: str) -> Optional[dict]:
 def revoke_session(token: str) -> bool:
     with _lock:
         conn = _get_conn()
-        cur = conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+        cur = _exec(conn, "DELETE FROM sessions WHERE token = ?", (token,))
         conn.commit()
         return cur.rowcount > 0
 
@@ -592,7 +859,7 @@ def revoke_session(token: str) -> bool:
 def log_event(event_type: str, model_id: str = None, node_id: str = None, metadata: dict = None) -> None:
     with _lock:
         conn = _get_conn()
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO analytics (id, event_type, model_id, node_id, metadata, timestamp) VALUES (?,?,?,?,?,?)",
             (str(uuid4()), event_type, model_id, node_id, json.dumps(metadata or {}), utc_now())
         )
@@ -602,7 +869,7 @@ def log_event(event_type: str, model_id: str = None, node_id: str = None, metada
 def log_inference(data: dict) -> None:
     with _lock:
         conn = _get_conn()
-        conn.execute(
+        _exec(conn, 
             """INSERT INTO inference_logs (id, model_id, node_id, prompt, response, elapsed_ms,
                tokens_prompt, tokens_completion, gen_tok_per_sec, prompt_tok_per_sec,
                success, error, timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
@@ -617,32 +884,32 @@ def log_inference(data: dict) -> None:
 
 def get_analytics() -> dict:
     conn = _get_conn()
-    total_downloads = conn.execute(
+    total_downloads = _scalar(_exec(conn,
         "SELECT COUNT(*) FROM analytics WHERE event_type = 'download_complete'"
-    ).fetchone()[0]
-    total_inferences = conn.execute("SELECT COUNT(*) FROM inference_logs").fetchone()[0]
-    active_nodes = conn.execute(
+    ).fetchone())
+    total_inferences = _scalar(_exec(conn, "SELECT COUNT(*) FROM inference_logs").fetchone())
+    active_nodes = _scalar(_exec(conn,
         "SELECT COUNT(*) FROM nodes WHERE status = 'active'"
-    ).fetchone()[0]
-    total_models = conn.execute("SELECT COUNT(*) FROM models").fetchone()[0]
-    total_chunks = conn.execute("SELECT COALESCE(SUM(chunk_count), 0) FROM models").fetchone()[0]
-    total_size = conn.execute("SELECT COALESCE(SUM(model_size), 0) FROM models").fetchone()[0]
+    ).fetchone())
+    total_models = _scalar(_exec(conn, "SELECT COUNT(*) FROM models").fetchone())
+    total_chunks = _scalar(_exec(conn, "SELECT COALESCE(SUM(chunk_count), 0) FROM models").fetchone())
+    total_size = _scalar(_exec(conn, "SELECT COALESCE(SUM(model_size), 0) FROM models").fetchone())
 
     # Top models by inference count
-    top_rows = conn.execute(
+    top_rows = _exec(conn, 
         """SELECT model_id, COUNT(*) as count, AVG(gen_tok_per_sec) as avg_speed
            FROM inference_logs WHERE success = 1 GROUP BY model_id ORDER BY count DESC LIMIT 5"""
     ).fetchall()
     top_models = [{"model_id": r["model_id"], "inferences": r["count"], "avg_tok_s": round(r["avg_speed"] or 0, 1)} for r in top_rows]
 
     # Recent events
-    event_rows = conn.execute(
+    event_rows = _exec(conn, 
         "SELECT * FROM analytics ORDER BY timestamp DESC LIMIT 20"
     ).fetchall()
     events = [{"event_type": r["event_type"], "model_id": r["model_id"], "timestamp": r["timestamp"]} for r in event_rows]
 
     # Node uptime
-    node_rows = conn.execute("SELECT node_id, registered_at, last_heartbeat FROM nodes").fetchall()
+    node_rows = _exec(conn, "SELECT node_id, registered_at, last_heartbeat FROM nodes").fetchall()
     node_uptime = {}
     for r in node_rows:
         try:
@@ -673,7 +940,7 @@ def create_race(prompt: str, model_id: str, num_workers: int, partial_tokens: in
         conn = _get_conn()
         race_id = str(uuid4())
         now = utc_now()
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO races (id, prompt, model_id, num_workers, partial_tokens, status, created_at) VALUES (?,?,?,?,?,?,?)",
             (race_id, prompt[:500], model_id, num_workers, partial_tokens, "racing", now)
         )
@@ -683,10 +950,10 @@ def create_race(prompt: str, model_id: str, num_workers: int, partial_tokens: in
 
 def get_race(race_id: str) -> Optional[dict]:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM races WHERE id = ?", (race_id,)).fetchone()
+    row = _exec(conn, "SELECT * FROM races WHERE id = ?", (race_id,)).fetchone()
     if not row:
         return None
-    workers = conn.execute("SELECT * FROM race_workers WHERE race_id = ?", (race_id,)).fetchall()
+    workers = _exec(conn, "SELECT * FROM race_workers WHERE race_id = ?", (race_id,)).fetchall()
     return {
         "id": row["id"],
         "prompt": row["prompt"],
@@ -719,7 +986,7 @@ def add_race_worker(race_id: str, worker_id: str, worker_url: str) -> dict:
     with _lock:
         conn = _get_conn()
         wid = str(uuid4())
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO race_workers (id, race_id, worker_url, worker_id, status, created_at) VALUES (?,?,?,?,?,?)",
             (wid, race_id, worker_url, worker_id, "generating", utc_now())
         )
@@ -738,7 +1005,7 @@ def update_race_worker(race_id: str, worker_id: str, data: dict) -> None:
                 values.append(data[k])
         if fields:
             values.extend([race_id, worker_id])
-            conn.execute(
+            _exec(conn, 
                 f"UPDATE race_workers SET {', '.join(fields)} WHERE race_id = ? AND worker_id = ?",
                 values
             )
@@ -748,7 +1015,7 @@ def update_race_worker(race_id: str, worker_id: str, data: dict) -> None:
 def complete_race(race_id: str, winner_id: str, final_response: str, total_ms: int, tokens_saved: int) -> None:
     with _lock:
         conn = _get_conn()
-        conn.execute(
+        _exec(conn, 
             "UPDATE races SET winner_worker_id = ?, final_response = ?, status = 'completed', total_elapsed_ms = ?, tokens_saved = ? WHERE id = ?",
             (winner_id, final_response[:2000], total_ms, tokens_saved, race_id)
         )
@@ -758,14 +1025,14 @@ def complete_race(race_id: str, winner_id: str, final_response: str, total_ms: i
 def set_user_preference(race_id: str, worker_id: str) -> None:
     with _lock:
         conn = _get_conn()
-        conn.execute(
+        _exec(conn, 
             "UPDATE races SET user_preference = ? WHERE id = ?",
             (worker_id, race_id)
         )
         conn.commit()
-        stats = conn.execute("SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
+        stats = _exec(conn, "SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
         if stats:
-            conn.execute(
+            _exec(conn, 
                 "UPDATE worker_stats SET user_preferences = user_preferences + 1 WHERE worker_id = ?",
                 (worker_id,)
             )
@@ -774,7 +1041,7 @@ def set_user_preference(race_id: str, worker_id: str) -> None:
 
 def list_races(limit: int = 20) -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM races ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+    rows = _exec(conn, "SELECT * FROM races ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
     return [
         {
             "id": r["id"],
@@ -793,24 +1060,24 @@ def list_races(limit: int = 20) -> list[dict]:
 
 def get_or_create_worker_stats(worker_id: str, worker_url: str) -> dict:
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
+    row = _exec(conn, "SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
     if row:
         return _row_to_worker_stats(row)
     with _lock:
         now = utc_now()
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO worker_stats (worker_id, worker_url, alpha, beta, last_race) VALUES (?,?,?,?,?)",
             (worker_id, worker_url, 1.0, 1.0, now)
         )
         conn.commit()
-        row = conn.execute("SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
+        row = _exec(conn, "SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
         return _row_to_worker_stats(row)
 
 
 def update_worker_stats(worker_id: str, won: bool, score: float, latency_ms: float) -> None:
     with _lock:
         conn = _get_conn()
-        row = conn.execute("SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
+        row = _exec(conn, "SELECT * FROM worker_stats WHERE worker_id = ?", (worker_id,)).fetchone()
         if not row:
             return
         races_won = row["races_won"] + (1 if won else 0)
@@ -821,7 +1088,7 @@ def update_worker_stats(worker_id: str, won: bool, score: float, latency_ms: flo
         avg_lat = ((row["avg_latency_ms"] * (total_races - 1)) + latency_ms) / total_races if total_races > 0 else latency_ms
         alpha = row["alpha"] + (score if won else 0)
         beta = row["beta"] + (0.1 if not won else 0)
-        conn.execute(
+        _exec(conn, 
             "UPDATE worker_stats SET races_won = ?, races_lost = ?, total_score = ?, avg_score = ?, avg_latency_ms = ?, alpha = ?, beta = ?, last_race = ? WHERE worker_id = ?",
             (races_won, races_lost, total_score, avg_score, avg_lat, alpha, beta, utc_now(), worker_id)
         )
@@ -830,7 +1097,7 @@ def update_worker_stats(worker_id: str, won: bool, score: float, latency_ms: flo
 
 def list_worker_stats() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute("SELECT * FROM worker_stats ORDER BY avg_score DESC").fetchall()
+    rows = _exec(conn, "SELECT * FROM worker_stats ORDER BY avg_score DESC").fetchall()
     return [_row_to_worker_stats(r) for r in rows]
 
 
@@ -855,15 +1122,15 @@ def announce_peer_chunks(peer_id: str, chunks: list[str], model_id: str = "") ->
     with _lock:
         conn = _get_conn()
         now = utc_now()
-        conn.execute("DELETE FROM peer_chunks WHERE peer_id = ?", (peer_id,))
+        _exec(conn, "DELETE FROM peer_chunks WHERE peer_id = ?", (peer_id,))
         count = 0
         for chunk_hash in chunks:
-            conn.execute(
+            _exec(conn, 
                 "INSERT INTO peer_chunks (id, peer_id, chunk_hash, model_id, announced_at) VALUES (?,?,?,?,?)",
                 (str(uuid4()), peer_id, chunk_hash, model_id, now)
             )
             count += 1
-        conn.execute(
+        _exec(conn, 
             "UPDATE peers SET last_seen = ? WHERE peer_id = ?",
             (now, peer_id)
         )
@@ -873,7 +1140,7 @@ def announce_peer_chunks(peer_id: str, chunks: list[str], model_id: str = "") ->
 
 def find_peers_for_chunk(chunk_hash: str) -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute(
+    rows = _exec(conn, 
         """SELECT DISTINCT p.peer_id, p.ip, p.port, p.last_seen
            FROM peer_chunks pc JOIN peers p ON pc.peer_id = p.peer_id
            WHERE pc.chunk_hash = ?""",
@@ -887,7 +1154,7 @@ def find_peers_for_chunk(chunk_hash: str) -> list[dict]:
 
 def find_peers_for_model(model_id: str) -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute(
+    rows = _exec(conn, 
         """SELECT DISTINCT p.peer_id, p.ip, p.port, p.last_seen, COUNT(pc.chunk_hash) as chunk_count
            FROM peer_chunks pc JOIN peers p ON pc.peer_id = p.peer_id
            WHERE pc.model_id = ?
@@ -906,7 +1173,7 @@ def log_peer_transfer(from_peer: str, to_peer: str, chunk_hash: str, bytes_trans
         conn = _get_conn()
         tid = str(uuid4())
         now = utc_now()
-        conn.execute(
+        _exec(conn, 
             "INSERT INTO peer_connections (id, from_peer, to_peer, chunk_hash, status, bytes_transferred, started_at, completed_at) VALUES (?,?,?,?,?,?,?,?)",
             (tid, from_peer, to_peer, chunk_hash, "completed", bytes_transferred, now, now)
         )
@@ -916,10 +1183,10 @@ def log_peer_transfer(from_peer: str, to_peer: str, chunk_hash: str, bytes_trans
 
 def get_peer_transfer_stats() -> dict:
     conn = _get_conn()
-    total = conn.execute("SELECT COUNT(*) FROM peer_connections").fetchone()[0]
-    total_bytes = conn.execute("SELECT COALESCE(SUM(bytes_transferred), 0) FROM peer_connections").fetchone()[0]
-    active_peers = conn.execute("SELECT COUNT(DISTINCT peer_id) FROM peer_chunks").fetchone()[0]
-    total_chunks_announced = conn.execute("SELECT COUNT(*) FROM peer_chunks").fetchone()[0]
+    total = _scalar(_exec(conn, "SELECT COUNT(*) FROM peer_connections").fetchone())
+    total_bytes = _scalar(_exec(conn, "SELECT COALESCE(SUM(bytes_transferred), 0) FROM peer_connections").fetchone())
+    active_peers = _scalar(_exec(conn, "SELECT COUNT(DISTINCT peer_id) FROM peer_chunks").fetchone())
+    total_chunks_announced = _scalar(_exec(conn, "SELECT COUNT(*) FROM peer_chunks").fetchone())
     return {
         "total_transfers": total,
         "total_bytes_transferred": total_bytes,
@@ -930,7 +1197,7 @@ def get_peer_transfer_stats() -> dict:
 
 def get_peer_chunk_map() -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute(
+    rows = _exec(conn, 
         """SELECT peer_id, COUNT(chunk_hash) as chunk_count, model_id
            FROM peer_chunks GROUP BY peer_id ORDER BY chunk_count DESC"""
     ).fetchall()

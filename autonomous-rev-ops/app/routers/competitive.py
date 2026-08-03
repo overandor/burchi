@@ -30,15 +30,25 @@ from pydantic import BaseModel
 
 from app import store_gguf as store
 from app.auth_gguf import verify_api_key
+from app.router import get_router
+from app.preference_loop import get_pipeline
 
 router = APIRouter(prefix="/api/competitive", tags=["competitive"])
 
-KNOWN_WORKERS = [
+# Local workers (2080 Ti fleet) take priority; remote workers are fallback
+LOCAL_WORKERS = [
+    {"worker_id": "worker-A", "url": "http://localhost:8110"},
+    {"worker_id": "worker-B", "url": "http://localhost:8111"},
+    {"worker_id": "worker-local-8102", "url": "http://localhost:8102"},
+    {"worker_id": "worker-local-8103", "url": "http://localhost:8103"},
+]
+REMOTE_WORKERS = [
     {"worker_id": "worker-p2p", "url": "https://gguf-p2p-deploy.vercel.app"},
     {"worker_id": "worker-serverless", "url": "https://gguf-serverless-poc.vercel.app"},
     {"worker_id": "worker-vercel-poc", "url": "https://gguf-vercel-poc.vercel.app"},
 ]
-FALLBACK_WORKERS = [KNOWN_WORKERS[0]]
+KNOWN_WORKERS = LOCAL_WORKERS + REMOTE_WORKERS
+FALLBACK_WORKERS = [LOCAL_WORKERS[0]] if LOCAL_WORKERS else REMOTE_WORKERS[:1]
 
 # Winner selection: once this many workers are scored, pick best and cancel rest
 _MIN_SCORED_TO_DECIDE = 2
@@ -90,8 +100,25 @@ class PreferenceRequest(BaseModel):
     worker_id: str
 
 
-def _select_workers(num: int) -> list[dict]:
-    """Thompson Sampling from Beta(alpha, beta) distribution."""
+def _select_workers(num: int, prompt: str = "") -> list[dict]:
+    """Select workers using the contextual router (LinTS over prompt features).
+
+    Falls back to non-contextual Thompson Sampling if the contextual router
+    has no data yet, or to the default worker list if no stats exist at all.
+    """
+    # Try contextual router first — uses prompt features to pick the best workers
+    if prompt:
+        try:
+            router = get_router()
+            # Filter to workers that have stats OR are local (always available)
+            available = KNOWN_WORKERS
+            selected = router.select_workers(prompt, available, num)
+            if selected:
+                return selected
+        except Exception:
+            pass  # Fall through to legacy selection
+
+    # Legacy: non-contextual Thompson Sampling from Beta(alpha, beta)
     stats = store.list_worker_stats()
     if not stats:
         return KNOWN_WORKERS[:num]
@@ -238,7 +265,7 @@ async def competitive_race(body: RaceRequest, key_info: dict = Depends(verify_ap
     - Returns proof: cancellation timestamps, tokens before/after, per-worker latency
     """
     t0 = time.time()
-    workers = _select_workers(body.num_workers)
+    workers = _select_workers(body.num_workers, body.prompt)
     if not workers:
         workers = FALLBACK_WORKERS
 
@@ -427,6 +454,21 @@ async def competitive_race(body: RaceRequest, key_info: dict = Depends(verify_ap
         "workers_cancelled": len(cancellation_events),
     })
 
+    # ─── Feed the preference loop ───────────────────────────────────────
+    # Record race outcome as preference pairs, train ranker, update router
+    try:
+        pipeline = get_pipeline()
+        pipeline.record_race_outcome(
+            race_id=race_id,
+            prompt=body.prompt,
+            workers=workers,
+            winner_id=winner_id,
+            scores=scored_workers,
+            texts=worker_texts,
+        )
+    except Exception:
+        pass  # Don't fail the race if preference loop errors
+
     worker_results = []
     for w in workers:
         wid = w["worker_id"]
@@ -461,7 +503,7 @@ async def competitive_race_stream(body: RaceRequest, key_info: dict = Depends(ve
 
     Events: start, token, scored, cancelled, winner, final, [DONE]
     """
-    workers = _select_workers(body.num_workers)
+    workers = _select_workers(body.num_workers, body.prompt)
     if not workers:
         workers = FALLBACK_WORKERS
     race = store.create_race(body.prompt, body.model_id, len(workers), body.partial_tokens)
@@ -571,7 +613,31 @@ async def set_preference(body: PreferenceRequest, key_info: dict = Depends(verif
         raise HTTPException(status_code=404, detail="Race not found")
     store.set_user_preference(body.race_id, body.worker_id)
     store.log_event("user_preference", metadata={"race_id": body.race_id, "worker_id": body.worker_id})
-    return {"ok": True, "race_id": body.race_id, "preferred_worker": body.worker_id}
+
+    # Feed user preference into the preference loop (data flywheel)
+    try:
+        pipeline = get_pipeline()
+        race_workers = [
+            {"worker_id": w["worker_id"], "url": w["worker_url"]}
+            for w in race.get("workers", [])
+        ]
+        texts = {w["worker_id"]: w.get("partial_text", "") for w in race.get("workers", [])}
+        feedback = pipeline.record_user_preference(
+            race_id=body.race_id,
+            prompt=race.get("prompt", ""),
+            chosen_worker_id=body.worker_id,
+            all_workers=race_workers,
+            texts=texts,
+        )
+        return {
+            "ok": True, "race_id": body.race_id, "preferred_worker": body.worker_id,
+            "feedback": feedback,
+        }
+    except Exception as e:
+        return {
+            "ok": True, "race_id": body.race_id, "preferred_worker": body.worker_id,
+            "feedback_error": str(e),
+        }
 
 
 @router.get("/races")
