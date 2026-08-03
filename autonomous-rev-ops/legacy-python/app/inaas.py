@@ -56,22 +56,6 @@ def _init_pricing_tables():
         return
     conn = store._get_conn()
     conn.executescript(PRICING_TABLES_SQL)
-
-    # Seed default pricing tiers
-    default_tiers = [
-        ("Free Tier", "text", 0.0, 0.0, 0.0, "free", "100 requests/hour, basic models"),
-        ("Standard", "text", 0.002, 0.01, 0.0001, "standard", "General purpose inference"),
-        ("Premium", "text", 0.005, 0.02, 0.0002, "premium", "Priority queue, GPU models"),
-        ("Spot", "text", 0.001, 0.005, 0.00005, "spot", "Best-effort delivery, cheaper"),
-    ]
-    for name, model_type, p1k, pimg, pembed, tier, desc in default_tiers:
-        existing = conn.execute("SELECT id FROM pricing_tiers WHERE name = ?", (name,)).fetchone()
-        if not existing:
-            conn.execute(
-                "INSERT INTO pricing_tiers (id, name, model_type, price_per_1k_tokens, price_per_image, price_per_embedding, tier, description, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
-                (str(uuid4()), name, model_type, p1k, pimg, pembed, tier, desc, _utc_now())
-            )
-
     conn.commit()
     _pricing_initialized = True
 

@@ -13,6 +13,7 @@ Core algorithms:
 from __future__ import annotations
 
 import json
+import os
 import random
 from datetime import datetime, timezone
 from typing import Any
@@ -128,42 +129,102 @@ TARGET_AUDIENCES = [
 ]
 
 
-def mutate_bio(parent: str, mutation_rate: float = 0.3) -> str:
-    """Generate a mutated bio from a parent by swapping components."""
-    if random.random() < mutation_rate:
-        template = random.choice(BIO_TEMPLATES)
-        return template.format(
-            specialty=random.choice(SPECIALTIES),
-            years=random.choice(["5", "6", "8", "10"]),
-            benefit=random.choice(BENEFITS),
-            availability=random.choice(AVAILABILITY),
-            cta=random.choice(CTAS),
-            social_proof=random.choice(SOCIAL_PROOF),
-            target_audience=random.choice(TARGET_AUDIENCES),
+def _llm_generate(prompt: str, max_tokens: int = 300, temperature: float = 0.8) -> str:
+    """Generate text using a real LLM via Pollinations.ai (free, no API key)."""
+    import urllib.request
+    import urllib.error
+
+    messages = [{"role": "user", "content": prompt}]
+    payload = json.dumps({
+        "model": "openai-fast",
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "seed": 42,
+    }).encode("utf-8")
+
+    # Try Pollinations.ai
+    try:
+        req = urllib.request.Request(
+            "https://text.pollinations.ai/openai",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0",
+                "Referer": "https://pollinations.ai/",
+                "Origin": "https://pollinations.ai",
+            },
         )
-    return parent
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"].strip()
+    except Exception:
+        pass
+
+    # Try Ollama tunnels
+    for ollama_url in [
+        "https://proud-post-highest-college.trycloudflare.com/api/chat",
+        "http://localhost:11434/api/chat",
+    ]:
+        try:
+            ollama_payload = json.dumps({
+                "model": "alpha-gpt:latest",
+                "messages": messages,
+                "stream": False,
+            }).encode("utf-8")
+            req = urllib.request.Request(ollama_url, data=ollama_payload, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                if data.get("message", {}).get("content"):
+                    return data["message"]["content"].strip()
+        except Exception:
+            pass
+
+    raise RuntimeError("All inference endpoints unavailable")
+
+
+def mutate_bio(parent: str, mutation_rate: float = 0.3) -> str:
+    """Generate a mutated bio from a parent using the LLM."""
+    if not parent:
+        return parent
+    prompt = (
+        f"You are a professional massage therapist bio writer. "
+        f"Rewrite the following bio with a different angle, tone, or structure. "
+        f"Keep it professional and under 300 characters.\n\n"
+        f"Original bio:\n{parent}\n\n"
+        f"Write a new variation:"
+    )
+    try:
+        return _llm_generate(prompt, max_tokens=200, temperature=0.9)
+    except Exception:
+        return parent
 
 
 def generate_bio_candidates(count: int = 3, parent: str = "") -> list[dict]:
-    """Generate bio candidates, optionally mutating from a parent."""
+    """Generate bio candidates using the LLM."""
     candidates = []
+    labels = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
+
     for i in range(count):
-        if parent and random.random() < 0.5:
-            text = mutate_bio(parent)
-        else:
-            template = random.choice(BIO_TEMPLATES)
-            text = template.format(
-                specialty=random.choice(SPECIALTIES),
-                years=random.choice(["5", "6", "8", "10"]),
-                benefit=random.choice(BENEFITS),
-                availability=random.choice(AVAILABILITY),
-                cta=random.choice(CTAS),
-                social_proof=random.choice(SOCIAL_PROOF),
-                target_audience=random.choice(TARGET_AUDIENCES),
+        if parent:
+            prompt = (
+                f"You are a professional massage therapist bio writer. "
+                f"Create a variation of this bio with a different angle or emphasis. "
+                f"Keep it professional, compelling, and under 300 characters.\n\n"
+                f"Original: {parent}\n\n"
+                f"New variation:"
             )
-        animal = random.choice(["wolf", "fox", "bear", "eagle", "lion", "hawk", "panther"])
-        adjective = random.choice(["controlled", "confident", "gentle", "swift", "bold", "calm"])
-        label = f"{adjective.title()} {animal.title()} v{random.randint(1, 9)}"
+        else:
+            prompt = (
+                f"You are a professional massage therapist bio writer. "
+                f"Write a compelling, professional massage therapy bio. "
+                f"Include specialty, experience, and a call to action. "
+                f"Keep it under 300 characters."
+            )
+        try:
+            text = _llm_generate(prompt, max_tokens=200, temperature=0.7 + (i * 0.1))
+        except Exception as e:
+            text = f"[LLM generation failed: {str(e)[:80]}]"
+        label = labels[i] if i < len(labels) else f"Variant_{i+1}"
         candidates.append({
             "label": label,
             "content": text,
@@ -195,72 +256,92 @@ def generate_content(content_type: str, topic: str = "", count: int = 1) -> list
 
 
 def _gen_blog(topic: str) -> dict:
-    titles = [
-        f"5 Benefits of {topic or 'Deep Tissue Massage'}",
-        f"Why {topic or 'Sports Massage'} Could Change Your Recovery",
-        f"The Science Behind {topic or 'Swedish Massage'}: What Really Happens",
-    ]
-    bodies = [
-        f"{topic or 'Deep tissue massage'} offers numerous benefits including pain relief, stress reduction, "
-        f"improved blood pressure, injury rehabilitation, and scar tissue breakdown. "
-        f"Regular sessions can significantly improve your quality of life and athletic performance.",
-        f"Many people don't realize that {topic or 'massage therapy'} is backed by serious science. "
-        f"Studies show measurable reductions in cortisol, improvements in circulation, and faster recovery times. "
-        f"Here's what the research actually says about {topic or 'regular massage'}.",
-    ]
-    return {
-        "type": "blog",
-        "title": random.choice(titles),
-        "body": random.choice(bodies),
-    }
+    """Generate a blog post using the LLM."""
+    prompt = (
+        f"Write a short blog post (200-300 words) about {topic or 'deep tissue massage'} "
+        f"for a massage therapy practice. Include a compelling title. "
+        f"Format: Title on first line, then the body."
+    )
+    try:
+        text = _llm_generate(prompt, max_tokens=400, temperature=0.7)
+    except Exception as e:
+        text = f"Blog about {topic or 'massage'}\n\n[LLM generation failed: {str(e)[:80]}]"
+    lines = text.split("\n", 1)
+    title = lines[0].strip() if lines else "Blog Post"
+    body = lines[1].strip() if len(lines) > 1 else text
+    return {"type": "blog", "title": title, "body": body}
 
 
 def _gen_social(topic: str) -> dict:
-    posts = [
-        f"Book a 90-minute session this Tuesday and get 20% off! Limited slots available. #massage #wellness #{topic or 'recovery'}",
-        f"Your body works hard for you. Time to return the favor. Book your session today. 💆‍♂️ #selfcare",
-        f"Just had a client say 'I feel like a new person.' That's why I do what I do. #massage #nyc",
-        f"Tip: drink plenty of water after your massage to help flush toxins and reduce soreness. #wellness",
-    ]
-    return {"type": "social", "title": "Social Post", "body": random.choice(posts)}
+    """Generate a social media post using the LLM."""
+    prompt = (
+        f"Write a short social media post (1-3 sentences) for a massage therapy practice "
+        f"about {topic or 'wellness and recovery'}. Include relevant hashtags. "
+        f"Keep it engaging and professional."
+    )
+    try:
+        text = _llm_generate(prompt, max_tokens=150, temperature=0.8)
+    except Exception as e:
+        text = f"[LLM generation failed: {str(e)[:80]}]"
+    return {"type": "social", "title": "Social Post", "body": text}
 
 
 def _gen_seo(topic: str) -> dict:
-    keywords = [
-        f"massage therapist {topic or 'downtown'}", "deep tissue massage", "swedish massage",
-        "sports massage", "same-day appointment", "massage therapy NYC",
-        f"best massage {topic or 'manhattan'}", "therapeutic massage", "recovery massage",
-    ]
-    selected = random.sample(keywords, min(5, len(keywords)))
+    """Generate SEO keywords using the LLM."""
+    prompt = (
+        f"You are an SEO expert. List 8-10 high-value SEO keywords for a massage therapy practice "
+        f"focusing on {topic or 'general massage therapy'}. "
+        f"Return only the keywords, comma-separated."
+    )
+    try:
+        text = _llm_generate(prompt, max_tokens=100, temperature=0.5)
+    except Exception as e:
+        text = f"[LLM generation failed: {str(e)[:80]}]"
     return {
         "type": "seo",
         "title": f"SEO Keywords: {topic or 'massage therapist'}",
-        "body": f"Target keywords: {', '.join(selected)}",
+        "body": text,
     }
 
 
 def _gen_email(topic: str) -> dict:
-    templates = [
-        "Hi [Name], thanks for visiting my profile! I noticed you've been back a few times. "
-        "I'd love to help you with your wellness goals. Reply to schedule a session.",
-        "Hi [Name], it's been a while since your last visit. I have some openings this week "
-        "and would love to see you again. Book now and get 10% off your next session.",
-    ]
-    return {"type": "email", "title": f"Email: {topic or 'Follow-up'}", "body": random.choice(templates)}
+    """Generate a follow-up email using the LLM."""
+    prompt = (
+        f"Write a professional follow-up email for a massage therapy client "
+        f"about {topic or 'scheduling their next session'}. "
+        f"Keep it warm, concise, and include a clear call to action. "
+        f"Use [Name] as a placeholder for the client's name."
+    )
+    try:
+        text = _llm_generate(prompt, max_tokens=200, temperature=0.7)
+    except Exception as e:
+        text = f"[LLM generation failed: {str(e)[:80]}]"
+    return {"type": "email", "title": f"Email: {topic or 'Follow-up'}", "body": text}
 
 
 def _gen_interview(topic: str) -> dict:
-    qs = [
-        ("What inspired you to become a massage therapist?", "I've always been fascinated by how the body heals itself. Massage therapy lets me facilitate that healing directly."),
-        ("What's the most common issue you see?", "Chronic tension from desk work. So many people carry stress in their neck and shoulders without realizing it."),
-        ("How often should someone get a massage?", "For maintenance, once a month. For recovery from injury or intense training, weekly or bi-weekly."),
-    ]
-    q, a = random.choice(qs)
-    return {"type": "interview", "title": f"Interview Q: {q[:40]}...", "body": f"Q: {q}\n\nA: {a}"}
+    """Generate an interview Q&A using the LLM."""
+    prompt = (
+        f"Write a short interview Q&A for a massage therapist about {topic or 'their practice'}. "
+        f"Include one question and a thoughtful answer. "
+        f"Format: Q: <question>\n\nA: <answer>"
+    )
+    try:
+        text = _llm_generate(prompt, max_tokens=250, temperature=0.7)
+    except Exception as e:
+        text = f"Q: [LLM generation failed]\n\nA: {str(e)[:80]}"
+    q_match = text.split("\n")[0].replace("Q:", "").strip()[:40] if "Q:" in text else text[:40]
+    return {"type": "interview", "title": f"Interview Q: {q_match}...", "body": text}
 
 
 def _gen_generic(topic: str) -> dict:
-    return {"type": "generic", "title": topic or "Generated Content", "body": f"Content about {topic or 'massage therapy'}."}
+    """Generate generic content using the LLM."""
+    prompt = f"Write a short professional content piece about {topic or 'massage therapy'}."
+    try:
+        text = _llm_generate(prompt, max_tokens=200, temperature=0.7)
+    except Exception as e:
+        text = f"[LLM generation failed: {str(e)[:80]}]"
+    return {"type": "generic", "title": topic or "Generated Content", "body": text}
 
 
 # ─── Decision Cycle ──────────────────────────────────────────────

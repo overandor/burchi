@@ -70,28 +70,6 @@ def _init_strategy_tables():
         return
     conn = store._get_conn()
     conn.executescript(STRATEGY_TABLES_SQL)
-
-    # Seed some example strategies
-    existing = conn.execute("SELECT COUNT(*) as count FROM strategies").fetchone()
-    if existing["count"] == 0:
-        examples = [
-            ("Bio A/B Testing Pro", "Automated bio variant testing with RL optimization", "bio", "bio_optimization",
-             {"mutation_rate": 0.15, "min_impressions": 50, "reward_metric": "ctr"}, 0),
-            ("High-Intent Outreach", "Auto-message high-intent visitors with personalized content", "outreach", "visitor_engagement",
-             {"intent_threshold": 0.75, "message_template": "personalized"}, 9.99),
-            ("Competitor Price Match", "Monitor competitor pricing and auto-adjust", "pricing", "price_optimization",
-             {"check_interval": "daily", "adjustment_factor": 0.95}, 19.99),
-            ("Content Calendar Auto", "Generate and schedule multi-modal content automatically", "content", "content_generation",
-             {"frequency": "weekly", "platforms": ["instagram", "website"]}, 14.99),
-        ]
-        for name, desc, cat, stype, config, price in examples:
-            sid = str(uuid4())
-            conn.execute(
-                """INSERT INTO strategies (id, name, description, category, strategy_type, config, price, rating, rating_count, install_count, tags, created_at, updated_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (sid, name, desc, cat, stype, json.dumps(config), price, 4.5, 10, 50, json.dumps([cat, stype]), _utc_now(), _utc_now())
-            )
-
     conn.commit()
     _strategy_initialized = True
 

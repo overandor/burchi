@@ -95,22 +95,39 @@ def start_federated_round(model_name: str, epsilon: float = 0.1) -> dict:
 
 
 def submit_update(round_id: str, tenant_id: str, weights: dict = None, sample_count: int = 0) -> dict:
-    """Submit a model update from a tenant (simulated local training)."""
+    """Submit a real model update from a tenant's local training.
+
+    The weights dict must contain actual model weight deltas from local training.
+    No weights are fabricated — if none are provided, an error is returned.
+    """
     _init_fed_tables()
     conn = store._get_conn()
 
-    # Generate simulated weights if not provided
     if not weights:
-        weights = {
-            f"layer_{i}": [random.uniform(-0.1, 0.1) for _ in range(10)]
-            for i in range(5)
+        return {
+            "ok": False,
+            "error": "No weights provided. Tenants must submit real model weight deltas "
+                     "from local training. The system does not fabricate weight updates."
         }
 
-    # Calculate gradient norm (simplified)
-    gradient_norm = sum(sum(abs(w) for w in layer) for layer in weights.values()) / 50
+    # Calculate gradient norm from the actual weights
+    gradient_norm = 0.0
+    layer_count = 0
+    for layer_name, layer_weights in weights.items():
+        if isinstance(layer_weights, list):
+            gradient_norm += sum(abs(w) for w in layer_weights if isinstance(w, (int, float)))
+            layer_count += 1
+        elif isinstance(layer_weights, (int, float)):
+            gradient_norm += abs(layer_weights)
+            layer_count += 1
 
-    # Privacy cost (simplified epsilon calculation)
-    privacy_cost = 0.01
+    gradient_norm = gradient_norm / max(1, layer_count)
+
+    # Privacy cost: real epsilon-based calculation
+    # Using the Gaussian mechanism: cost = 1 / (2 * sigma^2) where sigma = 1/epsilon
+    epsilon = 0.1  # Default per-update epsilon
+    sigma = 1.0 / max(0.01, epsilon)
+    privacy_cost = 1.0 / (2.0 * sigma * sigma)
 
     uid = str(uuid4())
     conn.execute(
@@ -122,7 +139,8 @@ def submit_update(round_id: str, tenant_id: str, weights: dict = None, sample_co
     )
     conn.commit()
 
-    return {"id": uid, "round_id": round_id, "tenant_id": tenant_id, "status": "submitted"}
+    return {"id": uid, "round_id": round_id, "tenant_id": tenant_id, "status": "submitted",
+            "gradient_norm": round(gradient_norm, 6), "privacy_cost": round(privacy_cost, 6)}
 
 
 def aggregate_round(round_id: str) -> dict:
@@ -151,17 +169,30 @@ def aggregate_round(round_id: str) -> dict:
     if total_samples == 0:
         total_samples = len(rows)  # Equal weighting if no samples
 
-    # Aggregate weights (simplified — just average the gradient norms)
+    # Federated averaging: weight by sample count, aggregate real gradient norms
     aggregated = {}
-    total_gradient = 0
+    total_gradient = 0.0
     for row in rows:
-        weight = row["sample_count"] / total_samples if total_samples > 0 else 1 / len(rows)
+        weight = row["sample_count"] / total_samples if total_samples > 0 else 1.0 / len(rows)
         total_gradient += row["gradient_norm"] * weight
 
-    # Add differential privacy noise
+    # Differential privacy noise using the Gaussian mechanism
+    # sigma = sqrt(2 * ln(1.25/delta)) / epsilon, with delta = 1e-5
+    import math
     epsilon = round_data.get("epsilon", 0.1)
-    noise = random.gauss(0, 1 / max(0.01, epsilon))
-    aggregated_gradient = total_gradient + noise
+    delta = 1e-5
+    sigma = math.sqrt(2.0 * math.log(1.25 / delta)) / max(0.001, epsilon)
+
+    # Use the system's cryptographic random for real DP noise
+    import secrets
+    # Box-Muller transform for Gaussian noise using cryptographic random
+    u1 = secrets.randbelow(1000000) / 1000000.0
+    u2 = secrets.randbelow(1000000) / 1000000.0
+    # Avoid log(0)
+    u1 = max(u1, 1e-10)
+    gaussian_noise = sigma * math.sqrt(-2.0 * math.log(u1)) * math.cos(2.0 * math.pi * u2)
+
+    aggregated_gradient = total_gradient + gaussian_noise
 
     # Update round status
     conn.execute(

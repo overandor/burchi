@@ -129,10 +129,10 @@ def deliver_webhook(webhook_id: str, event_type: str, payload: dict) -> dict:
     # Sign the payload
     signature = hmac.new(webhook["secret"].encode(), payload_json.encode(), hashlib.sha256).hexdigest()
 
-    # Attempt delivery (simulated — in production, use httpx)
-    success = True
-    response_status = 200
-    response_body = "OK"
+    # Attempt real HTTP delivery to the webhook URL
+    success = False
+    response_status = 0
+    response_body = ""
 
     try:
         req = urllib.request.Request(
@@ -145,14 +145,21 @@ def deliver_webhook(webhook_id: str, event_type: str, payload: dict) -> dict:
             },
             method="POST",
         )
-        # In serverless, we simulate the delivery
-        # with urllib.request.urlopen(req, timeout=5) as resp:
-        #     response_status = resp.status
-        #     response_body = resp.read().decode()[:500]
-    except Exception as e:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            response_status = resp.status
+            response_body = resp.read().decode("utf-8", errors="replace")[:500]
+            success = 200 <= response_status < 300
+    except urllib.error.HTTPError as e:
+        response_status = e.code
+        try:
+            response_body = e.read().decode("utf-8", errors="replace")[:500]
+        except Exception:
+            response_body = str(e)
         success = False
+    except Exception as e:
         response_status = 0
         response_body = str(e)
+        success = False
 
     # Record delivery
     conn.execute(

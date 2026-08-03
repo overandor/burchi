@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import math
-import random
+
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
@@ -161,13 +161,14 @@ def bayesian_optimize_experiment(experiment_id: str) -> dict:
 
     optimizer = BayesianOptimizer(len(variants))
 
-    # Feed historical data
+    # Feed historical data — use actual reward values, no synthetic noise
     for v in variants:
         idx = variants.index(v)
         reward = v.get("reward", 0)
         impressions = v.get("impressions", 0)
-        for _ in range(min(impressions, 100)):  # Cap at 100 for performance
-            optimizer.update(idx, reward + random.uniform(-0.1, 0.1))
+        # Feed the actual observed reward for each impression (capped for performance)
+        for _ in range(min(impressions, 100)):
+            optimizer.update(idx, reward)
 
     # Get recommendation
     recommended = optimizer.select()

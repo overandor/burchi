@@ -247,40 +247,98 @@ async def _execute_onnx(
 
 
 async def _execute_embeddings(model_id: str, input_text: str) -> dict[str, Any]:
-    """Execute embedding generation via sentence-transformers."""
-    # For now, use a simple hash-based embedding as placeholder
-    # Real implementation would call a sentence-transformers server
-    import hashlib
-    import struct
+    """Execute embedding generation via a real embedding API.
 
-    # Generate a deterministic 384-dim embedding from the text
-    hash_bytes = hashlib.sha256(input_text.encode()).digest()
-    # Expand to 384 dimensions by repeating hash with offsets
-    embedding = []
-    for i in range(384):
-        byte_val = hash_bytes[(i * 4) % len(hash_bytes)]
-        # Normalize to [-1, 1] range
-        embedding.append((byte_val / 127.5) - 1.0)
+    Uses Hugging Face Inference API (if HF_TOKEN is set) or a local
+    sentence-transformers server (if EMBEDDING_ENDPOINT is set).
+    Returns an error if no embedding backend is available.
+    """
+    import os
+    import urllib.request
+    import urllib.error
 
-    return {
-        "object": "list",
-        "data": [{
-            "id": "emb-0",
-            "object": "embedding",
-            "embedding": embedding,
-            "index": 0,
-        }],
-        "model": model_id,
-        "usage": {
-            "prompt_tokens": len(input_text.split()),
-            "total_tokens": len(input_text.split()),
-        },
-        "_meta": {
-            "runtime": "sentence_transformers",
-            "dimensions": 384,
-            "note": "Hash-based placeholder embedding. Connect a real sentence-transformers server for production.",
-        },
-    }
+    # ─── Try local sentence-transformers server first ──────────────
+    embedding_endpoint = os.environ.get("EMBEDDING_ENDPOINT", "")
+    if embedding_endpoint:
+        try:
+            body = json.dumps({"model": model_id, "input": input_text}).encode("utf-8")
+            req = urllib.request.Request(
+                embedding_endpoint,
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                return result
+        except Exception as e:
+            return _error_response(model_id, f"Embedding server error: {str(e)[:200]}")
+
+    # ─── Try Hugging Face Inference API ────────────────────────────
+    hf_token = os.environ.get("HF_TOKEN", os.environ.get("HUGGING_FACE_HUB_TOKEN", ""))
+    if hf_token:
+        try:
+            url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{model_id}"
+            body = json.dumps({"inputs": input_text}).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=body,
+                headers={
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                raw = json.loads(resp.read().decode("utf-8"))
+
+                # HF returns a list of tokens, each with a list of floats
+                # Average across tokens to get a single embedding (pure Python)
+                if isinstance(raw, list) and raw and isinstance(raw[0], list):
+                    # Average token embeddings into one vector
+                    token_count = len(raw)
+                    dim = len(raw[0]) if raw[0] else 0
+                    embedding = [0.0] * dim
+                    for token_vec in raw:
+                        for i, val in enumerate(token_vec):
+                            if i < dim:
+                                embedding[i] += val
+                    embedding = [v / token_count for v in embedding]
+                elif isinstance(raw, list):
+                    embedding = raw
+                else:
+                    embedding = []
+
+                return {
+                    "object": "list",
+                    "data": [{
+                        "id": "emb-0",
+                        "object": "embedding",
+                        "embedding": embedding,
+                        "index": 0,
+                    }],
+                    "model": model_id,
+                    "usage": {
+                        "prompt_tokens": len(input_text.split()),
+                        "total_tokens": len(input_text.split()),
+                    },
+                }
+        except urllib.error.HTTPError as e:
+            err = ""
+            try:
+                err = e.read().decode("utf-8")[:200]
+            except Exception:
+                err = str(e)
+            return _error_response(model_id, f"HF embedding API error ({e.code}): {err}")
+        except Exception as e:
+            return _error_response(model_id, f"HF embedding error: {str(e)[:200]}")
+
+    # ─── No embedding backend available ────────────────────────────
+    return _error_response(
+        model_id,
+        "No embedding backend available. Set HF_TOKEN or EMBEDDING_ENDPOINT environment variable "
+        "to enable real embedding generation via Hugging Face or a sentence-transformers server."
+    )
 
 
 async def _execute_diffusers(model_id: str, prompt: str) -> dict[str, Any]:

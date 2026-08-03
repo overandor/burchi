@@ -97,20 +97,52 @@ def _get_consent_contacts(limit: int = 50) -> list[dict]:
         return []
 
 
-def sync_to_hubspot(connection_id: str, contacts: list[dict] = None) -> dict:
-    """Sync contacts to HubSpot CRM.
+def _http_request(url: str, headers: dict = None, method: str = "GET", body: bytes = None, timeout: int = 15) -> dict:
+    """Make a real HTTP request to a CRM API."""
+    import urllib.request
+    import urllib.error
+    req = urllib.request.Request(url, headers=headers or {}, method=method)
+    if body:
+        req.data = body
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return {"ok": True, "status": resp.status, "data": json.loads(resp.read().decode("utf-8"))}
+    except urllib.error.HTTPError as e:
+        err_body = ""
+        try:
+            err_body = e.read().decode("utf-8")[:500]
+        except Exception:
+            pass
+        return {"ok": False, "status": e.code, "error": err_body or str(e)}
+    except Exception as e:
+        return {"ok": False, "status": 0, "error": str(e)}
 
-    In production, this would call the HubSpot API. For now, it simulates the sync.
+
+def sync_to_hubspot(connection_id: str, contacts: list[dict] = None) -> dict:
+    """Sync contacts to HubSpot CRM via the real HubSpot API.
+
+    Requires the connection's api_key to be a valid HubSpot access token.
     """
     _init_crm_tables()
     conn = store._get_conn()
 
+    connection = get_crm_connection(connection_id)
+    if not connection:
+        return {"ok": False, "error": "Connection not found"}
+
+    api_key = connection.get("api_key", "")
+    if not api_key:
+        return {"ok": False, "error": "No HubSpot API key configured for this connection"}
+
     if not contacts:
         contacts = _get_consent_contacts()
 
+    if not contacts:
+        return {"ok": True, "crm": "hubspot", "synced": 0, "total_contacts": 0, "message": "No consent-verified contacts to sync"}
+
     synced = 0
+    errors = 0
     for contact in contacts:
-        # Simulate HubSpot API call
         hubspot_contact = {
             "properties": {
                 "email": contact.get("email", ""),
@@ -121,28 +153,63 @@ def sync_to_hubspot(connection_id: str, contacts: list[dict] = None) -> dict:
             }
         }
 
+        # Real HubSpot API call
+        result = _http_request(
+            "https://api.hubapi.com/crm/v3/objects/contacts",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+            body=json.dumps(hubspot_contact).encode("utf-8"),
+        )
+
+        status = "success" if result["ok"] else "failed"
+        external_id = result["data"].get("id", "") if result["ok"] else ""
+        log_data = hubspot_contact if result["ok"] else {"error": result.get("error", ""), "payload": hubspot_contact}
+
         log_id = str(uuid4())
         conn.execute(
             "INSERT INTO crm_sync_log (id, connection_id, record_type, external_id, action, status, data, synced_at) VALUES (?,?,?,?,?,?,?,?)",
-            (log_id, connection_id, "contact", contact.get("email", ""), "create", "success", json.dumps(hubspot_contact), _utc_now())
+            (log_id, connection_id, "contact", external_id or contact.get("email", ""), "create", status, json.dumps(log_data), _utc_now())
         )
-        synced += 1
+        if result["ok"]:
+            synced += 1
+        else:
+            errors += 1
 
     conn.execute("UPDATE crm_connections SET last_sync = ?, total_synced = total_synced + ? WHERE id = ?", (_utc_now(), synced, connection_id))
     conn.commit()
 
-    return {"ok": True, "crm": "hubspot", "synced": synced, "total_contacts": len(contacts)}
+    return {"ok": True, "crm": "hubspot", "synced": synced, "errors": errors, "total_contacts": len(contacts)}
 
 
 def sync_to_salesforce(connection_id: str, contacts: list[dict] = None) -> dict:
-    """Sync contacts to Salesforce CRM."""
+    """Sync contacts to Salesforce CRM via the real Salesforce REST API.
+
+    Requires the connection's api_key to be a valid Salesforce session token
+    and api_url to be the Salesforce instance URL.
+    """
     _init_crm_tables()
     conn = store._get_conn()
+
+    connection = get_crm_connection(connection_id)
+    if not connection:
+        return {"ok": False, "error": "Connection not found"}
+
+    api_key = connection.get("api_key", "")
+    api_url = connection.get("api_url", "")
+    if not api_key or not api_url:
+        return {"ok": False, "error": "No Salesforce API key or instance URL configured"}
 
     if not contacts:
         contacts = _get_consent_contacts()
 
+    if not contacts:
+        return {"ok": True, "crm": "salesforce", "synced": 0, "total_contacts": 0, "message": "No consent-verified contacts to sync"}
+
     synced = 0
+    errors = 0
     for contact in contacts:
         salesforce_contact = {
             "FirstName": contact.get("name", "").split()[0] if contact.get("name") else "",
@@ -152,28 +219,61 @@ def sync_to_salesforce(connection_id: str, contacts: list[dict] = None) -> dict:
             "LeadSource": "Consent Platform",
         }
 
+        # Real Salesforce API call
+        result = _http_request(
+            f"{api_url}/services/data/v58.0/sobjects/Contact",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+            body=json.dumps(salesforce_contact).encode("utf-8"),
+        )
+
+        status = "success" if result["ok"] else "failed"
+        external_id = result["data"].get("id", "") if result["ok"] else ""
+        log_data = salesforce_contact if result["ok"] else {"error": result.get("error", ""), "payload": salesforce_contact}
+
         log_id = str(uuid4())
         conn.execute(
             "INSERT INTO crm_sync_log (id, connection_id, record_type, external_id, action, status, data, synced_at) VALUES (?,?,?,?,?,?,?,?)",
-            (log_id, connection_id, "contact", contact.get("email", ""), "create", "success", json.dumps(salesforce_contact), _utc_now())
+            (log_id, connection_id, "contact", external_id or contact.get("email", ""), "create", status, json.dumps(log_data), _utc_now())
         )
-        synced += 1
+        if result["ok"]:
+            synced += 1
+        else:
+            errors += 1
 
     conn.execute("UPDATE crm_connections SET last_sync = ?, total_synced = total_synced + ? WHERE id = ?", (_utc_now(), synced, connection_id))
     conn.commit()
 
-    return {"ok": True, "crm": "salesforce", "synced": synced, "total_contacts": len(contacts)}
+    return {"ok": True, "crm": "salesforce", "synced": synced, "errors": errors, "total_contacts": len(contacts)}
 
 
 def sync_to_pipedrive(connection_id: str, contacts: list[dict] = None) -> dict:
-    """Sync contacts to Pipedrive CRM."""
+    """Sync contacts to Pipedrive CRM via the real Pipedrive API.
+
+    Requires the connection's api_key to be a valid Pipedrive API token.
+    """
     _init_crm_tables()
     conn = store._get_conn()
+
+    connection = get_crm_connection(connection_id)
+    if not connection:
+        return {"ok": False, "error": "Connection not found"}
+
+    api_key = connection.get("api_key", "")
+    if not api_key:
+        return {"ok": False, "error": "No Pipedrive API key configured for this connection"}
 
     if not contacts:
         contacts = _get_consent_contacts()
 
+    if not contacts:
+        return {"ok": True, "crm": "pipedrive", "synced": 0, "total_contacts": 0, "message": "No consent-verified contacts to sync"}
+
     synced = 0
+    errors = 0
     for contact in contacts:
         pipedrive_person = {
             "name": contact.get("name", ""),
@@ -181,17 +281,32 @@ def sync_to_pipedrive(connection_id: str, contacts: list[dict] = None) -> dict:
             "phone": [{"value": contact.get("phone", ""), "primary": True}],
         }
 
+        # Real Pipedrive API call
+        result = _http_request(
+            f"https://api.pipedrive.com/v1/persons?api_token={api_key}",
+            headers={"Content-Type": "application/json"},
+            method="POST",
+            body=json.dumps(pipedrive_person).encode("utf-8"),
+        )
+
+        status = "success" if result["ok"] else "failed"
+        external_id = str(result["data"].get("data", {}).get("id", "")) if result["ok"] else ""
+        log_data = pipedrive_person if result["ok"] else {"error": result.get("error", ""), "payload": pipedrive_person}
+
         log_id = str(uuid4())
         conn.execute(
             "INSERT INTO crm_sync_log (id, connection_id, record_type, external_id, action, status, data, synced_at) VALUES (?,?,?,?,?,?,?,?)",
-            (log_id, connection_id, "contact", contact.get("email", ""), "create", "success", json.dumps(pipedrive_person), _utc_now())
+            (log_id, connection_id, "contact", external_id or contact.get("email", ""), "create", status, json.dumps(log_data), _utc_now())
         )
-        synced += 1
+        if result["ok"]:
+            synced += 1
+        else:
+            errors += 1
 
     conn.execute("UPDATE crm_connections SET last_sync = ?, total_synced = total_synced + ? WHERE id = ?", (_utc_now(), synced, connection_id))
     conn.commit()
 
-    return {"ok": True, "crm": "pipedrive", "synced": synced, "total_contacts": len(contacts)}
+    return {"ok": True, "crm": "pipedrive", "synced": synced, "errors": errors, "total_contacts": len(contacts)}
 
 
 def sync_all() -> dict:

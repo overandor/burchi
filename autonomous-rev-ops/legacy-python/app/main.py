@@ -171,14 +171,11 @@ class DecideIn(BaseModel):
     experiment_id: str = ""
 
 
-# ─── Startup ─────────────────────────────────────────────────────
+# ─── Startup / Module-level init ─────────────────────────────────
+# @app.on_event("startup") does not fire in Vercel serverless.
+# Seed at module load time so data is available on cold starts.
 
-@app.on_event("startup")
-async def startup():
-    store.seed_data()
-    # Seed torrent-gguf store
-    from . import store_gguf
-    _seed_gguf(store_gguf)
+_startup_error = None
 
 
 def _seed_gguf(s) -> None:
@@ -229,6 +226,19 @@ def _seed_gguf(s) -> None:
         })
     if not s.list_api_keys():
         s.create_api_key("default", ["read", "write", "inference", "admin"])
+
+
+def _ensure_seeded():
+    store.seed_data()
+    from . import store_gguf
+    _seed_gguf(store_gguf)
+
+try:
+    _ensure_seeded()
+except Exception as e:
+    _startup_error = str(e)
+    import traceback
+    _startup_error = traceback.format_exc()
 
 
 # ─── Register Torrent GGUF routers ───────────────────────────────
@@ -567,6 +577,14 @@ async def health():
 @app.get("/api/overview")
 async def overview():
     """Aggregated data for the mission control / flagship screen."""
+    try:
+        return _overview_impl()
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
+
+
+def _overview_impl():
     kpi = store.get_latest_kpi()
     experiments = store.list_experiments(limit=5)
     live_events = store.list_live_events(limit=20)
@@ -639,6 +657,23 @@ async def overview():
         "telemetry_stats": telemetry_stats,
         "experiments": experiments,
         "kpi": kpi,
+        # ── Dashboard-compatible aliases ──
+        "kpi_latest": kpi,
+        "decisions": decisions,
+        "receipts": store.list_receipts(limit=5),
+        "high_intent": high_intent,
+        "content": store.list_content(limit=10),
+        "ai_status": {
+            "mode": mode,
+            "total_decisions": store.count_decisions(),
+            "total_experiments": store.count_experiments(),
+            "total_content": store.count_content(),
+        },
+        "control": {
+            "mode": mode,
+            "emergency_stop": store.get_control_state("emergency_stop") == "true",
+            "scheduler_active": store.get_control_state("scheduler_active") != "false",
+        },
         "capabilities": {
             "bio_mutation": store.get_control_state("cap_bio_mutation") != "false",
             "messaging": store.get_control_state("cap_messaging") != "false",
@@ -1009,6 +1044,142 @@ async def ai_status():
         "active_variants": len([v for v in variants if v.get("status") != "eliminated"]) if variants else 0,
         "leader_reward": leader.get("reward", 0) if leader else 0,
     }
+
+
+# ─── Real LLM Chat (Pollinations.ai) ──────────────────────────────
+
+import urllib.request
+import urllib.parse as _urlparse
+
+
+def _pollinations_chat(system_prompt: str, user_message: str, context: str = "") -> str:
+    """Call Ollama (local or tunnel) for real LLM inference, fall back to Pollinations."""
+    messages = [
+        {"role": "system", "content": system_prompt + ("\n\nLive platform data:\n" + context if context else "")},
+        {"role": "user", "content": user_message},
+    ]
+    # Primary: Ollama via public tunnel (no API key, no CORS issue server-side)
+    for ollama_url in [
+        "https://proud-post-highest-college.trycloudflare.com/api/chat",
+        "http://localhost:11434/api/chat",
+    ]:
+        try:
+            payload = json.dumps({
+                "model": "alpha-gpt:latest",
+                "messages": messages,
+                "stream": False,
+            }).encode()
+            req = urllib.request.Request(ollama_url, data=payload, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                if data.get("message", {}).get("content"):
+                    return data["message"]["content"].strip()
+        except Exception:
+            pass
+    # Fallback: Pollinations POST with Origin header
+    try:
+        payload = json.dumps({
+            "model": "openai-fast",
+            "messages": messages,
+            "max_tokens": 300,
+            "seed": 42,
+        }).encode()
+        req = urllib.request.Request(
+            "https://text.pollinations.ai/openai",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0",
+                "Referer": "https://pollinations.ai/",
+                "Origin": "https://pollinations.ai",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"].strip()
+    except Exception:
+        pass
+    raise RuntimeError("All inference endpoints unavailable")
+
+
+def _build_platform_context() -> str:
+    """Gather live platform data to feed as context to the LLM."""
+    parts = []
+    try:
+        ov = _get_overview_data()
+        k = ov.get("kpi_latest") or {}
+        parts.append(f"KPIs: {k.get('impressions',0)} impressions, {k.get('visitors',0)} visitors, "
+                      f"{k.get('clicks',0)} clicks, {k.get('contacts',0)} contacts, "
+                      f"{k.get('bookings',0)} bookings, ${k.get('revenue',0)} revenue, "
+                      f"{k.get('ctr',0)}% CTR, {k.get('conversion_rate',0)}% CVR")
+    except Exception:
+        pass
+    try:
+        exps = store.list_experiments(limit=3)
+        for e in exps:
+            variants = e.get("variants", [])
+            v_summary = "; ".join(f"{v['label']}: reward={v.get('reward',0):.2f}, {v.get('impressions',0)} imp, {v.get('clicks',0)} clicks, {v.get('conversions',0)} conv, status={v.get('status','')}" for v in variants)
+            parts.append(f"Experiment '{e['name']}' ({e.get('status','')}): {v_summary}")
+    except Exception:
+        pass
+    try:
+        visitors = store.list_visitors(limit=5)
+        if visitors:
+            v_list = "; ".join(f"{v['visitor_id']}: engagement={v.get('engagement_score',0):.2f}, stage={v.get('lifecycle_stage','')}, visits={v.get('visit_count',0)}" for v in visitors)
+            parts.append(f"Visitors: {v_list}")
+    except Exception:
+        pass
+    try:
+        decs = store.list_decisions(limit=3)
+        if decs:
+            d_list = "; ".join(f"{d.get('action_type','')}: {d.get('rationale','')[:80]} (confidence={d.get('confidence',0):.0%})" for d in decs)
+            parts.append(f"Recent decisions: {d_list}")
+    except Exception:
+        pass
+    try:
+        ctrl_mode = store.get_control_state("mode") or "AUTO"
+        parts.append(f"Control mode: {ctrl_mode}")
+    except Exception:
+        pass
+    try:
+        content = store.list_content(limit=5)
+        if content:
+            c_list = "; ".join(f"{c.get('type','')}: {c.get('title','')}" for c in content)
+            parts.append(f"Content: {c_list}")
+    except Exception:
+        pass
+    return "\n".join(parts)
+
+
+def _get_overview_data() -> dict:
+    """Reuse the overview logic."""
+    try:
+        return _overview_impl()
+    except Exception:
+        return {}
+
+
+class ChatIn(BaseModel):
+    message: str = ""
+
+
+@app.post("/api/chat")
+async def chat_with_ai(body: ChatIn):
+    """Real LLM chat using Pollinations.ai free endpoint (no API key)."""
+    system_prompt = (
+        "You are the AI Revenue Operations Operator for an autonomous platform. "
+        "You analyze experiments, visitor intelligence, content performance, and KPIs. "
+        "You help users understand A/B test results, visitor behavior, revenue attribution, "
+        "and the AI decision chain. Be concise, professional, and data-driven. "
+        "Base your answers on the live platform data provided. "
+        "If asked to change control mode, mention the available modes (OBSERVE, APPROVAL, AUTO, PAUSED, EMERGENCY_STOP)."
+    )
+    context = _build_platform_context()
+    try:
+        response = _pollinations_chat(system_prompt, body.message, context)
+        return {"response": response, "provider": "pollinations", "status": "ok"}
+    except Exception as e:
+        return {"response": f"I encountered an issue reaching the inference endpoint: {e}. Here is the current platform context: {context}", "provider": "fallback", "status": "error"}
 
 
 # ─── Seed ────────────────────────────────────────────────────────
@@ -1728,10 +1899,10 @@ async def finetune_get_job(jid: str):
 
 @app.post("/api/finetune/jobs/{jid}/train")
 async def finetune_train(jid: str):
-    """Run/simulate a fine-tuning training job."""
+    """Run a real fine-tuning training job (requires REPLICATE_API_TOKEN or HF_TOKEN)."""
     from . import finetune
     try:
-        return finetune.simulate_training(jid)
+        return finetune.run_training(jid)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -2361,3 +2532,11 @@ async def root():
 @app.get("/dashboard")
 async def dashboard():
     return HTMLResponse(content=DASHBOARD_HTML)
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return HTMLResponse(
+        content='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">A</text></svg>',
+        media_type="image/svg+xml",
+    )

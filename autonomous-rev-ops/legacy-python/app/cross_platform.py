@@ -1,20 +1,25 @@
 """Cross-platform ingestion — unified data pipeline from external sources.
 
 Supports ingestion from:
-  - Google Analytics (website traffic, conversions)
-  - Meta Ads (ad spend, impressions, CTR)
-  - Google Business Profile (reviews, views, calls)
-  - Yelp (reviews, photos, business info)
-  - RubRatings (competitor profiles, reviews)
+  - Google Analytics (GA4 Data API)
+  - Meta Ads (Facebook Marketing API)
+  - Google Business Profile (Business Profile Performance API)
+  - Yelp (Yelp Fusion API)
+  - RubRatings (live scraping)
 
-Each source has a connector that normalizes data into a unified schema.
+Each source has a real connector that calls the actual API using stored credentials.
+No data is ever fabricated. If credentials are missing or the API call fails,
+the ingestion returns an error.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import time
-from datetime import datetime, timezone
+import urllib.request
+import urllib.error
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -23,6 +28,31 @@ from . import store
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+# ─── HTTP helper ───────────────────────────────────────────────────
+
+def _http_request(url: str, headers: dict = None, method: str = "GET", body: bytes = None, timeout: int = 15) -> dict:
+    """Make a real HTTP request and return the parsed response."""
+    req = urllib.request.Request(url, headers=headers or {}, method=method)
+    if body:
+        req.data = body
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return {
+                "ok": True,
+                "status": resp.status,
+                "data": json.loads(resp.read().decode("utf-8")),
+            }
+    except urllib.error.HTTPError as e:
+        err_body = ""
+        try:
+            err_body = e.read().decode("utf-8")
+        except Exception:
+            pass
+        return {"ok": False, "status": e.code, "error": err_body or str(e)}
+    except Exception as e:
+        return {"ok": False, "status": 0, "error": str(e)}
 
 
 # ─── Ingestion Tables ──────────────────────────────────────────────
@@ -66,7 +96,7 @@ def _init_ingestion_tables():
 # ─── Source Management ─────────────────────────────────────────────
 
 def add_source(source_type: str, source_name: str, credentials: dict = None) -> dict:
-    """Register a data source for ingestion."""
+    """Register a data source for ingestion with real credentials."""
     _init_ingestion_tables()
     conn = store._get_conn()
     sid = str(uuid4())
@@ -93,183 +123,309 @@ def list_sources() -> list[dict]:
     return [dict(r) for r in rows]
 
 
-# ─── Google Analytics Connector ────────────────────────────────────
+def _get_credentials(source_id: str) -> dict:
+    """Extract credentials from a source record."""
+    source = get_source(source_id)
+    if not source:
+        return {}
+    try:
+        return json.loads(source.get("credentials", "{}"))
+    except Exception:
+        return {}
+
+
+def _store_record(source_id: str, record_type: str, external_id: str, data: dict) -> str:
+    """Store an ingestion record and update source stats."""
+    conn = store._get_conn()
+    rid = str(uuid4())
+    conn.execute(
+        "INSERT INTO ingestion_records (id, source_id, record_type, external_id, data, ingested_at) VALUES (?,?,?,?,?,?)",
+        (rid, source_id, record_type, external_id, json.dumps(data), _utc_now())
+    )
+    conn.execute("UPDATE ingestion_sources SET last_ingested = ?, total_records = total_records + 1 WHERE id = ?", (_utc_now(), source_id))
+    conn.commit()
+    return rid
+
+
+# ─── Google Analytics Connector (GA4 Data API) ─────────────────────
 
 def ingest_google_analytics(source_id: str, data: dict = None) -> dict:
-    """Ingest data from Google Analytics.
+    """Ingest data from Google Analytics 4 via the Data API.
 
-    In production, this would call the GA4 API. For now, it accepts
-    manually provided data or generates sample data.
+    Requires credentials: property_id, access_token (or service account JSON).
+    If real data is passed directly (data param), it is stored as-is.
     """
     _init_ingestion_tables()
-    conn = store._get_conn()
 
-    # Sample GA data if not provided
-    if not data:
-        import random
-        data = {
-            "metrics": {
-                "sessions": random.randint(100, 500),
-                "users": random.randint(50, 300),
-                "pageviews": random.randint(200, 800),
-                "conversions": random.randint(5, 30),
-                "revenue": round(random.uniform(500, 5000), 2),
-            },
-            "dimensions": {
-                "source": "google",
-                "medium": "organic",
-                "date": _utc_now()[:10],
-            }
+    # If data is provided directly (e.g., from a webhook or manual upload), store it
+    if data:
+        _store_record(source_id, "ga_metrics", data.get("dimensions", {}).get("date", ""), data)
+        store.log_telemetry("ga_ingested", value=float(data.get("metrics", {}).get("sessions", 0)))
+        return {"ok": True, "source": "google_analytics", "records": 1, "data": data}
+
+    # Real GA4 Data API call
+    creds = _get_credentials(source_id)
+    property_id = creds.get("property_id", "")
+    access_token = creds.get("access_token", "")
+
+    if not property_id or not access_token:
+        return {
+            "ok": False,
+            "source": "google_analytics",
+            "error": "Missing credentials. Required: property_id, access_token. "
+                     "Get an access token from Google OAuth2 with analytics.readonly scope.",
         }
 
-    rid = str(uuid4())
-    conn.execute(
-        "INSERT INTO ingestion_records (id, source_id, record_type, external_id, data, ingested_at) VALUES (?,?,?,?,?,?)",
-        (rid, source_id, "ga_metrics", data.get("dimensions", {}).get("date", ""), json.dumps(data), _utc_now())
+    # GA4 Data API: run realtime report
+    url = f"https://analyticsdata.googleapis.com/v1beta/properties/{property_id}:runRealtimeReport"
+    body = json.dumps({
+        "metrics": [
+            {"name": "activeUsers"},
+            {"name": "screenPageViews"},
+            {"name": "conversions"},
+        ],
+    }).encode("utf-8")
+
+    result = _http_request(
+        url,
+        headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+        method="POST",
+        body=body,
     )
-    conn.execute("UPDATE ingestion_sources SET last_ingested = ?, total_records = total_records + 1 WHERE id = ?", (_utc_now(), source_id))
-    conn.commit()
 
-    # Log telemetry
-    store.log_telemetry("ga_ingested", value=float(data.get("metrics", {}).get("sessions", 0)))
+    if not result["ok"]:
+        return {"ok": False, "source": "google_analytics", "error": result.get("error", "GA4 API call failed"), "status": result.get("status")}
 
-    return {"ok": True, "source": "google_analytics", "records": 1, "data": data}
+    ga_data = result["data"]
+    rows = ga_data.get("rows", [])
+    totals = ga_data.get("totals", [{}])
+    metric_values = totals[0].get("values", []) if totals else []
+
+    normalized = {
+        "metrics": {
+            "active_users": int(metric_values[0]) if len(metric_values) > 0 else 0,
+            "pageviews": int(metric_values[1]) if len(metric_values) > 1 else 0,
+            "conversions": int(metric_values[2]) if len(metric_values) > 2 else 0,
+        },
+        "dimensions": {"date": _utc_now()[:10]},
+        "raw": ga_data,
+    }
+
+    _store_record(source_id, "ga_metrics", normalized["dimensions"]["date"], normalized)
+    store.log_telemetry("ga_ingested", value=float(normalized["metrics"]["active_users"]))
+
+    return {"ok": True, "source": "google_analytics", "records": 1, "data": normalized}
 
 
-# ─── Meta Ads Connector ────────────────────────────────────────────
+# ─── Meta Ads Connector (Facebook Marketing API) ───────────────────
 
 def ingest_meta_ads(source_id: str, data: dict = None) -> dict:
-    """Ingest data from Meta Ads (Facebook/Instagram advertising)."""
-    _init_ingestion_tables()
-    conn = store._get_conn()
+    """Ingest data from Meta Ads via the Facebook Marketing API.
 
-    if not data:
-        import random
-        data = {
-            "campaign_metrics": {
-                "spend": round(random.uniform(50, 500), 2),
-                "impressions": random.randint(1000, 10000),
-                "clicks": random.randint(50, 500),
-                "ctr": round(random.uniform(1.5, 5.0), 2),
-                "conversions": random.randint(2, 20),
-                "roas": round(random.uniform(1.5, 4.0), 2),
-            },
-            "campaign_name": f"Campaign_{int(time.time())}",
+    Requires credentials: access_token, ad_account_id.
+    """
+    _init_ingestion_tables()
+
+    if data:
+        _store_record(source_id, "meta_ad_metrics", data.get("campaign_name", ""), data)
+        store.log_telemetry("meta_ads_ingested", value=float(data.get("campaign_metrics", {}).get("spend", 0)))
+        return {"ok": True, "source": "meta_ads", "records": 1, "data": data}
+
+    creds = _get_credentials(source_id)
+    access_token = creds.get("access_token", "")
+    ad_account_id = creds.get("ad_account_id", "")
+
+    if not access_token or not ad_account_id:
+        return {
+            "ok": False,
+            "source": "meta_ads",
+            "error": "Missing credentials. Required: access_token, ad_account_id.",
         }
 
-    rid = str(uuid4())
-    conn.execute(
-        "INSERT INTO ingestion_records (id, source_id, record_type, external_id, data, ingested_at) VALUES (?,?,?,?,?,?)",
-        (rid, source_id, "meta_ad_metrics", data.get("campaign_name", ""), json.dumps(data), _utc_now())
+    # Facebook Marketing API: get account insights
+    url = f"https://graph.facebook.com/v19.0/{ad_account_id}/insights"
+    params = (
+        "?fields=spend,impressions,clicks,ctr,conversions,actions"
+        "&level=account&date_preset=last_7d"
+        f"&access_token={access_token}"
     )
-    conn.execute("UPDATE ingestion_sources SET last_ingested = ?, total_records = total_records + 1 WHERE id = ?", (_utc_now(), source_id))
-    conn.commit()
 
-    store.log_telemetry("meta_ads_ingested", value=float(data.get("campaign_metrics", {}).get("spend", 0)))
+    result = _http_request(url + params)
 
-    return {"ok": True, "source": "meta_ads", "records": 1, "data": data}
+    if not result["ok"]:
+        return {"ok": False, "source": "meta_ads", "error": result.get("error", "Meta API call failed"), "status": result.get("status")}
+
+    fb_data = result["data"]
+    insights = fb_data.get("data", [])
+
+    if not insights:
+        return {"ok": True, "source": "meta_ads", "records": 0, "data": {"message": "No ad data in the last 7 days"}}
+
+    record = insights[0]
+    normalized = {
+        "campaign_metrics": {
+            "spend": float(record.get("spend", 0)),
+            "impressions": int(record.get("impressions", 0)),
+            "clicks": int(record.get("clicks", 0)),
+            "ctr": float(record.get("ctr", 0)),
+            "conversions": int(record.get("conversions", 0)),
+        },
+        "campaign_name": record.get("campaign_name", ad_account_id),
+        "raw": record,
+    }
+
+    _store_record(source_id, "meta_ad_metrics", normalized["campaign_name"], normalized)
+    store.log_telemetry("meta_ads_ingested", value=normalized["campaign_metrics"]["spend"])
+
+    return {"ok": True, "source": "meta_ads", "records": 1, "data": normalized}
 
 
 # ─── Google Business Profile Connector ─────────────────────────────
 
 def ingest_google_business(source_id: str, data: dict = None) -> dict:
-    """Ingest data from Google Business Profile."""
-    _init_ingestion_tables()
-    conn = store._get_conn()
+    """Ingest data from Google Business Profile via the Performance API.
 
-    if not data:
-        import random
-        data = {
-            "business_metrics": {
-                "views": random.randint(100, 1000),
-                "calls": random.randint(5, 50),
-                "direction_requests": random.randint(10, 100),
-                "website_clicks": random.randint(20, 200),
-            },
-            "reviews": {
-                "average_rating": round(random.uniform(4.0, 5.0), 1),
-                "total_reviews": random.randint(20, 200),
-                "new_reviews": random.randint(1, 10),
-            }
+    Requires credentials: access_token, account_id, location_id.
+    """
+    _init_ingestion_tables()
+
+    if data:
+        _store_record(source_id, "gbp_metrics", "", data)
+        store.log_telemetry("gbp_ingested", value=float(data.get("business_metrics", {}).get("views", 0)))
+        return {"ok": True, "source": "google_business", "records": 1, "data": data}
+
+    creds = _get_credentials(source_id)
+    access_token = creds.get("access_token", "")
+    account_id = creds.get("account_id", "")
+    location_id = creds.get("location_id", "")
+
+    if not access_token or not account_id or not location_id:
+        return {
+            "ok": False,
+            "source": "google_business",
+            "error": "Missing credentials. Required: access_token, account_id, location_id.",
         }
 
-    rid = str(uuid4())
-    conn.execute(
-        "INSERT INTO ingestion_records (id, source_id, record_type, external_id, data, ingested_at) VALUES (?,?,?,?,?,?)",
-        (rid, source_id, "gbp_metrics", "", json.dumps(data), _utc_now())
+    # Google Business Profile Performance API
+    url = f"https://mybusinessbusinessinformation.googleapis.com/v1/accounts/{account_id}/locations/{location_id}/performance:report"
+    body = json.dumps({
+        "timeRange": {"startDate": (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d"),
+                       "endDate": datetime.now(timezone.utc).strftime("%Y-%m-%d")},
+    }).encode("utf-8")
+
+    result = _http_request(
+        url,
+        headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+        method="POST",
+        body=body,
     )
-    conn.execute("UPDATE ingestion_sources SET last_ingested = ?, total_records = total_records + 1 WHERE id = ?", (_utc_now(), source_id))
-    conn.commit()
 
-    store.log_telemetry("gbp_ingested", value=float(data.get("business_metrics", {}).get("views", 0)))
+    if not result["ok"]:
+        return {"ok": False, "source": "google_business", "error": result.get("error", "GBP API call failed"), "status": result.get("status")}
 
-    return {"ok": True, "source": "google_business", "records": 1, "data": data}
+    gbp_data = result["data"]
+    normalized = {
+        "business_metrics": {
+            "views": gbp_data.get("metricValues", {}).get("QUERIES", {}).get("value", 0),
+            "calls": gbp_data.get("metricValues", {}).get("CALL_CLICKS", {}).get("value", 0),
+            "direction_requests": gbp_data.get("metricValues", {}).get("DRIVING_DIRECTIONS_REQUESTS", {}).get("value", 0),
+            "website_clicks": gbp_data.get("metricValues", {}).get("WEBSITE_CLICKS", {}).get("value", 0),
+        },
+        "raw": gbp_data,
+    }
+
+    _store_record(source_id, "gbp_metrics", "", normalized)
+    store.log_telemetry("gbp_ingested", value=float(normalized["business_metrics"]["views"]))
+
+    return {"ok": True, "source": "google_business", "records": 1, "data": normalized}
 
 
-# ─── Yelp Connector ────────────────────────────────────────────────
+# ─── Yelp Connector (Yelp Fusion API) ──────────────────────────────
 
 def ingest_yelp(source_id: str, data: dict = None) -> dict:
-    """Ingest data from Yelp."""
-    _init_ingestion_tables()
-    conn = store._get_conn()
+    """Ingest data from Yelp via the Yelp Fusion API.
 
-    if not data:
-        import random
-        data = {
-            "business_info": {
-                "rating": round(random.uniform(3.5, 5.0), 1),
-                "review_count": random.randint(10, 300),
-                "photos": random.randint(5, 50),
-            },
-            "recent_reviews": [
-                {"rating": random.randint(3, 5), "text": "Great service!", "date": _utc_now()[:10]}
-                for _ in range(random.randint(1, 5))
-            ]
+    Requires credentials: api_key, business_id.
+    """
+    _init_ingestion_tables()
+
+    if data:
+        _store_record(source_id, "yelp_data", "", data)
+        store.log_telemetry("yelp_ingested", value=float(data.get("business_info", {}).get("rating", 0)))
+        return {"ok": True, "source": "yelp", "records": 1, "data": data}
+
+    creds = _get_credentials(source_id)
+    api_key = creds.get("api_key", "")
+    business_id = creds.get("business_id", "")
+
+    if not api_key or not business_id:
+        return {
+            "ok": False,
+            "source": "yelp",
+            "error": "Missing credentials. Required: api_key, business_id. "
+                     "Get an API key from https://www.yelp.com/developers",
         }
 
-    rid = str(uuid4())
-    conn.execute(
-        "INSERT INTO ingestion_records (id, source_id, record_type, external_id, data, ingested_at) VALUES (?,?,?,?,?,?)",
-        (rid, source_id, "yelp_data", "", json.dumps(data), _utc_now())
-    )
-    conn.execute("UPDATE ingestion_sources SET last_ingested = ?, total_records = total_records + 1 WHERE id = ?", (_utc_now(), source_id))
-    conn.commit()
+    # Yelp Fusion API: get business details
+    url = f"https://api.yelp.com/v3/businesses/{business_id}"
+    result = _http_request(url, headers={"Authorization": f"Bearer {api_key}"})
 
-    store.log_telemetry("yelp_ingested", value=float(data.get("business_info", {}).get("rating", 0)))
+    if not result["ok"]:
+        return {"ok": False, "source": "yelp", "error": result.get("error", "Yelp API call failed"), "status": result.get("status")}
 
-    return {"ok": True, "source": "yelp", "records": 1, "data": data}
+    biz = result["data"]
+    normalized = {
+        "business_info": {
+            "rating": biz.get("rating", 0),
+            "review_count": biz.get("review_count", 0),
+            "photos": len(biz.get("photos", [])),
+            "name": biz.get("name", ""),
+            "phone": biz.get("phone", ""),
+            "url": biz.get("url", ""),
+        },
+        "raw": biz,
+    }
+
+    _store_record(source_id, "yelp_data", business_id, normalized)
+    store.log_telemetry("yelp_ingested", value=float(normalized["business_info"]["rating"]))
+
+    return {"ok": True, "source": "yelp", "records": 1, "data": normalized}
 
 
-# ─── RubRatings Connector ──────────────────────────────────────────
+# ─── RubRatings Connector (live scraping) ──────────────────────────
 
 def ingest_rubratings(source_id: str, data: dict = None) -> dict:
-    """Ingest competitor data from RubRatings."""
-    _init_ingestion_tables()
-    conn = store._get_conn()
+    """Ingest competitor data from RubRatings via live scraping.
 
-    if not data:
-        # Use existing competitor data from hfdata
-        from . import hfdata
-        competitors = hfdata.get_competitors(limit=10)
-        data = {
+    Uses the existing market_intel scraper for real competitor data.
+    """
+    _init_ingestion_tables()
+
+    if data:
+        _store_record(source_id, "rubratings_data", "", data)
+        store.log_telemetry("rubratings_ingested", value=float(data.get("competitors_scraped", 0)))
+        return {"ok": True, "source": "rubratings", "records": 1, "data": data}
+
+    # Use the real market intelligence scraper
+    from . import market_intel
+    try:
+        scraped = market_intel.scrape_competitors()
+        competitors = scraped.get("competitors", [])
+        normalized = {
             "competitors_scraped": len(competitors),
             "top_competitors": [
                 {"username": c.get("username"), "rank": c.get("rank"), "rating": c.get("rating")}
-                for c in competitors[:5]
-            ]
+                for c in competitors[:10]
+            ],
+            "scraped_at": _utc_now(),
         }
 
-    rid = str(uuid4())
-    conn.execute(
-        "INSERT INTO ingestion_records (id, source_id, record_type, external_id, data, ingested_at) VALUES (?,?,?,?,?,?)",
-        (rid, source_id, "rubratings_data", "", json.dumps(data), _utc_now())
-    )
-    conn.execute("UPDATE ingestion_sources SET last_ingested = ?, total_records = total_records + 1 WHERE id = ?", (_utc_now(), source_id))
-    conn.commit()
+        _store_record(source_id, "rubratings_data", "", normalized)
+        store.log_telemetry("rubratings_ingested", value=float(len(competitors)))
 
-    store.log_telemetry("rubratings_ingested", value=float(data.get("competitors_scraped", 0)))
-
-    return {"ok": True, "source": "rubratings", "records": 1, "data": data}
+        return {"ok": True, "source": "rubratings", "records": 1, "data": normalized}
+    except Exception as e:
+        return {"ok": False, "source": "rubratings", "error": f"Scraping failed: {e}"}
 
 
 # ─── Unified Attribution Model ─────────────────────────────────────
@@ -279,10 +435,8 @@ def get_unified_attribution() -> dict:
     _init_ingestion_tables()
     conn = store._get_conn()
 
-    # Get all ingestion records
     rows = conn.execute("SELECT * FROM ingestion_records ORDER BY ingested_at DESC LIMIT 100").fetchall()
 
-    # Aggregate by source type
     attribution = {}
     for row in rows:
         source_type = row["record_type"]
@@ -293,14 +447,12 @@ def get_unified_attribution() -> dict:
 
         attribution[source_type]["records"] += 1
 
-        # Merge metrics
         for key, value in data.items():
             if isinstance(value, dict):
                 for k, v in value.items():
                     if isinstance(v, (int, float)):
                         attribution[source_type]["metrics"][k] = attribution[source_type]["metrics"].get(k, 0) + v
 
-    # Detect anomalies
     anomalies = []
     for source_type, data in attribution.items():
         metrics = data.get("metrics", {})
@@ -321,7 +473,7 @@ def get_unified_attribution() -> dict:
 # ─── Ingest All Sources ────────────────────────────────────────────
 
 def ingest_all() -> dict:
-    """Ingest data from all configured sources."""
+    """Ingest data from all configured sources using real API calls."""
     sources = list_sources()
     results = []
 

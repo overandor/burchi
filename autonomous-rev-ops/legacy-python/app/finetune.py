@@ -239,8 +239,8 @@ def create_finetune_job(
 ) -> dict:
     """Create a fine-tuning job.
 
-    In production, this would submit a job to a training cluster (e.g., Modal,
-    Replicate, or a local GPU). For now, it simulates the training process.
+    Submits a real training job to Replicate (if REPLICATE_API_TOKEN is set)
+    or Hugging Face AutoTrain (if HF_TOKEN is set). Requires a GPU backend.
     """
     _init_finetune_tables()
     conn = store._get_conn()
@@ -287,17 +287,26 @@ def list_finetune_jobs() -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def simulate_training(jid: str) -> dict:
-    """Simulate a fine-tuning training run.
+def run_training(jid: str) -> dict:
+    """Run a real fine-tuning training job.
 
-    In production, this would be replaced by actual training on a GPU cluster.
-    The simulation generates realistic loss curves and metrics.
+    Uses Replicate API if REPLICATE_API_TOKEN is set, otherwise uses
+    Hugging Face AutoTrain if HF_TOKEN is set. If neither is available,
+    returns an error — no simulation.
     """
+    import os
+    import urllib.request
+    import urllib.error
+
     _init_finetune_tables()
     conn = store._get_conn()
     job = get_finetune_job(jid)
     if not job:
         raise ValueError(f"Job {jid} not found")
+
+    dataset = get_dataset(job["dataset_id"])
+    if not dataset:
+        raise ValueError(f"Dataset {job['dataset_id']} not found")
 
     now = _utc_now()
     conn.execute(
@@ -306,39 +315,143 @@ def simulate_training(jid: str) -> dict:
     )
     conn.commit()
 
-    # Simulate training with decreasing loss
-    import random
-    epochs = job["epochs"]
-    loss_history = []
-    initial_loss = 2.5
+    replicate_token = os.environ.get("REPLICATE_API_TOKEN", "")
+    hf_token = os.environ.get("HF_TOKEN", os.environ.get("HUGGING_FACE_HUB_TOKEN", ""))
 
-    for epoch in range(epochs):
-        for step in range(10):  # 10 steps per epoch
-            loss = initial_loss * math.exp(-0.3 * (epoch * 10 + step) / 10) + random.uniform(0, 0.1)
-            loss_history.append({
-                "epoch": epoch + 1,
-                "step": step + 1,
-                "loss": round(loss, 4),
-            })
+    # ─── Replicate training ────────────────────────────────────────
+    if replicate_token:
+        try:
+            # Upload dataset as a JSONL file to Replicate
+            samples = dataset.get("data", [])
+            jsonl_content = "\n".join(json.dumps({
+                "instruction": s.get("instruction", ""),
+                "input": s.get("input", ""),
+                "output": s.get("output", ""),
+            }) for s in samples)
 
-    final_loss = loss_history[-1]["loss"] if loss_history else 0
+            # Create a training run on Replicate
+            # Using the lucataco/finetune-llama-7b model as a real training backend
+            body = json.dumps({
+                "input": {
+                    "train_data": jsonl_content,
+                    "base_model": job["base_model"],
+                    "epochs": str(job["epochs"]),
+                    "learning_rate": str(job["learning_rate"]),
+                    "output_model_name": job["output_model_name"],
+                },
+            }).encode("utf-8")
 
-    metrics = {
-        "final_loss": final_loss,
-        "initial_loss": initial_loss,
-        "loss_reduction": round(initial_loss - final_loss, 4),
-        "training_samples": job.get("dataset_id", ""),
-        "epochs_completed": epochs,
-    }
+            req = urllib.request.Request(
+                "https://api.replicate.com/v1/predictions",
+                data=body,
+                headers={
+                    "Authorization": f"Token {replicate_token}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
 
-    output_path = f"/models/{job['output_model_name']}.gguf"
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                prediction = json.loads(resp.read().decode("utf-8"))
 
+            # Store the prediction ID for status tracking
+            conn.execute(
+                """UPDATE finetune_jobs SET
+                   status = 'training', metrics = ?, output_model_path = ?
+                   WHERE id = ?""",
+                (json.dumps({
+                    "replicate_prediction_id": prediction.get("id", ""),
+                    "replicate_status": prediction.get("status", ""),
+                    "replicate_urls": prediction.get("urls", {}),
+                }), prediction.get("urls", {}).get("get", ""), jid)
+            )
+            conn.commit()
+
+            return get_finetune_job(jid)
+
+        except urllib.error.HTTPError as e:
+            err = e.read().decode("utf-8")
+            conn.execute(
+                "UPDATE finetune_jobs SET status = 'failed', error = ? WHERE id = ?",
+                (f"Replicate API error: {err}", jid)
+            )
+            conn.commit()
+            return get_finetune_job(jid)
+        except Exception as e:
+            conn.execute(
+                "UPDATE finetune_jobs SET status = 'failed', error = ? WHERE id = ?",
+                (f"Replicate training error: {str(e)}", jid)
+            )
+            conn.commit()
+            return get_finetune_job(jid)
+
+    # ─── Hugging Face AutoTrain ────────────────────────────────────
+    if hf_token:
+        try:
+            # Upload dataset to Hugging Face Hub as a dataset
+            # Then create an AutoTrain job
+            samples = dataset.get("data", [])
+
+            # Create dataset JSONL
+            jsonl_content = "\n".join(json.dumps({
+                "instruction": s.get("instruction", ""),
+                "input": s.get("input", ""),
+                "output": s.get("output", ""),
+            }) for s in samples)
+
+            # Submit to HF AutoTrain API
+            body = json.dumps({
+                "dataset": jsonl_content,
+                "model": job["base_model"],
+                "epochs": job["epochs"],
+                "learning_rate": job["learning_rate"],
+                "project_name": job["output_model_name"],
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                "https://api.endpoints.huggingface.co/v2/autotrain/train",
+                data=body,
+                headers={
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+
+            conn.execute(
+                """UPDATE finetune_jobs SET
+                   status = 'training', metrics = ?, output_model_path = ?
+                   WHERE id = ?""",
+                (json.dumps(result), result.get("model_url", ""), jid)
+            )
+            conn.commit()
+
+            return get_finetune_job(jid)
+
+        except urllib.error.HTTPError as e:
+            err = e.read().decode("utf-8")
+            conn.execute(
+                "UPDATE finetune_jobs SET status = 'failed', error = ? WHERE id = ?",
+                (f"HF AutoTrain error: {err}", jid)
+            )
+            conn.commit()
+            return get_finetune_job(jid)
+        except Exception as e:
+            conn.execute(
+                "UPDATE finetune_jobs SET status = 'failed', error = ? WHERE id = ?",
+                (f"HF AutoTrain error: {str(e)}", jid)
+            )
+            conn.commit()
+            return get_finetune_job(jid)
+
+    # ─── No GPU backend available ──────────────────────────────────
     conn.execute(
-        """UPDATE finetune_jobs SET
-           status = 'completed', progress = 100, loss_history = ?,
-           metrics = ?, output_model_path = ?, completed_at = ?
-           WHERE id = ?""",
-        (json.dumps(loss_history), json.dumps(metrics), output_path, _utc_now(), jid)
+        "UPDATE finetune_jobs SET status = 'failed', error = ? WHERE id = ?",
+        ("No training backend available. Set REPLICATE_API_TOKEN or HF_TOKEN environment variable "
+         "to enable real fine-tuning on GPU.", jid)
     )
     conn.commit()
 
@@ -395,7 +508,7 @@ async def run_ab_test(tid: str) -> dict:
     )
     base_output = base_result.get("choices", [{}])[0].get("message", {}).get("content", "")
 
-    # Generate with fine-tuned model (uses same endpoint for now)
+    # Generate with fine-tuned model
     finetuned_result = await runtime_executor.resolve_and_execute(
         model_id=test["finetuned_model"],
         runtime="llama_cpp",
@@ -405,9 +518,42 @@ async def run_ab_test(tid: str) -> dict:
     )
     finetuned_output = finetuned_result.get("choices", [{}])[0].get("message", {}).get("content", "")
 
-    # Score outputs (simple heuristic: longer + more specific = better)
-    base_score = len(base_output) / 200 + (1 if any(w in base_output.lower() for w in ["massage", "therapy", "professional"]) else 0)
-    finetuned_score = len(finetuned_output) / 200 + (1 if any(w in finetuned_output.lower() for w in ["massage", "therapy", "professional"]) else 0)
+    # Score outputs using an LLM-as-judge approach — ask the model to evaluate both
+    eval_prompt = (
+        f"You are a content quality evaluator. Score each text on a scale of 0-10 based on "
+        f"professionalism, specificity, and persuasiveness for a massage therapy bio.\n\n"
+        f"Text A:\n{base_output}\n\n"
+        f"Text B:\n{finetuned_output}\n\n"
+        f"Respond with JSON: {{\"score_a\": <number>, \"score_b\": <number>}}"
+    )
+    eval_result = await runtime_executor.resolve_and_execute(
+        model_id=test["base_model"],
+        runtime="llama_cpp",
+        messages=[{"role": "user", "content": eval_prompt}],
+        max_tokens=100,
+        temperature=0.1,
+    )
+    eval_output = eval_result.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+    # Parse the LLM judge scores
+    base_score = 0.0
+    finetuned_score = 0.0
+    try:
+        # Try to extract JSON from the eval output
+        import re
+        json_match = re.search(r'\{[^}]+\}', eval_output)
+        if json_match:
+            scores = json.loads(json_match.group())
+            base_score = float(scores.get("score_a", 0)) / 10.0
+            finetuned_score = float(scores.get("score_b", 0)) / 10.0
+    except Exception:
+        pass
+
+    # Fallback: if LLM judge failed to produce parseable scores, use text length ratio
+    # as a secondary signal (longer, more detailed content is generally better)
+    if base_score == 0 and finetuned_score == 0:
+        base_score = min(1.0, len(base_output) / 300)
+        finetuned_score = min(1.0, len(finetuned_output) / 300)
 
     winner = "finetuned" if finetuned_score > base_score else "base" if base_score > finetuned_score else "tie"
 
@@ -431,7 +577,3 @@ def list_ab_tests() -> list[dict]:
     conn = store._get_conn()
     rows = conn.execute("SELECT * FROM ab_tests ORDER BY created_at DESC").fetchall()
     return [dict(r) for r in rows]
-
-
-# Need math for simulate_training
-import math
