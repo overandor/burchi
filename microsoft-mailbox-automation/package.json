@@ -1,0 +1,45 @@
+{
+  "name": "microsoft-mailbox-automation",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^5.17.3",
+    "@azure/msal-node": "^2.9.2",
+    "@azure/msal-react": "^5.5.4",
+    "@google-cloud/local-auth": "^3.0.1",
+    "@microsoft/microsoft-graph-client": "^3.0.5",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "exceljs": "^4.4.0",
+    "googleapis": "^173.0.0",
+    "isomorphic-fetch": "^3.0.0",
+    "lucide-react": "^0.408.0",
+    "mermaid": "^11.16.0",
+    "nanoid": "^5.0.7",
+    "next": "14.2.5",
+    "openai": "^4.52.0",
+    "papaparse": "^5.4.1",
+    "pdf-parse": "^1.1.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tailwind-merge": "^2.4.0",
+    "zustand": "^4.5.4"
+  },
+  "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.8.1",
+    "@types/node": "^20.14.10",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.6",
+    "typescript": "^5.5.3"
+  }
+}

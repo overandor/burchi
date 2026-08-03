@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
+import { searchEmailsREST } from "@/lib/gmail/rest-client";
+import { normalizeOrigin } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const clientId = process.env.GMAIL_CLIENT_ID || "";
+    const clientSecret = process.env.GMAIL_CLIENT_SECRET || "";
+    const refreshToken = body.refreshToken || request.cookies.get("gmail-refresh-token")?.value || "";
+
+    if (!clientId || !refreshToken) {
+      return NextResponse.json({ error: "Gmail not connected" }, { status: 401 });
+    }
+
+    const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+    const results = await searchEmailsREST(
+      { clientId, clientSecret, redirectUri, refreshToken, emailAddress: "" },
+      body.query || "",
+      body.maxResults || 50
+    );
+
+    return NextResponse.json({ results, count: results.length });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}

@@ -1,0 +1,6 @@
+[build]
+  command = "NEXT_PUBLIC_DEMO=true NEXT_PUBLIC_OAUTH_REDIRECT_BASE=https://mailbox-sci-data.netlify.app npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
