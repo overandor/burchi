@@ -246,7 +246,7 @@ export default function DashboardPage() {
         return;
       }
       const creds = JSON.parse(local);
-      const res = await fetch("/api/imap/fetch", {
+      const res = await fetch("/api/imap/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: creds.email, password: creds.password, host: creds.host, maxEmails: 50 }),
@@ -258,36 +258,46 @@ export default function DashboardPage() {
         setIsSyncing(false);
         return;
       }
-      // Convert IMAP messages to processed records
-      const newRecords: ProcessedEmailRecord[] = (data.messages || []).map((msg: any) => ({
-        id: msg.id,
-        subject: msg.subject,
-        from: msg.from,
-        fromAddress: msg.fromAddress,
-        receivedDateTime: msg.receivedDateTime,
-        bodyPreview: msg.bodyPreview,
-        hasAttachments: msg.hasAttachments,
-        category: "Other",
-        extractedData: { fields: [], tables: [], summary: msg.bodyPreview, confidence: 0.5 },
-        processedAt: new Date().toISOString(),
-      }));
+      // Records come back fully processed (with wikitree, mindmap, execution plan, fields, tables)
+      const newRecords: ProcessedEmailRecord[] = data.records || [];
       // Merge with existing records
       const existing = localStorage.getItem("processed-emails");
       const existingRecords: ProcessedEmailRecord[] = existing ? JSON.parse(existing) : [];
       const merged = [...newRecords, ...existingRecords.filter(r => !newRecords.some(n => n.id === r.id))];
       localStorage.setItem("processed-emails", JSON.stringify(merged));
       setRecords(merged);
-      const newStatus: SyncStatus = {
-        lastSync: new Date().toISOString(),
-        totalEmails: merged.length,
-        processedEmails: merged.length,
-        pendingEmails: 0,
-        isSyncing: false,
-        errors: [],
-      };
-      localStorage.setItem("sync-status", JSON.stringify(newStatus));
-      setStatus(newStatus);
-      setSyncResult(`Fetched ${data.count} emails from ${creds.email}`);
+      if (data.status) {
+        localStorage.setItem("sync-status", JSON.stringify(data.status));
+        setStatus(data.status);
+      } else {
+        const newStatus: SyncStatus = {
+          lastSync: new Date().toISOString(),
+          totalEmails: merged.length,
+          processedEmails: merged.length,
+          pendingEmails: 0,
+          isSyncing: false,
+          errors: data.errors || [],
+        };
+        localStorage.setItem("sync-status", JSON.stringify(newStatus));
+        setStatus(newStatus);
+      }
+      // Auto-display telemetry from sync result
+      if (data.telemetry) {
+        const t = data.telemetry;
+        const revenueMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_revenue" || m.key === "total_revenue");
+        const timeMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_time_saved" || m.key === "time_saved");
+        const effMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_efficiency" || m.key === "efficiency_score");
+        const dataMetric = t.aggregateMetrics?.find((m: any) => m.key === "agg_emails" || m.key === "data_points");
+        setTelemetrySummary({
+          totalRevenue: revenueMetric?.value || 0,
+          timeSaved: timeMetric?.value || 0,
+          efficiency: effMetric?.value || 0,
+          dataPoints: dataMetric?.value || 0,
+        });
+      }
+      setSyncResult(`Synced ${data.synced} emails, processed ${data.processed} with full analysis`);
+      fetchRecords();
+      fetchStatus();
     } catch (e: any) {
       setError(e.message);
     } finally {

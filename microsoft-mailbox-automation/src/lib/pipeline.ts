@@ -2,6 +2,7 @@ import { AppConfig, EmailMessage, ProcessedEmailRecord, ParsedAttachmentData } f
 import { fetchEmails, fetchAttachments } from "@/lib/graph/client";
 import { parseAttachment } from "@/lib/parsers/attachment-parser";
 import { extractDataFromEmail } from "@/lib/llm/extractor";
+import { generateAnalysis } from "@/lib/analysis/generator";
 import { loadProcessedEmails, saveProcessedEmails, loadSyncStatus, saveSyncStatus } from "@/lib/config";
 import { nanoid } from "nanoid";
 
@@ -72,6 +73,18 @@ export async function syncAndProcess(
         config
       );
 
+      // Generate deterministic analysis (wikitree, mindmap, execution plan)
+      const analysis = generateAnalysis({
+        subject: email.subject,
+        sender: email.sender,
+        body: email.body || "",
+        attachments: parsedAttachments.map((p, i) => ({
+          name: `attachment-${i + 1}`,
+          type: p.type || "unknown",
+          parsedData: p,
+        })),
+      });
+
       const record: ProcessedEmailRecord = {
         id: nanoid(),
         emailId: email.id,
@@ -84,6 +97,7 @@ export async function syncAndProcess(
         fieldCount: extractedData.fields.length,
         tableCount: extractedData.tables.length,
         extractedData,
+        analysis,
       };
 
       newRecords.push(record);
