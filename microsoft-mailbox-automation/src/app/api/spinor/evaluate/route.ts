@@ -9,7 +9,7 @@ import {
   evaluateGoldenNodeReadiness,
   evaluateMissionRepetition,
 } from "@/lib/spinor/core.mjs";
-import type { SpinorThresholds } from "@/lib/spinor/core.mjs";
+import type { Confounder, SpinorThresholds } from "@/lib/spinor/core.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ interface EvaluateRequest {
   attribution?: {
     baseConfidence?: number;
     executionFidelity?: number;
-    confounders?: Record<string, unknown>[];
+    confounders?: Confounder[];
   };
   evidence?: Record<string, unknown>;
   goldenNode?: Record<string, unknown>;
