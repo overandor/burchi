@@ -1,6 +1,7 @@
 FROM node:20-alpine AS base
 
 # Stage 1: Install dependencies
+# No native modules needed — pure JS storage layer
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* .npmrc ./
