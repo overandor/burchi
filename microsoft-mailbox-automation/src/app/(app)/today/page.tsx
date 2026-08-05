@@ -13,7 +13,7 @@ export default function TodayPage() {
 
 function TodayPageInner() {
   const searchParams = useSearchParams();
-  const employeeId = searchParams.get("employeeId") || "emp-001";
+  const employeeId = searchParams?.get("employeeId") || "emp-001";
   const [assignments, setAssignments] = useState<HypothesisAssignment[]>([]);
   const [hypotheses, setHypotheses] = useState<Map<string, HypothesisAnatomy>>(new Map());
   const [priorArt, setPriorArt] = useState<Map<string, PriorArtRecord>>(new Map());

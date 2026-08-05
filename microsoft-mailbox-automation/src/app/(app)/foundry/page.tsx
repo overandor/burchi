@@ -34,7 +34,7 @@ export default function FoundryPage() {
 
 function FoundryPageInner() {
   const searchParams = useSearchParams();
-  const employeeId = searchParams.get("employeeId") || "emp-001";
+  const employeeId = searchParams?.get("employeeId") || "emp-001";
   const [organism, setOrganism] = useState<SpinorOrganism | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
