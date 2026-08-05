@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-05T02:25:00-04:00",
+  "repository": "overandor/burchi",
+  "workspace": "microsoft-mailbox-automation",
+  "branch": "feat/spinor-production-foundation",
+  "baseCommit": "1e21c3520f12fe3adfe4ef036bba542fa9c2c32a",
+  "currentObjective": "Establish a verified production baseline and prevent demo SPINOR records from being presented as production evidence.",
+  "activeTask": "SPINOR-002",
+  "currentHypothesis": "A central demo-data boundary can be introduced without removing the existing SPINOR game shell or working mailbox and lifecycle functionality.",
+  "observedStack": {
+    "framework": "Next.js 14 App Router",
+    "language": "TypeScript",
+    "ui": "React 18 + Tailwind",
+    "testRunner": "node:test with tsx",
+    "storage": "JSON/filesystem with in-memory serverless fallback"
+  },
+  "verifiedFromRepository": [
+    "SPIN causal-unit and state-machine modules exist",
+    "SPINOR-RL, prior-art, scoring, Golden Node and organism modules exist",
+    "ETL pipeline and business-process modules exist",
+    "Static game fixtures contain production-looking missions, results and Golden Nodes"
+  ],
+  "unverifiedClaims": [
+    "Full npm test suite passes at current HEAD",
+    "Production build passes at current HEAD",
+    "Deployed Netlify, Fly and other surfaces use the same current commit",
+    "Authentication and organization isolation are implemented",
+    "Current remote integrations are operational"
+  ],
+  "filesChanged": [
+    "TASK_LEDGER.md",
+    "hyperflow/session_state.json"
+  ],
+  "lastSuccessfulAction": "Created feat/spinor-production-foundation and committed TASK_LEDGER.md.",
+  "nextAction": "Trace consumers of src/lib/game/data.ts, then implement and test explicit demo-mode gating at the narrowest shared boundary.",
+  "blockers": [
+    "No local shell or CI status is currently available through the connector, so build and test claims cannot yet be independently re-run."
+  ]
+}
