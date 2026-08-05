@@ -150,7 +150,7 @@ function FoundryPageInner() {
             <div className="mt-3 rounded-lg border border-border bg-muted/20 p-4">
               <p className="font-medium text-foreground">{selectedNode.label}</p>
               <p className="mt-1 text-sm text-muted-foreground">{selectedNode.detail}</p>
-              <p className="mt-2 text-xs" style={{ color: COLOR_HEX[selectedNode.color] }}>{selectedNode.kind.replace(/_/g, " ")}</p>
+              <p className="mt-2 text-xs" style={{ color: COLOR_HEX[selectedNode.color] }}>{selectedNode.role.replace(/_/g, " ")}</p>
             </div>
           )}
         </div>
@@ -185,7 +185,7 @@ function FoundryPageInner() {
           <div className="card p-4">
             <p className="done-section-label">Signature actions</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {organism.availableActions.map((action) => (
+              {organism.actions.map((action) => (
                 <button
                   key={action}
                   onClick={() => handleAction(action)}
