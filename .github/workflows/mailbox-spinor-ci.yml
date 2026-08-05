@@ -1,0 +1,48 @@
+name: Mailbox SPINOR CI
+
+on:
+  pull_request:
+    paths:
+      - 'microsoft-mailbox-automation/**'
+      - '.github/workflows/mailbox-spinor-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'microsoft-mailbox-automation/**'
+      - '.github/workflows/mailbox-spinor-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: microsoft-mailbox-automation
+    env:
+      NEXT_PUBLIC_DEMO: 'false'
+      SPINOR_ALLOW_LOCAL_STORE: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: microsoft-mailbox-automation/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: SPINOR domain tests
+        run: npm run test:spinor
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npm run build
