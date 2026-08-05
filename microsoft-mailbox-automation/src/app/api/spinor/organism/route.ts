@@ -12,6 +12,7 @@ import {
   loadProcesses,
 } from "@/lib/config";
 import { assembleOrganism } from "@/lib/spinor/scoring";
+import { getDemoDataPolicy } from "@/lib/spinor/demo-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -22,40 +23,98 @@ export const dynamic = "force-dynamic";
  * assignment: the central hypothesis plus surrounding evidence nodes,
  * maturity stage, evidence badge, and Discovery Contribution Score.
  *
- * Seeds the engine on demand (serverless-safe) and allocates a fresh
- * hypothesis if the participant has no active assignment.
+ * Development fixtures are seeded only when demo mode is enabled. Production
+ * returns an explicit empty state instead of silently manufacturing evidence.
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const employeeId = searchParams.get("employeeId") ?? "emp-001";
+    const demoPolicy = getDemoDataPolicy();
+    const requestedEmployeeId = searchParams.get("employeeId");
 
-    // Ensure the golden store is seeded (idempotent).
-    ensureGoldenSeeded();
+    if (!requestedEmployeeId && !demoPolicy.enabled) {
+      return NextResponse.json(
+        {
+          error: "employeeId is required outside demo mode.",
+          organism: null,
+          activeCount: 0,
+          demoMode: false,
+          dataOrigin: "production",
+        },
+        { status: 400 },
+      );
+    }
+
+    const employeeId = requestedEmployeeId ?? "emp-001";
+
+    if (loadHypotheses().length === 0 && demoPolicy.enabled) {
+      ensureGoldenSeeded();
+    }
 
     let active = getActiveAssignmentsForEmployee(employeeId);
     if (active.length === 0) {
-      // Allocate for this employee if nothing is active.
-      const employee = SEED_EMPLOYEES.find((e) => e.id === employeeId) ?? SEED_EMPLOYEES[0];
+      if (!demoPolicy.enabled) {
+        return NextResponse.json({
+          organism: null,
+          activeCount: 0,
+          demoMode: false,
+          dataOrigin: "production",
+          emptyState: {
+            code: "NO_ACTIVE_ASSIGNMENT",
+            message:
+              "No approved Daily Seed is assigned. Connect evidence, create an approved hypothesis, or allocate an existing hypothesis.",
+          },
+        });
+      }
+
+      const employee = SEED_EMPLOYEES.find((candidate) => candidate.id === employeeId);
+      if (!employee) {
+        return NextResponse.json(
+          {
+            error: "Unknown demo participant.",
+            organism: null,
+            activeCount: 0,
+            demoMode: true,
+            dataOrigin: "demo",
+          },
+          { status: 404 },
+        );
+      }
+
       goldenEngine.allocateForEmployee(employee.id);
       active = getActiveAssignmentsForEmployee(employeeId);
     }
+
     if (active.length === 0) {
       return NextResponse.json(
-        { error: "No assignable hypothesis available for this participant.", organism: null },
+        {
+          error: "No assignable hypothesis available for this participant.",
+          organism: null,
+          activeCount: 0,
+          demoMode: demoPolicy.enabled,
+          dataOrigin: demoPolicy.enabled ? "demo" : "production",
+        },
         { status: 404 },
       );
     }
 
-    // Primary assignment = the first active one.
     const assignment = active[0];
     const hypotheses = loadHypotheses();
-    const hypothesis = hypotheses.find((h) => h.id === assignment.hypothesisId);
+    const hypothesis = hypotheses.find((candidate) => candidate.id === assignment.hypothesisId);
     if (!hypothesis) {
-      return NextResponse.json({ error: "Hypothesis record missing.", organism: null }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: "Hypothesis record missing.",
+          organism: null,
+          activeCount: active.length,
+          demoMode: demoPolicy.enabled,
+          dataOrigin: demoPolicy.enabled ? "demo" : "production",
+        },
+        { status: 404 },
+      );
     }
 
-    const priorArt = loadPriorArt().find((p) => p.id === hypothesis.priorArtId);
+    const priorArt = loadPriorArt().find((record) => record.id === hypothesis.priorArtId);
     const organism = assembleOrganism(
       assignment,
       hypothesis,
@@ -64,12 +123,22 @@ export async function GET(req: NextRequest) {
       loadHypothesisAttributions(),
       loadDerivatives(),
       loadGoldenNodes(),
-      loadProcesses().map((p) => ({ hypothesisId: p.hypothesisId })),
+      loadProcesses().map((process) => ({ hypothesisId: process.hypothesisId })),
     );
 
-    return NextResponse.json({ organism, activeCount: active.length });
-  } catch (e: any) {
-    console.error("[spinor/organism] error:", e);
-    return NextResponse.json({ error: e.message, organism: null }, { status: 500 });
+    return NextResponse.json({
+      organism,
+      activeCount: active.length,
+      demoMode: demoPolicy.enabled,
+      dataOrigin: demoPolicy.enabled ? "demo" : "production",
+      demoPolicy: {
+        source: demoPolicy.source,
+        reason: demoPolicy.reason,
+      },
+    });
+  } catch (error: unknown) {
+    console.error("[spinor/organism] error:", error);
+    const message = error instanceof Error ? error.message : "Unknown organism error";
+    return NextResponse.json({ error: message, organism: null }, { status: 500 });
   }
 }
