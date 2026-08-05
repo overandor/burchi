@@ -21,6 +21,18 @@ This document records the first production-safe SPINOR implementation slice insi
 
 The implementation deliberately separates a single-record evidence class from aggregate Golden Node promotion. A strong initial result cannot promote itself.
 
+### API access boundary
+
+`src/lib/spinor/access.ts` provides a temporary service-token boundary until session-backed organization membership is implemented.
+
+- Production requires `SPINOR_API_TOKEN`.
+- Production requires `SPINOR_ALLOWED_ORGANIZATIONS`.
+- Tokens are compared with a timing-safe comparison.
+- Requests outside the configured organization allowlist are rejected.
+- Development may run without a token, but no production bypass is implicit.
+
+This is not represented as complete user authentication or row-level tenancy. It is a fail-closed boundary preventing the new SPINOR APIs from exposing mailbox evidence merely because a caller supplies an organization ID.
+
 ### Append-only repository boundary
 
 `src/lib/spinor/repository.ts` exposes one repository contract with two providers:
@@ -52,6 +64,8 @@ The remote provider contract is:
 
 ### APIs
 
+All routes require an authorized organization in production.
+
 `GET /api/spinor/evidence` previews normalized evidence without writing it.
 
 Required query parameter:
@@ -78,7 +92,7 @@ Optional body fields:
 - `recordIds`
 - `limit`
 
-`POST /api/spinor/evaluate` evaluates supplied real inputs. It does not generate synthetic outcomes. Supported sections are:
+`POST /api/spinor/evaluate` evaluates supplied real inputs. It does not generate synthetic outcomes. It requires `organizationId` and supports:
 
 - `effect`
 - `attribution`
@@ -109,7 +123,7 @@ Optional body fields:
 
 The following requirements remain open and must not be represented as working:
 
-- authenticated organization membership and row-level tenancy enforcement;
+- session-backed authentication, organization membership, and row-level tenancy enforcement;
 - a deployed durable SPINOR event store matching the repository contract;
 - database migrations and relational projections over the event ledger;
 - the complete Daily Seed schema, allocator, fairness debt, and portfolio scheduler;
@@ -120,13 +134,13 @@ The following requirements remain open and must not be represented as working:
 - contribution ledgers and bounded contribution scoring;
 - automation-candidate progression;
 - all eight primary SPINOR screens and their accessible visual organisms;
-- end-to-end authentication, organization isolation, mobile, and reduced-motion tests;
+- end-to-end organization isolation, mobile, and reduced-motion tests;
 - Advantage Foundry and Attribution Oracle service adapters.
 
 ## Next critical implementation sequence
 
 1. Deploy a durable organization-scoped event store and verify append receipts.
-2. Add authentication and enforce organization membership at every SPINOR API boundary.
+2. Replace the temporary service token with session-backed authentication and enforce organization membership at every boundary.
 3. Add relational projections and migrations for hypotheses, versions, SPINs, experiments, observations, replications, compliance records, and contributions.
 4. Implement Daily Seed generation and allocation against stored evidence.
 5. Implement experiment execution and the replication-gated promotion end-to-end test.
