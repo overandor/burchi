@@ -1,0 +1,17 @@
+# Netlify redirects for Next.js route groups.
+# The @netlify/plugin-nextjs handles API routes and dynamic routes.
+# These redirects ensure that static pages from route groups (e.g. (app)/)
+# are served correctly when the plugin's automatic routing misses them.
+/today       /today.html       200
+/foundry     /foundry.html     200
+/experiment  /experiment.html  200
+/history     /history.html     200
+/spinor-rl   /spinor-rl.html   200
+/golden-nodes /golden-nodes.html 200
+/discovery-ledger /discovery-ledger.html 200
+/learnings   /learnings.html   200
+/process-lab /process-lab.html 200
+/results     /results.html     200
+/inbox       /inbox.html       200
+/experiments /experiments.html 200
+/spinor      /spinor.html      200
