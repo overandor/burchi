@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeSpinorRequest, SpinorAccessError } from "@/lib/spinor/access";
 import {
+  DEFAULT_THRESHOLDS,
   assertComplianceTransition,
   calculateEffect,
   classifyEvidence,
@@ -8,6 +9,7 @@ import {
   evaluateGoldenNodeReadiness,
   evaluateMissionRepetition,
 } from "@/lib/spinor/core.mjs";
+import type { SpinorThresholds } from "@/lib/spinor/core.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +30,7 @@ interface EvaluateRequest {
     options?: { similarityThreshold?: number; maximumSimilarMissions?: number };
   };
   complianceTransition?: { from?: string; to?: string };
-  thresholds?: Record<string, number>;
+  thresholds?: Partial<SpinorThresholds>;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,6 +40,10 @@ export async function POST(request: NextRequest) {
     if (!organizationId) throw new Error("organizationId is required.");
     authorizeSpinorRequest(request, organizationId);
 
+    const thresholds: SpinorThresholds = {
+      ...DEFAULT_THRESHOLDS,
+      ...(body.thresholds ?? {}),
+    };
     const result: Record<string, unknown> = {
       organizationId,
       evaluatedAt: new Date().toISOString(),
@@ -56,11 +62,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.evidence) {
-      result.evidence = classifyEvidence(body.evidence, body.thresholds);
+      result.evidence = classifyEvidence(body.evidence, thresholds);
     }
 
     if (body.goldenNode) {
-      result.goldenNode = evaluateGoldenNodeReadiness(body.goldenNode, body.thresholds);
+      result.goldenNode = evaluateGoldenNodeReadiness(body.goldenNode, thresholds);
     }
 
     if (body.activityGenome?.candidate) {
