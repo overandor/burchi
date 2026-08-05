@@ -131,6 +131,23 @@ export async function GET() {
     checks.goldenEngine = { ok: false, detail: e.message };
   }
 
+  // ─── SPIN engine check ─────────────────────────────────────────
+  try {
+    const { dbHealth, getSpinCount } = await import("@/lib/spinor/spin-engine");
+    const db = dbHealth();
+    const count = getSpinCount();
+    // Auto-seed if DB is empty
+    if (count === 0) {
+      const { seedDemoSPINs } = await import("@/lib/spinor/demo-seed");
+      seedDemoSPINs();
+      checks.spinEngine = { ok: true, detail: `auto-seeded ${getSpinCount()} SPINs` };
+    } else {
+      checks.spinEngine = { ok: db.ok, detail: `${count} SPINs, ${db.claimCount} claims, chain ${db.ok ? "ok" : "error"}` };
+    }
+  } catch (e: any) {
+    checks.spinEngine = { ok: false, detail: e.message };
+  }
+
   const allOk = Object.values(checks).every((c) => c.ok);
   return NextResponse.json(
     {

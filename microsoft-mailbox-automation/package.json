@@ -16,6 +16,7 @@
     "@azure/msal-react": "^5.5.4",
     "@google-cloud/local-auth": "^3.0.1",
     "@microsoft/microsoft-graph-client": "^3.0.5",
+    "better-sqlite3": "^13.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "exceljs": "^4.4.0",
