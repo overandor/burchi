@@ -25,7 +25,7 @@ export default function AuthRedirectPage() {
           name: "User",
           email: "",
         },
-        "*"
+        window.location.origin
       );
 
       setTimeout(() => {

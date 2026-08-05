@@ -45,7 +45,10 @@ function AuthContent({ children }: { children: React.ReactNode }) {
       instance
         .acquireTokenSilent({ scopes: GRAPH_SCOPES, account })
         .then((res: AuthenticationResult) => setAccessToken(res.accessToken))
-        .catch(() => setAccessToken(null));
+        .catch((e: any) => {
+          console.error("[auth] error:", e);
+          setAccessToken(null);
+        });
     }
   }, [account, instance]);
 
@@ -62,7 +65,9 @@ function AuthContent({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     sessionStorage.removeItem("msal-token");
     sessionStorage.removeItem("msal-user");
-    instance.logoutRedirect({ account: account || undefined }).catch(() => {});
+    instance.logoutRedirect({ account: account || undefined }).catch((e: any) => {
+      console.error("[auth] error:", e);
+    });
   }, [instance, account]);
 
   const getValidToken = useCallback(async (): Promise<string | null> => {
@@ -74,7 +79,8 @@ function AuthContent({ children }: { children: React.ReactNode }) {
       });
       setAccessToken(res.accessToken);
       return res.accessToken;
-    } catch {
+    } catch (e) {
+      console.error("[auth] error:", e);
       try {
         await instance.acquireTokenRedirect({ scopes: GRAPH_SCOPES, account });
         return null;
@@ -122,7 +128,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clientId = azureData.clientId || "";
             tenantId = azureData.tenantId || "common";
           }
-        } catch {}
+        } catch (e) {
+          console.error("[auth] error:", e);
+        }
 
         // Fall back to localStorage
         if (!clientId) {
@@ -132,7 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const parsed = JSON.parse(localConfig);
               clientId = parsed.clientId || "";
               tenantId = parsed.tenantId || "common";
-            } catch {}
+            } catch (e) {
+              console.error("[auth] error:", e);
+            }
           }
         }
 
@@ -143,6 +153,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const config = text ? JSON.parse(text) : {};
           clientId = config.graph?.clientId || "";
           tenantId = config.graph?.tenantId || "common";
+        }
+
+        // If no Azure AD client ID is configured, skip MSAL initialization.
+        // The device code flow (MicrosoftLogin component) uses a public client ID
+        // and doesn't need MSAL. Initializing MSAL with a dummy client ID causes
+        // redirect errors (login.live.com/undefined).
+        if (!clientId) {
+          console.log("[auth] No Azure AD client ID configured, skipping MSAL init");
+          setMsalInstance(null);
+          return;
         }
 
         const msalConfig = getMsalConfig(clientId, tenantId);
@@ -174,16 +194,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (!msalInstance) {
+    // No MSAL instance — either still loading or no Azure AD configured.
+    // Render children without auth provider so the app works with device code flow.
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <svg className="mx-auto h-10 w-10 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <AuthContext.Provider
+        value={{
+          isAuthenticated: false,
+          account: null,
+          accessToken: null,
+          loading: false,
+          error: null,
+          login: () => {},
+          logout: () => {},
+          getValidToken: async () => null,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
     );
   }
 

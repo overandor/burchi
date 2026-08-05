@@ -38,31 +38,43 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }),
+      signal: controller.signal,
+    });
 
-  const tokenText = await tokenRes.text();
-  const tokenData = tokenText ? JSON.parse(tokenText) : {};
+    const tokenText = await tokenRes.text();
+    const tokenData = tokenText ? JSON.parse(tokenText) : {};
 
-  if (!tokenRes.ok) {
+    if (!tokenRes.ok) {
+      return NextResponse.json(
+        { error: tokenData.error_description || tokenData.error || "Token exchange failed" },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json({
+      refreshToken: tokenData.refresh_token || "",
+      accessToken: tokenData.access_token || "",
+      expiresIn: tokenData.expires_in || 3600,
+    });
+  } catch (e: any) {
     return NextResponse.json(
-      { error: tokenData.error_description || tokenData.error || "Token exchange failed" },
-      { status: 400 },
+      { error: e.name === "AbortError" ? "Token exchange timed out" : e.message },
+      { status: 504 },
     );
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return NextResponse.json({
-    refreshToken: tokenData.refresh_token || "",
-    accessToken: tokenData.access_token || "",
-    expiresIn: tokenData.expires_in || 3600,
-  });
 }

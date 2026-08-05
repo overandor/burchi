@@ -2,6 +2,8 @@ import { GmailConfig, EmailMessage, ProcessedEmailRecord, SyncStatus, ParsedAtta
 import { fetchEmailsREST, fetchAttachmentContentREST } from "@/lib/gmail/rest-client";
 import { parseAttachment } from "@/lib/parsers/attachment-parser";
 import { generateAnalysis } from "@/lib/analysis/generator";
+import { extractDataFromEmail } from "@/lib/llm/extractor";
+import { loadConfig } from "@/lib/config";
 import { loadProcessedEmails, saveProcessedEmails, loadSyncStatus, saveSyncStatus } from "@/lib/config";
 import { nanoid } from "nanoid";
 
@@ -16,7 +18,7 @@ export async function syncAndProcessGmail(
   try {
     const emails = await fetchEmailsREST(config, maxEmails);
     let existing: ProcessedEmailRecord[] = [];
-    try { existing = loadProcessedEmails(); } catch { }
+    try { existing = loadProcessedEmails(); } catch (e) { console.error("[gmail] error:", e); }
     const existingIds = new Set(existing.map((e) => e.emailId));
 
     for (const email of emails) {
@@ -37,7 +39,7 @@ export async function syncAndProcessGmail(
     // Try to persist (works locally, fails silently on serverless)
     try {
       saveProcessedEmails(existing);
-    } catch { }
+    } catch (e) { console.error("[gmail] error:", e); }
 
     const newStatus: SyncStatus = {
       lastSync: new Date().toISOString(),
@@ -47,7 +49,7 @@ export async function syncAndProcessGmail(
       isSyncing: false,
       errors,
     };
-    try { saveSyncStatus(newStatus); } catch { }
+    try { saveSyncStatus(newStatus); } catch (e) { console.error("[gmail] error:", e); }
 
     return { synced: emails.length, processed, errors, records: existing, status: newStatus };
   } catch (e: any) {
@@ -62,6 +64,7 @@ export async function processEmail(
 ): Promise<ProcessedEmailRecord | null> {
   // Fetch and parse attachments
   const attachmentData = [];
+  const parsedAttachments: ParsedAttachmentData[] = [];
   for (const att of email.attachments) {
     try {
       const content = await fetchAttachmentContentREST(config, email.id, att.id);
@@ -72,13 +75,14 @@ export async function processEmail(
         type: parsed.type,
         parsedData: parsed,
       });
+      parsedAttachments.push(parsed);
     } catch (e: any) {
       console.error(`Failed to parse attachment ${att.name}:`, e.message);
       attachmentData.push({ name: att.name, type: "unknown", parsedData: { type: "unknown" } as ParsedAttachmentData });
     }
   }
 
-  // Generate analysis
+  // Generate deterministic analysis (wikitree, mindmap, execution plan)
   const analysis = generateAnalysis({
     subject: email.subject,
     sender: email.sender,
@@ -86,19 +90,45 @@ export async function processEmail(
     attachments: attachmentData,
   });
 
-  // Build extracted data from analysis
-  const fields = extractFieldsFromAttachments(attachmentData);
-  const tables = extractTablesFromAttachments(attachmentData);
+  // Try LLM extraction for fields/tables/summary/category
+  let fields: any[] = [];
+  let tables: any[] = [];
+  let summary = analysis.execution.summary;
+  let category = categorizeEmail(email, attachmentData);
+  let confidence = 0.85;
+
+  try {
+    const appConfig = loadConfig();
+    if (appConfig.llm?.endpoint) {
+      const extracted = await extractDataFromEmail(email, parsedAttachments, appConfig);
+      if (extracted.fields?.length > 0) fields = extracted.fields;
+      else fields = extractFieldsFromAttachments(attachmentData);
+      if (extracted.tables?.length > 0) tables = extracted.tables;
+      else tables = extractTablesFromAttachments(attachmentData);
+      if (extracted.summary) summary = extracted.summary;
+      if (extracted.category) category = extracted.category;
+      confidence = extracted.confidence || 0.85;
+    } else {
+      // No LLM endpoint configured — fall back to deterministic extraction
+      fields = extractFieldsFromAttachments(attachmentData);
+      tables = extractTablesFromAttachments(attachmentData);
+    }
+  } catch (e: any) {
+    console.error("LLM extraction failed, falling back to deterministic:", e.message);
+    fields = extractFieldsFromAttachments(attachmentData);
+    tables = extractTablesFromAttachments(attachmentData);
+  }
 
   const record: ProcessedEmailRecord = {
     id: nanoid(),
     emailId: email.id,
     subject: email.subject,
     sender: email.sender,
+    senderEmail: email.senderEmail,
     receivedDate: email.receivedDate,
     processedAt: new Date().toISOString(),
-    category: categorizeEmail(email, attachmentData),
-    confidence: 0.85,
+    category,
+    confidence,
     fieldCount: fields.length,
     tableCount: tables.length,
     extractedData: {
@@ -106,9 +136,9 @@ export async function processEmail(
       extractedAt: new Date().toISOString(),
       fields,
       tables,
-      summary: analysis.execution.summary,
-      category: categorizeEmail(email, attachmentData),
-      confidence: 0.85,
+      summary,
+      category,
+      confidence,
       source: attachmentData.length > 0 ? "attachment" : "email_body",
     },
     analysis,

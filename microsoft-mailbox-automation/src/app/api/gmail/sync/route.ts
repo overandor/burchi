@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAndProcessGmail } from "@/lib/gmail/pipeline";
 import { loadConfig } from "@/lib/config";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, getRequestOrigin } from "@/lib/utils";
 import { generateTelemetry } from "@/lib/telemetry/engine";
+import { detectCommitments } from "@/lib/commitment/detector";
+import { upsertCommitmentByEmailId } from "@/lib/commitment/store";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const maxEmails = body.maxEmails || 100;
-    const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+    const redirectUri = `${normalizeOrigin(getRequestOrigin(request))}/api/gmail/callback`;
 
     const result = await syncAndProcessGmail(
       { clientId, clientSecret, redirectUri, refreshToken, emailAddress: "" },
@@ -40,7 +42,21 @@ export async function POST(request: NextRequest) {
       console.error("Telemetry generation failed:", e.message);
     }
 
-    return NextResponse.json({ ...result, telemetry });
+    let commitments = [] as any[];
+    try {
+      commitments = detectCommitments(result.records || []);
+      for (const c of commitments) {
+        try {
+          upsertCommitmentByEmailId(c);
+        } catch (e: any) {
+          console.error("[gmail/sync] commitment upsert error:", e.message);
+        }
+      }
+    } catch (e: any) {
+      console.error("[gmail/sync] commitment detection error:", e.message);
+    }
+
+    return NextResponse.json({ ...result, telemetry, commitments });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

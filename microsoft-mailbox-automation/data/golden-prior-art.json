@@ -1,0 +1,187 @@
+[
+  {
+    "id": "pa_X3gOy1dBiW",
+    "hypothesisClaim": "Digitally engaged physicians may prefer configurable, asynchronous follow-up systems over repeated scheduled contact.",
+    "status": "transfer_candidate",
+    "evidenceState": "supported",
+    "sourceDomains": [
+      "Enterprise onboarding",
+      "Professional education",
+      "Digital health engagement"
+    ],
+    "testedInMarket": false,
+    "testedInAdjacentIndustries": true,
+    "adjacentSupportSummary": "Supported in enterprise software onboarding and professional education.",
+    "responsibleComponent": "Self-service workflow with staff ownership",
+    "requiredConditions": [
+      "High digital responsiveness",
+      "Staff able to operate portal",
+      "No unresolved medical-information request"
+    ],
+    "risksAndConfounders": [
+      "Existing relationship strength",
+      "Practice size",
+      "Digital infrastructure",
+      "Staff involvement"
+    ],
+    "genuinelyUnknown": [
+      "Whether physicians will actually use the self-service system in pharma field execution"
+    ],
+    "researchConfidence": 0.8,
+    "researchedAt": "2026-08-05T02:11:48.038Z"
+  },
+  {
+    "id": "pa_uyBBlKAN5C",
+    "hypothesisClaim": "Office-manager-first outreach improves workflow resolution for digitally responsive accounts.",
+    "status": "established",
+    "evidenceState": "supported",
+    "sourceDomains": [
+      "Enterprise SaaS onboarding",
+      "Practice management"
+    ],
+    "testedInMarket": true,
+    "testedInAdjacentIndustries": true,
+    "adjacentSupportSummary": "Mixed support; staff-gatekeeper models work in enterprise SaaS.",
+    "responsibleComponent": "Staff-gatekeeper sequencing",
+    "requiredConditions": [
+      "Office manager present",
+      "Digital responsiveness",
+      "Staff delegation pattern"
+    ],
+    "risksAndConfounders": [
+      "Office manager authority variance",
+      "Turnover",
+      "Practice size"
+    ],
+    "genuinelyUnknown": [],
+    "researchConfidence": 1,
+    "researchedAt": "2026-08-05T02:11:48.038Z"
+  },
+  {
+    "id": "pa_oh8zcRL5Kh",
+    "hypothesisClaim": "A short self-service workflow outperforms a comprehensive workflow for first-time digital accounts.",
+    "status": "transfer_candidate",
+    "evidenceState": "inconclusive",
+    "sourceDomains": [
+      "Consumer onboarding",
+      "UX research"
+    ],
+    "testedInMarket": false,
+    "testedInAdjacentIndustries": true,
+    "adjacentSupportSummary": "Progressive disclosure outperforms comprehensive forms in consumer onboarding.",
+    "responsibleComponent": "Workflow length / progressive disclosure",
+    "requiredConditions": [
+      "First-time digital account",
+      "No prior self-service adoption"
+    ],
+    "risksAndConfounders": [
+      "Account maturity",
+      "Content depth preference"
+    ],
+    "genuinelyUnknown": [
+      "Optimal step count for pharma access workflows"
+    ],
+    "researchConfidence": 0.6,
+    "researchedAt": "2026-08-05T02:11:48.039Z"
+  },
+  {
+    "id": "pa_D7K38SDeyO",
+    "hypothesisClaim": "Automated reminders improve self-service workflow completion for digitally responsive accounts.",
+    "status": "transfer_candidate",
+    "evidenceState": "supported",
+    "sourceDomains": [
+      "Patient portal engagement",
+      "Behavioral nudges"
+    ],
+    "testedInMarket": false,
+    "testedInAdjacentIndustries": true,
+    "adjacentSupportSummary": "Supported in patient-portal engagement studies.",
+    "responsibleComponent": "Reminder cadence",
+    "requiredConditions": [
+      "Digital responsiveness",
+      "Started but incomplete workflow"
+    ],
+    "risksAndConfounders": [
+      "Reminder fatigue",
+      "Trust erosion"
+    ],
+    "genuinelyUnknown": [
+      "Whether reminders reduce trust in pharma field execution context"
+    ],
+    "researchConfidence": 0.8,
+    "researchedAt": "2026-08-05T02:11:48.039Z"
+  },
+  {
+    "id": "pa_i_HBQ6QLnF",
+    "hypothesisClaim": "Human-guided accounts convert better when technology runs behind the scenes while preserving a personal face.",
+    "status": "transfer_candidate",
+    "evidenceState": "inconclusive",
+    "sourceDomains": [
+      "Field execution observation"
+    ],
+    "testedInMarket": true,
+    "testedInAdjacentIndustries": false,
+    "adjacentSupportSummary": "Not tested in adjacent industries; in-market observed association only.",
+    "responsibleComponent": "Hybrid human-front / tech-back model",
+    "requiredConditions": [
+      "Human-guided account",
+      "Representative available for personal follow-up"
+    ],
+    "risksAndConfounders": [
+      "Representative availability",
+      "Account relationship strength"
+    ],
+    "genuinelyUnknown": [
+      "Whether the tech-back component is the active ingredient"
+    ],
+    "researchConfidence": 0.65,
+    "researchedAt": "2026-08-05T02:11:48.039Z"
+  },
+  {
+    "id": "pa_fYhzCxM-U9",
+    "hypothesisClaim": "For digitally responsive accounts, a staff-owned self-service workflow may produce faster operational completion than representative-led follow-up.",
+    "status": "transfer_candidate",
+    "evidenceState": "inconclusive",
+    "sourceDomains": [],
+    "testedInMarket": false,
+    "testedInAdjacentIndustries": false,
+    "adjacentSupportSummary": "No prior-art research available (deterministic fallback).",
+    "responsibleComponent": null,
+    "requiredConditions": [],
+    "risksAndConfounders": [],
+    "genuinelyUnknown": [
+      "For digitally responsive accounts, a staff-owned self-service workflow may produce faster operational completion than representative-led follow-up."
+    ],
+    "researchConfidence": 0.25,
+    "researchedAt": "2026-08-05T02:26:34.085Z"
+  },
+  {
+    "id": "pa_L-6hgSju1t",
+    "hypothesisClaim": "For digitally responsive accounts, a staff-owned self-service workflow may produce faster operational completion than representative-led follow-up.",
+    "status": "transfer_candidate",
+    "evidenceState": "inconclusive",
+    "sourceDomains": [
+      "retail",
+      "banking",
+      "telecom"
+    ],
+    "testedInMarket": false,
+    "testedInAdjacentIndustries": true,
+    "adjacentSupportSummary": "Retail and banking studies indicate that self‑service kiosks and online portals can shorten transaction times for routine, well‑defined tasks, whereas more complex interactions still favor representative assistance.",
+    "responsibleComponent": "automation of routine task workflow",
+    "requiredConditions": [
+      "high digital literacy among users",
+      "simple, well‑defined tasks"
+    ],
+    "risksAndConfounders": [
+      "user error leading to rework",
+      "lack of personalization may delay resolution"
+    ],
+    "genuinelyUnknown": [
+      "impact on overall operational efficiency in pharma field execution",
+      "patient satisfaction with self‑service versus representative follow‑up"
+    ],
+    "researchConfidence": 0.6,
+    "researchedAt": "2026-08-05T02:30:02.041Z"
+  }
+]

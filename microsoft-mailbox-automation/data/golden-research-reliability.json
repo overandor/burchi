@@ -1,0 +1,67 @@
+[
+  {
+    "employeeId": "emp-001",
+    "level": "process_builder",
+    "executionFidelity": 0.9,
+    "evidenceQuality": 0.9,
+    "ethicalJudgment": 0.9,
+    "usefulOverrides": 4,
+    "experimentCompletion": 0.92,
+    "confounderDetection": 0.85,
+    "derivativeQuality": 0.85,
+    "collaboration": 0.8,
+    "updatedAt": "2026-08-05T02:11:48.040Z"
+  },
+  {
+    "employeeId": "emp-002",
+    "level": "hypothesis_modifier",
+    "executionFidelity": 0.85,
+    "evidenceQuality": 0.85,
+    "ethicalJudgment": 0.9,
+    "usefulOverrides": 3,
+    "experimentCompletion": 0.9,
+    "confounderDetection": 0.8,
+    "derivativeQuality": 0.75,
+    "collaboration": 0.8,
+    "updatedAt": "2026-08-05T02:11:48.040Z"
+  },
+  {
+    "employeeId": "emp-003",
+    "level": "reliable_tester",
+    "executionFidelity": 0.75,
+    "evidenceQuality": 0.7,
+    "ethicalJudgment": 0.9,
+    "usefulOverrides": 1,
+    "experimentCompletion": 0.8,
+    "confounderDetection": 0.6,
+    "derivativeQuality": 0.4,
+    "collaboration": 0.8,
+    "updatedAt": "2026-08-05T02:11:48.040Z"
+  },
+  {
+    "employeeId": "emp-004",
+    "level": "strategy_architect",
+    "executionFidelity": 0.92,
+    "evidenceQuality": 0.93,
+    "ethicalJudgment": 0.9,
+    "usefulOverrides": 5,
+    "experimentCompletion": 0.95,
+    "confounderDetection": 0.9,
+    "derivativeQuality": 0.9,
+    "collaboration": 0.8,
+    "updatedAt": "2026-08-05T02:11:48.040Z"
+  },
+  {
+    "employeeId": "emp-005",
+    "level": "replicator",
+    "executionFidelity": 0.8,
+    "evidenceQuality": 0.8,
+    "ethicalJudgment": 0.9,
+    "usefulOverrides": 2,
+    "experimentCompletion": 0.85,
+    "confounderDetection": 0.7,
+    "derivativeQuality": 0.6,
+    "collaboration": 0.8,
+    "updatedAt": "2026-08-05T02:11:48.040Z"
+  }
+]

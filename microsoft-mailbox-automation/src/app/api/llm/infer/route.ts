@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     try {
       const { loadConfig } = await import("@/lib/config");
       config = loadConfig();
-    } catch {}
+    } catch (e) {
+      console.error("[llm/infer] config load error:", e);
+    }
 
     const endpoint = body.endpoint || config.llm?.endpoint || process.env.LLM_ENDPOINT || "";
     const apiKey = body.apiKey || config.llm?.apiKey || process.env.OPENAI_API_KEY || "";
@@ -38,7 +40,9 @@ export async function POST(request: NextRequest) {
           try {
             const { loadProcessedEmails } = await import("@/lib/config");
             records = loadProcessedEmails();
-          } catch {}
+          } catch (e) {
+            console.error("[llm/infer] loadProcessedEmails error:", e);
+          }
         }
 
         const { generateTelemetry } = await import("@/lib/telemetry/engine");
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (e) {
-        // Telemetry injection is optional — continue without it
+        console.error("[llm/infer] telemetry injection error:", e);
       }
     }
 
@@ -98,7 +102,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Ollama request failed: ${text || llmRes.statusText}` }, { status: 502 });
       }
 
-      const data = text ? JSON.parse(text) : {};
+      const data = text && !text.trim().startsWith("<") ? JSON.parse(text) : {};
       // Normalize to OpenAI-like format for the frontend
       return NextResponse.json({
         choices: [{
@@ -144,7 +148,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `LLM request failed: ${text || llmRes.statusText}` }, { status: 502 });
       }
 
-      const data = text ? JSON.parse(text) : {};
+      const data = text && !text.trim().startsWith("<") ? JSON.parse(text) : {};
       // Normalize to OpenAI-like format for the frontend
       return NextResponse.json({
         ok: data.ok,
@@ -200,21 +204,44 @@ export async function POST(request: NextRequest) {
 
     const text = await llmRes.text();
     if (!llmRes.ok) {
-      // Try Pollinations fallback before returning error
+      // Primary endpoint failed (e.g. disabled Vercel deployment, 402 Payment
+      // Required, 503 model loading). Try a chain of free fallbacks before
+      // surfacing the error so the user is never hard-blocked.
+      const llm7Result = await tryLLM7(messages, model);
+      if (llm7Result) return NextResponse.json(llm7Result);
       const pollinationsResult = await tryPollinations(messages);
       if (pollinationsResult) return NextResponse.json(pollinationsResult);
-      // Parse error for better messaging
+      // Parse error for better messaging — guard against HTML error pages
       let errorMsg = `LLM request failed: ${text || llmRes.statusText}`;
       try {
         const errData = JSON.parse(text);
         if (errData.error?.code === 503 || errData.error?.message?.includes("Loading model")) {
           errorMsg = `Model server is starting up (503). Wait a few seconds and try again, or configure a different endpoint in Settings.`;
+        } else if (text.includes("DEPLOYMENT_DISABLED") || text.includes("Payment required") || llmRes.status === 402) {
+          errorMsg = `Configured endpoint is unavailable (disabled or billing issue). A free fallback (LLM7/Pollinations) was attempted but also failed. Set a working endpoint in Settings.`;
         }
-      } catch {}
+      } catch (e) {
+        console.error("[llm/infer] error response parse error:", e);
+      }
       return NextResponse.json({ error: errorMsg }, { status: 502 });
     }
 
-    const data = text ? JSON.parse(text) : {};
+    // Guard against HTML responses (some endpoints return HTML error pages
+    // with a 200 status). Fall back to free providers instead of crashing.
+    if (text.trim().startsWith("<")) {
+      const llm7Result = await tryLLM7(messages, model);
+      if (llm7Result) return NextResponse.json(llm7Result);
+      const pollinationsResult = await tryPollinations(messages);
+      if (pollinationsResult) return NextResponse.json(pollinationsResult);
+      return NextResponse.json({ error: "Endpoint returned a non-JSON (HTML) response. Configure a valid OpenAI-compatible endpoint in Settings." }, { status: 502 });
+    }
+
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch {
+      const llm7Result = await tryLLM7(messages, model);
+      if (llm7Result) return NextResponse.json(llm7Result);
+      return NextResponse.json({ error: "Endpoint returned invalid JSON. Configure a valid OpenAI-compatible endpoint in Settings." }, { status: 502 });
+    }
     return NextResponse.json(data);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -268,6 +295,45 @@ async function tryPollinations(messages: any[]): Promise<any | null> {
   return tryPollinationsDirect(messages, "openai");
 }
 
+/**
+ * Free, no-API-key OpenAI-compatible fallback (LLM7). Used when the user's
+ * configured endpoint is disabled, billing-blocked, or returns HTML errors.
+ */
+async function tryLLM7(messages: any[], model?: string): Promise<any | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    const res = await fetch("https://api.llm7.io/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "gpt-oss:20b",
+        messages,
+        max_tokens: 1024,
+        temperature: 0.7,
+      }),
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && !text.trim().startsWith("<")) {
+        const data = JSON.parse(text);
+        if (data.choices?.[0]?.message?.content) {
+          return {
+            choices: data.choices,
+            model: `${model || "gpt-oss:20b"} (llm7-fallback)`,
+            _provider: "llm7",
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[llm/infer] llm7 fallback error:", e);
+  }
+  return null;
+}
+
 async function tryPollinationsDirect(messages: any[], model: string): Promise<any | null> {
   const referrer = (process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE || "mailbox-sci-data.netlify.app").replace(/^https?:\/\//, "");
 
@@ -302,7 +368,9 @@ async function tryPollinationsDirect(messages: any[], model: string): Promise<an
         };
       }
     }
-  } catch {}
+  } catch (e) {
+    console.error("[llm/infer] pollinations fallback error:", e);
+  }
 
   return null;
 }

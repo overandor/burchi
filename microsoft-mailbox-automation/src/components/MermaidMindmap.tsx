@@ -2,6 +2,33 @@
 
 import { useEffect, useRef, useState } from "react";
 
+function sanitizeSvg(svgString: string): string {
+  if (typeof window === "undefined" || typeof DOMParser === "undefined") {
+    return svgString;
+  }
+  const doc = new DOMParser().parseFromString(svgString, "image/svg+xml");
+  const svg = doc.documentElement;
+
+  svg.querySelectorAll("script").forEach((el) => el.remove());
+  svg.querySelectorAll("foreignObject").forEach((el) => el.remove());
+
+  svg.querySelectorAll("*").forEach((el) => {
+    for (const attr of Array.from(el.attributes)) {
+      if (attr.name.startsWith("on")) {
+        el.removeAttribute(attr.name);
+      }
+      if (
+        (attr.name === "xlink:href" || attr.name === "href") &&
+        attr.value.trim().toLowerCase().startsWith("javascript:")
+      ) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  });
+
+  return new XMLSerializer().serializeToString(svg);
+}
+
 export default function MermaidMindmap({ chart }: { chart: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
@@ -33,7 +60,7 @@ export default function MermaidMindmap({ chart }: { chart: string }) {
         const id = `mermaid-${Date.now()}`;
         const { svg: renderedSvg } = await mermaid.render(id, chart);
         if (!cancelled) {
-          setSvg(renderedSvg);
+          setSvg(sanitizeSvg(renderedSvg));
           setError(null);
         }
       } catch (e: any) {

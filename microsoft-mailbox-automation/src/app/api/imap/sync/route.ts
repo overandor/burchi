@@ -91,7 +91,9 @@ export async function POST(request: NextRequest) {
                 .trim()
                 .slice(0, 5000);
             }
-          } catch {}
+          } catch (e) {
+            console.error("[imap/sync] body fetch error:", e);
+          }
 
           const subject = msg.envelope?.subject || "(no subject)";
           const sender = msg.envelope?.from?.[0]
@@ -239,6 +241,8 @@ export async function POST(request: NextRequest) {
   } finally {
     try {
       await client.logout();
-    } catch {}
+    } catch (e) {
+      console.error("[imap/sync] logout error:", e);
+    }
   }
 }

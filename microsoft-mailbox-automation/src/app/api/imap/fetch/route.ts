@@ -91,7 +91,9 @@ export async function POST(request: NextRequest) {
               .trim()
               .slice(0, 500);
           }
-        } catch {}
+        } catch (e) {
+          console.error("[imap/fetch] body preview error:", e);
+        }
 
         messages.push({
           id: msg.uid?.toString() || "",
@@ -137,6 +139,8 @@ export async function POST(request: NextRequest) {
   } finally {
     try {
       await client.logout();
-    } catch {}
+    } catch (e) {
+      console.error("[imap/fetch] logout error:", e);
+    }
   }
 }

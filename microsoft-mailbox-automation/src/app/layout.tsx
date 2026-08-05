@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AppHeader } from "@/components/app-header";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
-  title: "Mailbox Automation — Scientific Data Extraction",
-  description: "Microsoft Graph mailbox automation with LLM-powered scientific data extraction to spreadsheets",
+  title: "Advantage Foundry — Where hypotheses grow into edge",
+  description:
+    "A perpetual scientific-work game powered by mailbox evidence, where differentiated human–LLM hypotheses are distributed as missions, tested in real work, reverse-attributed through SPINOR-RL, and preserved as evolving Golden Node lineages.",
 };
 
 export default function RootLayout({
@@ -14,14 +15,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-white antialiased">
-        <div className="flex min-h-screen flex-col">
-          <AppHeader />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-slate-200 py-6 text-center text-sm text-slate-400">
-            Mailbox Automation — Scientific Data Extraction &copy; 2026
-          </footer>
-        </div>
+      <body className="min-h-screen bg-background text-foreground antialiased">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

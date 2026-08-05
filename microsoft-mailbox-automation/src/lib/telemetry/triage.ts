@@ -99,43 +99,45 @@ const REVENUE_BY_CATEGORY: Record<SplitCategory, number> = {
 };
 
 export function triageEmails(emails: EmailMessage[]): SplitInboxColumn[] {
-  const triaged = emails.map(triageEmail);
+  try {
+    const triaged = emails.map(triageEmail);
 
-  // Group by category
-  const columns: Record<SplitCategory, TriagedEmail[]> = {
-    vip: [], team: [], financial: [], research: [],
-    action_required: [], tools: [], newsletter: [], general: [],
-  };
+    const columns: Record<SplitCategory, TriagedEmail[]> = {
+      vip: [], team: [], financial: [], research: [],
+      action_required: [], tools: [], newsletter: [], general: [],
+    };
 
-  for (const t of triaged) {
-    columns[t.category].push(t);
+    for (const t of triaged) {
+      columns[t.category].push(t);
+    }
+
+    for (const cat of Object.keys(columns) as SplitCategory[]) {
+      columns[cat].sort((a, b) => {
+        if (a.isUnread !== b.isUnread) return a.isUnread ? -1 : 1;
+        return b.revenueScore - a.revenueScore;
+      });
+    }
+
+    return (Object.keys(columns) as SplitCategory[])
+      .map((category) => {
+        const items = columns[category];
+        const config = CATEGORY_CONFIG[category];
+        return {
+          category,
+          label: config.label,
+          icon: config.icon,
+          color: config.color,
+          emails: items,
+          totalValue: items.reduce((s, e) => s + e.estimatedValue, 0),
+          unreadCount: items.filter((e) => e.isUnread).length,
+        };
+      })
+      .filter((col) => col.emails.length > 0)
+      .sort((a, b) => b.totalValue - a.totalValue);
+  } catch (e) {
+    console.error("[telemetry/triage] triageEmails error:", e);
+    return [];
   }
-
-  // Sort each column by revenue score (descending), unread first
-  for (const cat of Object.keys(columns) as SplitCategory[]) {
-    columns[cat].sort((a, b) => {
-      if (a.isUnread !== b.isUnread) return a.isUnread ? -1 : 1;
-      return b.revenueScore - a.revenueScore;
-    });
-  }
-
-  // Build column objects
-  return (Object.keys(columns) as SplitCategory[])
-    .map((category) => {
-      const items = columns[category];
-      const config = CATEGORY_CONFIG[category];
-      return {
-        category,
-        label: config.label,
-        icon: config.icon,
-        color: config.color,
-        emails: items,
-        totalValue: items.reduce((s, e) => s + e.estimatedValue, 0),
-        unreadCount: items.filter((e) => e.isUnread).length,
-      };
-    })
-    .filter((col) => col.emails.length > 0)
-    .sort((a, b) => b.totalValue - a.totalValue);
 }
 
 function triageEmail(email: EmailMessage): TriagedEmail {
@@ -221,44 +223,48 @@ export interface FollowUpSuggestion {
 }
 
 export function generateFollowUps(emails: EmailMessage[]): FollowUpSuggestion[] {
-  const now = Date.now();
-  const suggestions: FollowUpSuggestion[] = [];
+  try {
+    const now = Date.now();
+    const suggestions: FollowUpSuggestion[] = [];
 
-  for (const email of emails) {
-    if (email.isRead) continue; // Only suggest for unread
+    for (const email of emails) {
+      if (email.isRead) continue;
 
-    const dateStr = email.receivedDate;
-    let receivedTime: number;
-    try {
-      receivedTime = new Date(dateStr).getTime();
-    } catch {
-      continue;
+      const dateStr = email.receivedDate;
+      let receivedTime: number;
+      try {
+        receivedTime = new Date(dateStr).getTime();
+      } catch {
+        continue;
+      }
+
+      if (isNaN(receivedTime)) continue;
+
+      const daysSince = Math.floor((now - receivedTime) / (1000 * 60 * 60 * 24));
+      if (daysSince < 1) continue;
+
+      const triaged = triageEmail(email);
+      if (triaged.estimatedValue < 200) continue;
+
+      const urgency: "overdue" | "soon" | "normal" =
+        daysSince > 7 ? "overdue" : daysSince > 3 ? "soon" : "normal";
+
+      suggestions.push({
+        email,
+        daysSinceReceived: daysSince,
+        estimatedValue: triaged.estimatedValue,
+        suggestedFollowUp: `Follow up with ${email.sender} re: "${email.subject}" — ${daysSince} days since received`,
+        urgency,
+      });
     }
 
-    if (isNaN(receivedTime)) continue;
-
-    const daysSince = Math.floor((now - receivedTime) / (1000 * 60 * 60 * 24));
-    if (daysSince < 1) continue; // Only suggest for emails older than 1 day
-
-    const triaged = triageEmail(email);
-    if (triaged.estimatedValue < 200) continue; // Only for valuable emails
-
-    const urgency: "overdue" | "soon" | "normal" =
-      daysSince > 7 ? "overdue" : daysSince > 3 ? "soon" : "normal";
-
-    suggestions.push({
-      email,
-      daysSinceReceived: daysSince,
-      estimatedValue: triaged.estimatedValue,
-      suggestedFollowUp: `Follow up with ${email.sender} re: "${email.subject}" — ${daysSince} days since received`,
-      urgency,
+    return suggestions.sort((a, b) => {
+      const urgencyOrder = { overdue: 0, soon: 1, normal: 2 };
+      if (a.urgency !== b.urgency) return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+      return b.estimatedValue - a.estimatedValue;
     });
+  } catch (e) {
+    console.error("[telemetry/triage] generateFollowUps error:", e);
+    return [];
   }
-
-  return suggestions.sort((a, b) => {
-    // Sort by urgency first, then by value
-    const urgencyOrder = { overdue: 0, soon: 1, normal: 2 };
-    if (a.urgency !== b.urgency) return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
-    return b.estimatedValue - a.estimatedValue;
-  });
 }

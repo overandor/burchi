@@ -58,26 +58,55 @@ ${emailContent.slice(0, 12000)}
 
 ${attachmentSummaries ? `\nAttachments:\n${attachmentSummaries}` : ""}`;
 
-  const response = await client.chat.completions.create({
-    model: config.llm.model,
-    messages: [
-      { role: "system", content: systemMessage },
-      { role: "user", content: userMessage },
-    ],
-    temperature: 0.1,
-    max_tokens: 4096,
-    response_format: { type: "json_object" },
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+
+  let response;
+  try {
+    response = await client.chat.completions.create({
+      model: config.llm.model,
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: userMessage },
+      ],
+      temperature: 0.1,
+      max_tokens: 4096,
+      response_format: { type: "json_object" },
+      // @ts-expect-error - OpenAI SDK accepts signal but types don't expose it in all versions
+      signal: controller.signal,
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    console.error("[extractor] OpenAI API call failed:", e);
+    throw e;
+  }
+  clearTimeout(timer);
+
+  if (!response?.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
+    console.error("[extractor] Invalid API response: missing or empty choices array");
+    throw new Error("LLM returned invalid response: missing choices array");
+  }
 
   const content = response.choices[0]?.message?.content || "{}";
+  if (!content || content === "{}") {
+    console.error("[extractor] Invalid API response: empty content in choices[0]");
+    throw new Error("LLM returned invalid response: empty content");
+  }
+
   let result: LLMExtractionResult;
 
   try {
     result = JSON.parse(content);
   } catch (e) {
+    console.error("[extractor] JSON parse failed:", e);
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      result = JSON.parse(jsonMatch[0]);
+      try {
+        result = JSON.parse(jsonMatch[0]);
+      } catch (e2) {
+        console.error("[extractor] Fallback JSON parse also failed:", e2);
+        throw new Error("LLM returned invalid JSON");
+      }
     } else {
       throw new Error("LLM returned invalid JSON");
     }

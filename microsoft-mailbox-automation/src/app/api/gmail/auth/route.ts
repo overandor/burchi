@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUrl } from "@/lib/gmail/client";
 import { loadConfig } from "@/lib/config";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, getRequestOrigin } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,13 @@ export const dynamic = "force-dynamic";
  * the client never sees or handles the client secret.
  */
 export async function GET(request: NextRequest) {
-  const config = loadConfig();
+  let config;
+  try {
+    config = loadConfig();
+  } catch (e) {
+    console.error("[gmail/auth] loadConfig error:", e);
+    config = { graph: {} };
+  }
 
   // Only use server-side env vars or config file — never accept credentials from query params
   const clientId =
@@ -29,7 +35,7 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 
-  const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+  const redirectUri = `${normalizeOrigin(getRequestOrigin(request))}/api/gmail/callback`;
 
   const authUrl = getAuthUrl({
     clientId,

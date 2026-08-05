@@ -8,7 +8,13 @@ export const dynamic = "force-dynamic";
  * Exposes the clientId (not secret) so the client knows it can initiate auth.
  */
 export async function GET() {
-  const config = loadConfig();
+  let config;
+  try {
+    config = loadConfig();
+  } catch (e) {
+    console.error("[azure/config] loadConfig error:", e);
+    config = { graph: {} };
+  }
 
   const clientId =
     process.env.AZURE_AD_CLIENT_ID ||

@@ -1,0 +1,234 @@
+[
+  {
+    "id": "IrgzHDA4nY1nMeDaxK7zD",
+    "emailId": "k4QF8eWR1qYQmhF5vijR9",
+    "emailSubject": "Compliance review of HCP engagement materials",
+    "requester": "Robert Osei, Compliance Director",
+    "requesterEmail": "Robert Osei, Compliance Director",
+    "recipientRole": "compliance",
+    "authorityVerified": true,
+    "requestedOutcome": "Compliance review of proposed HCP engagement materials",
+    "deadline": "2026-08-09",
+    "mandatoryOutputs": [
+      "Compliance review memo",
+      "Review checklist"
+    ],
+    "inferredOutputs": [
+      "Risk mitigation recommendations"
+    ],
+    "permittedTools": [
+      "policy_search",
+      "audit_log_reader",
+      "compliance_checklist_writer",
+      "internal_email_drafter"
+    ],
+    "externalSendAllowed": false,
+    "autonomyClass": 1,
+    "completionProbability": 0.82,
+    "dependencies": [
+      {
+        "description": "Compliance review gate",
+        "blocksProbability": 0.3
+      }
+    ],
+    "assumptions": [
+      "Request is directed at the inferred recipient role.",
+      "Standard content library and policy package apply.",
+      "No off-label or promotional claims are permitted."
+    ],
+    "status": "detected",
+    "auditEvents": [
+      {
+        "timestamp": "2026-08-05T01:09:29.014Z",
+        "event": "detected",
+        "detail": "Sample commitment generated for \"Compliance review of HCP engagement materials\" with autonomy class 1."
+      }
+    ],
+    "detectedAt": "2026-08-05T01:09:29.014Z"
+  },
+  {
+    "id": "4TvBenYBJxc0qBKV6M70y",
+    "emailId": "PBLm8gWrhsmtlJ_GfdPq8",
+    "emailSubject": "Medical information response needed - Descovy evidence",
+    "requester": "Dr. Priya Nair, Medical Affairs Lead",
+    "requesterEmail": "Dr. Priya Nair, Medical Affairs Lead",
+    "recipientRole": "medical_affairs",
+    "authorityVerified": true,
+    "requestedOutcome": "Prepare medical information response with evidence summary on Descovy",
+    "deadline": "2026-08-08",
+    "mandatoryOutputs": [
+      "Medical information response",
+      "Evidence quality assessment"
+    ],
+    "inferredOutputs": [
+      "Evidence quality assessment"
+    ],
+    "permittedTools": [
+      "evidence_search",
+      "medical_information_writer",
+      "literature_index",
+      "internal_email_drafter"
+    ],
+    "externalSendAllowed": false,
+    "autonomyClass": 1,
+    "completionProbability": 0.88,
+    "dependencies": [
+      {
+        "description": "Literature index availability",
+        "blocksProbability": 0.15
+      }
+    ],
+    "assumptions": [
+      "Request is directed at the inferred recipient role.",
+      "Standard content library and policy package apply.",
+      "No off-label or promotional claims are permitted."
+    ],
+    "status": "detected",
+    "auditEvents": [
+      {
+        "timestamp": "2026-08-05T01:09:29.014Z",
+        "event": "detected",
+        "detail": "Sample commitment generated for \"Medical information response needed - Descovy evidence\" with autonomy class 1."
+      }
+    ],
+    "detectedAt": "2026-08-05T01:09:29.014Z"
+  },
+  {
+    "id": "oWIU4Su3SjokkcX6UkJGP",
+    "emailId": "7AXYgx2gsk8JWQ4ptL4wZ",
+    "emailSubject": "Formulary analysis request - Biktarvy payer coverage",
+    "requester": "Dana Whitfield, Market Access Director",
+    "requesterEmail": "Dana Whitfield, Market Access Director",
+    "recipientRole": "market_access",
+    "authorityVerified": true,
+    "requestedOutcome": "Analyze formulary status for Biktarvy across top regional payers",
+    "deadline": "2026-08-10",
+    "mandatoryOutputs": [
+      "Formulary analysis",
+      "Analysis document"
+    ],
+    "inferredOutputs": [
+      "Payer landscape summary"
+    ],
+    "permittedTools": [
+      "formulary_database",
+      "payer_analyzer",
+      "reimbursement_calculator",
+      "internal_report_writer"
+    ],
+    "externalSendAllowed": false,
+    "autonomyClass": 1,
+    "completionProbability": 0.85,
+    "dependencies": [
+      {
+        "description": "Formulary database availability",
+        "blocksProbability": 0.2
+      }
+    ],
+    "assumptions": [
+      "Request is directed at the inferred recipient role.",
+      "Standard content library and policy package apply.",
+      "No off-label or promotional claims are permitted."
+    ],
+    "status": "detected",
+    "auditEvents": [
+      {
+        "timestamp": "2026-08-05T01:09:29.014Z",
+        "event": "detected",
+        "detail": "Sample commitment generated for \"Formulary analysis request - Biktarvy payer coverage\" with autonomy class 1."
+      }
+    ],
+    "detectedAt": "2026-08-05T01:09:29.014Z"
+  },
+  {
+    "id": "EkhWyYs9T7w3bZ_1M5ANV",
+    "emailId": "eShAFH_HFpMdotSitKf9q",
+    "emailSubject": "Please prepare pre-call brief for Dr. Chen",
+    "requester": "James Park, Field Lead",
+    "requesterEmail": "James Park, Field Lead",
+    "recipientRole": "field_representative",
+    "authorityVerified": true,
+    "requestedOutcome": "Draft pre-call brief for Dr. Chen cardiology visit",
+    "deadline": "2026-08-07",
+    "mandatoryOutputs": [
+      "Pre-call brief"
+    ],
+    "inferredOutputs": [
+      "Recommended next-best-action for territory"
+    ],
+    "permittedTools": [
+      "crm_lookup",
+      "territory_map",
+      "route_planner",
+      "call_planner",
+      "internal_report_writer"
+    ],
+    "externalSendAllowed": false,
+    "autonomyClass": 1,
+    "completionProbability": 0.92,
+    "dependencies": [],
+    "assumptions": [
+      "Request is directed at the inferred recipient role.",
+      "Standard content library and policy package apply.",
+      "No off-label or promotional claims are permitted."
+    ],
+    "status": "detected",
+    "auditEvents": [
+      {
+        "timestamp": "2026-08-05T01:09:29.014Z",
+        "event": "detected",
+        "detail": "Sample commitment generated for \"Please prepare pre-call brief for Dr. Chen\" with autonomy class 1."
+      }
+    ],
+    "detectedAt": "2026-08-05T01:09:29.014Z"
+  },
+  {
+    "id": "_ToEV5RVK36VDYPn1uEhv",
+    "emailId": "RiEZHz7NETGNrANwcgTi-",
+    "emailSubject": "Territory review needed by Friday",
+    "requester": "Sarah Martinez, Regional Manager",
+    "requesterEmail": "Sarah Martinez, Regional Manager",
+    "recipientRole": "field_representative",
+    "authorityVerified": true,
+    "requestedOutcome": "Prepare territory review report for Northern California this week",
+    "deadline": "2026-08-08",
+    "mandatoryOutputs": [
+      "Written report",
+      "Territory coverage map"
+    ],
+    "inferredOutputs": [
+      "Recommended next-best-action for territory",
+      "Timeline with milestones"
+    ],
+    "permittedTools": [
+      "crm_lookup",
+      "territory_map",
+      "route_planner",
+      "call_planner",
+      "internal_report_writer"
+    ],
+    "externalSendAllowed": false,
+    "autonomyClass": 1,
+    "completionProbability": 0.9,
+    "dependencies": [
+      {
+        "description": "CRM/data source availability",
+        "blocksProbability": 0.15
+      }
+    ],
+    "assumptions": [
+      "Request is directed at the inferred recipient role.",
+      "Standard content library and policy package apply.",
+      "No off-label or promotional claims are permitted."
+    ],
+    "status": "detected",
+    "auditEvents": [
+      {
+        "timestamp": "2026-08-05T01:09:29.014Z",
+        "event": "detected",
+        "detail": "Sample commitment generated for \"Territory review needed by Friday\" with autonomy class 1."
+      }
+    ],
+    "detectedAt": "2026-08-05T01:09:29.014Z"
+  }
+]

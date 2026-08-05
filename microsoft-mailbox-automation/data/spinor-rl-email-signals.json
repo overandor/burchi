@@ -1,0 +1,28 @@
+[
+  {
+    "id": "signal_UK0ah6Z9",
+    "emailId": "e1",
+    "employeeId": "emp-001",
+    "commitments": [],
+    "objections": [],
+    "unansweredQuestions": [],
+    "timingPatterns": "Response received at 2026-08-01T10:00:00Z",
+    "stakeholderRelationships": [
+      "Dr. Smith"
+    ],
+    "technologyAdoptionSignals": [],
+    "processBottlenecks": [],
+    "unresolvedRequests": [],
+    "emergingDemand": [],
+    "conversionLanguage": [],
+    "behavioralDeviations": [],
+    "recommendedNextAction": "Review email and determine next action",
+    "recommendedNextTest": "Test whether response timing correlates with engagement quality",
+    "untestedPossibility": "Whether a different communication channel would improve response rate",
+    "beliefToChallenge": "The assumption that current communication frequency is optimal",
+    "processToAutomate": "Email triage and response prioritization",
+    "bestEmployeeToInvestigate": "emp-001",
+    "llmUsed": false,
+    "extractedAt": "2026-08-05T03:08:39.062Z"
+  }
+]

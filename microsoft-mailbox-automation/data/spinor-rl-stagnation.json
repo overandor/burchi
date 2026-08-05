@@ -1,0 +1,14 @@
+[
+  {
+    "id": "stagnation_7-OzxsSC",
+    "taskDescription": "Daily email triage and response",
+    "employeeId": "emp-001",
+    "repetitionCount": 15,
+    "predictabilityScore": 0.75,
+    "recommendedTransformation": "promote_to_system",
+    "rationale": "Task repeated 15 times with 75% predictability",
+    "automationPlan": "Continue human execution with experimental variations",
+    "llmUsed": false,
+    "detectedAt": "2026-08-05T03:08:03.263Z"
+  }
+]

@@ -58,6 +58,8 @@ export async function POST(request: NextRequest) {
   } finally {
     try {
       await client.logout();
-    } catch {}
+    } catch (e) {
+      console.error("[imap/connect] logout error:", e);
+    }
   }
 }

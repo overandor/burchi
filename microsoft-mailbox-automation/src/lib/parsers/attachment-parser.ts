@@ -1,5 +1,7 @@
 import { EmailAttachment, ParsedAttachmentData } from "@/types";
 
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+
 export async function parseAttachment(
   attachment: EmailAttachment
 ): Promise<ParsedAttachmentData> {
@@ -9,15 +11,26 @@ export async function parseAttachment(
     return { type: "unknown" };
   }
 
-  const ext = name.split(".").pop()?.toLowerCase() || "";
   const buffer = Buffer.from(content);
+
+  if (buffer.length > MAX_FILE_SIZE_BYTES) {
+    console.warn(`[attachment-parser] File "${name}" exceeds 50MB limit (${buffer.length} bytes), skipping`);
+    return { type: "unknown" };
+  }
+
+  const ext = name.split(".").pop()?.toLowerCase() || "";
 
   if (ext === "csv" || contentType === "text/csv") {
     return parseCSV(buffer);
   }
 
   if (ext === "xlsx" || ext === "xls" || contentType.includes("spreadsheet") || contentType.includes("excel")) {
-    return parseExcel(buffer);
+    try {
+      return await parseExcel(buffer);
+    } catch (e) {
+      console.error("[attachment-parser] Excel parsing failed:", e);
+      return { type: "unknown" };
+    }
   }
 
   if (ext === "pdf" || contentType === "application/pdf") {
@@ -38,7 +51,8 @@ export async function parseAttachment(
         return { type: "csv", rows: json };
       }
       return { type: "text", text: JSON.stringify(json, null, 2) };
-    } catch {
+    } catch (e) {
+      console.error("[attachment-parser] JSON parsing failed:", e);
       return { type: "text", text: buffer.toString("utf-8") };
     }
   }
@@ -115,6 +129,7 @@ async function parsePDF(buffer: Buffer): Promise<ParsedAttachmentData> {
       },
     };
   } catch (e) {
+    console.error("[attachment-parser] PDF parsing failed:", e);
     return {
       type: "pdf",
       text: "",

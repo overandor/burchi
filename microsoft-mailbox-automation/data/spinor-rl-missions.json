@@ -1,0 +1,27 @@
+[
+  {
+    "id": "mission_9aZNCTSn",
+    "employeeId": "emp-001",
+    "missionClass": "scout",
+    "hypothesisId": "hn_tOLpVW-m",
+    "assignmentId": "ga_HobkgIFcZK",
+    "title": "Scout: Office-manager-first outreach improves workflow re",
+    "claim": "Office-manager-first outreach improves workflow resolution for digitally responsive accounts.",
+    "priorEvidence": "Higher workflow resolution with fewer physician interruptions",
+    "testedAlready": "No prior tests on this hypothesis.",
+    "unknowns": [
+      "Whether office manager authority is sufficient across account structures"
+    ],
+    "targetPopulation": "Accounts with an active office manager and digital responsiveness",
+    "experimentalAction": "Route initial outreach through the office manager before physician contact",
+    "controlComparison": "Physician-first outreach",
+    "successMetric": "Workflow resolution rate",
+    "failureCondition": "Whether office manager authority is sufficient across account structures",
+    "riskBoundary": "Approved information and workflows only; no clinical-judgment manipulation",
+    "minimumEvidence": "At least 3 controlled trials with consistent direction",
+    "strategicValue": "Higher workflow resolution with fewer physician interruptions",
+    "allocationReason": "RL-selected Scout mission for emp-001",
+    "state": "assigned",
+    "createdAt": "2026-08-05T02:37:16.213Z"
+  }
+]

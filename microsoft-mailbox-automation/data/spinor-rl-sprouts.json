@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sprout_ryyVPNA6",
+    "hypothesisId": "hn_tOLpVW-m",
+    "employeeId": "emp-001",
+    "claim": "Office-manager-first outreach improves workflow resolution for digitally responsive accounts. (varying channel)",
+    "modifiedDimension": "channel",
+    "status": "proposed",
+    "depth": 0,
+    "childrenIds": [],
+    "creditEmployeeId": "emp-001",
+    "createdAt": "2026-08-05T02:37:52.132Z"
+  },
+  {
+    "id": "sprout_0ERlS1SF",
+    "hypothesisId": "hn_tOLpVW-m",
+    "employeeId": "emp-001",
+    "claim": "Office-manager-first outreach improves workflow resolution for digitally responsive accounts. (varying channel)",
+    "modifiedDimension": "channel",
+    "status": "proposed",
+    "depth": 0,
+    "childrenIds": [],
+    "creditEmployeeId": "emp-001",
+    "createdAt": "2026-08-05T03:07:28.848Z"
+  }
+]

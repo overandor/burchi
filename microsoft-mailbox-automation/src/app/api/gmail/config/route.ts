@@ -9,7 +9,13 @@ export const dynamic = "force-dynamic";
  * requiring the user to enter credentials manually.
  */
 export async function GET() {
-  const config = loadConfig();
+  let config;
+  try {
+    config = loadConfig();
+  } catch (e) {
+    console.error("[gmail/config] loadConfig error:", e);
+    config = { graph: {} };
+  }
 
   const clientId =
     process.env.GMAIL_CLIENT_ID ||

@@ -1,0 +1,2577 @@
+[
+  {
+    "id": "36a4EtPqdifh2nuDJXHDS",
+    "emailId": "demo-GD7WeLC5",
+    "subject": "Q3 Environmental Field Study Results — Lake Ontario Basin",
+    "sender": "Dr. Sarah Chen",
+    "receivedDate": "2026-07-28T14:30:00Z",
+    "processedAt": "2026-08-01T03:16:41.356Z",
+    "category": "Environmental Data",
+    "confidence": 0.85,
+    "fieldCount": 7,
+    "tableCount": 1,
+    "extractedData": {
+      "emailId": "demo-VOgFDsfe",
+      "extractedAt": "2026-08-01T03:16:41.356Z",
+      "fields": [
+        {
+          "key": "site",
+          "value": "S1",
+          "type": "string",
+          "confidence": 0.9
+        },
+        {
+          "key": "ph",
+          "value": "7.6",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "dissolved_oxygen_mgL",
+          "value": "8.5",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "phosphorus_mgL",
+          "value": "0.021",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "temperature_C",
+          "value": "21.2",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "turbidity_NTU",
+          "value": "3.2",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "Prepared by",
+          "value": "Dr. Sarah Chen, Environmental Science Division",
+          "type": "string",
+          "confidence": 0.7
+        }
+      ],
+      "tables": [
+        {
+          "name": "field_data_q3.csv",
+          "headers": [
+            "site",
+            "ph",
+            "dissolved_oxygen_mgL",
+            "phosphorus_mgL",
+            "temperature_C",
+            "turbidity_NTU"
+          ],
+          "rows": [
+            {
+              "site": "S1",
+              "ph": 7.6,
+              "dissolved_oxygen_mgL": 8.5,
+              "phosphorus_mgL": 0.021,
+              "temperature_C": 21.2,
+              "turbidity_NTU": 3.2
+            },
+            {
+              "site": "S2",
+              "ph": 7.9,
+              "dissolved_oxygen_mgL": 8.3,
+              "phosphorus_mgL": 0.028,
+              "temperature_C": 21.8,
+              "turbidity_NTU": 2.8
+            },
+            {
+              "site": "S3",
+              "ph": 7.7,
+              "dissolved_oxygen_mgL": 8.1,
+              "phosphorus_mgL": 0.033,
+              "temperature_C": 22,
+              "turbidity_NTU": 4.1
+            },
+            {
+              "site": "S4",
+              "ph": 7.8,
+              "dissolved_oxygen_mgL": 8.4,
+              "phosphorus_mgL": 0.019,
+              "temperature_C": 21.5,
+              "turbidity_NTU": 2.5
+            },
+            {
+              "site": "S5",
+              "ph": 8,
+              "dissolved_oxygen_mgL": 7.9,
+              "phosphorus_mgL": 0.041,
+              "temperature_C": 22.3,
+              "turbidity_NTU": 5.6
+            },
+            {
+              "site": "S6",
+              "ph": 7.5,
+              "dissolved_oxygen_mgL": 8.6,
+              "phosphorus_mgL": 0.024,
+              "temperature_C": 21,
+              "turbidity_NTU": 3
+            },
+            {
+              "site": "S7",
+              "ph": 7.3,
+              "dissolved_oxygen_mgL": 7.2,
+              "phosphorus_mgL": 0.067,
+              "temperature_C": 23.1,
+              "turbidity_NTU": 8.9
+            },
+            {
+              "site": "S8",
+              "ph": 7.8,
+              "dissolved_oxygen_mgL": 8.2,
+              "phosphorus_mgL": 0.03,
+              "temperature_C": 22.1,
+              "turbidity_NTU": 3.5
+            }
+          ],
+          "source": "field_data_q3.csv"
+        }
+      ],
+      "summary": "Automated analysis pipeline for email \"Q3 Environmental Field Study Results — Lake Ontario Basin\" with 2 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+      "category": "Environmental Data",
+      "confidence": 0.85,
+      "source": "attachment"
+    },
+    "analysis": {
+      "wikitree": {
+        "root": {
+          "id": "root",
+          "title": "Q3 Environmental Field Study Results — Lake Ontario Basin",
+          "content": "Analysis of email from Dr. Sarah Chen with 2 attachment(s)",
+          "tags": [
+            "root",
+            "analysis"
+          ],
+          "sources": [
+            "email",
+            "attachments"
+          ],
+          "children": [
+            {
+              "id": "email-meta",
+              "title": "Email Metadata",
+              "content": "From: Dr. Sarah Chen\nSubject: Q3 Environmental Field Study Results — Lake Ontario Basin\nReceived: 2026-08-01T03:16:26.352Z",
+              "tags": [
+                "metadata",
+                "email"
+              ],
+              "sources": [
+                "email"
+              ],
+              "children": []
+            },
+            {
+              "id": "email-body",
+              "title": "Email Body Analysis",
+              "content": "Hi team,\n\nPlease find attached the Q3 environmental monitoring results for the Lake Ontario basin. The field study covered 12 sampling sites across the shoreline.\n\nKey findings:\n- pH levels averaged 7.8 (within normal range)\n- Dissolved oxygen: 8.2 mg/L (improved from Q2's 7.1 mg/L)\n- Phosphorus concentration: 0.045 mg/L (exceeds EPA threshold of 0.025 mg/L)\n- Water temperature: 22.4°C average (2.1°C above historical mean)\n\nThe elevated phosphorus levels near site 7 require immediate attention. I've included the full CSV dataset and a PDF summary report.\n\nPlease review and let me know if you need any clarification.\n\nBest regards,\nDr. Sarah Chen\nEnvironmental Science Division",
+              "tags": [
+                "body",
+                "content",
+                "environmental",
+                "levels",
+                "phosphorus"
+              ],
+              "sources": [
+                "email_body"
+              ],
+              "children": [
+                {
+                  "id": "keyword-0",
+                  "title": "Keyword: environmental",
+                  "content": "Found keyword \"environmental\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-1",
+                  "title": "Keyword: levels",
+                  "content": "Found keyword \"levels\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-2",
+                  "title": "Keyword: phosphorus",
+                  "content": "Found keyword \"phosphorus\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-3",
+                  "title": "Keyword: team",
+                  "content": "Found keyword \"team\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-4",
+                  "title": "Keyword: find",
+                  "content": "Found keyword \"find\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-5",
+                  "title": "Keyword: attached",
+                  "content": "Found keyword \"attached\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-6",
+                  "title": "Keyword: monitoring",
+                  "content": "Found keyword \"monitoring\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-7",
+                  "title": "Keyword: results",
+                  "content": "Found keyword \"results\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-8",
+                  "title": "Keyword: lake",
+                  "content": "Found keyword \"lake\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-9",
+                  "title": "Keyword: ontario",
+                  "content": "Found keyword \"ontario\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachment-0",
+              "title": "Attachment: field_data_q3.csv",
+              "content": "field_data_q3.csv (csv): 8 rows, columns: site, ph, dissolved_oxygen_mgL, phosphorus_mgL, temperature_C, turbidity_NTU",
+              "tags": [
+                "attachment",
+                "csv"
+              ],
+              "sources": [
+                "field_data_q3.csv"
+              ],
+              "children": [
+                {
+                  "id": "att-0-col-0",
+                  "title": "Column: site",
+                  "content": "Sample values: S1, S2, S3, S4, S5",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "field_data_q3.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-1",
+                  "title": "Column: ph",
+                  "content": "Sample values: 7.6, 7.9, 7.7, 7.8, 8",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "field_data_q3.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-2",
+                  "title": "Column: dissolved_oxygen_mgL",
+                  "content": "Sample values: 8.5, 8.3, 8.1, 8.4, 7.9",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "field_data_q3.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-3",
+                  "title": "Column: phosphorus_mgL",
+                  "content": "Sample values: 0.021, 0.028, 0.033, 0.019, 0.041",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "field_data_q3.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-4",
+                  "title": "Column: temperature_C",
+                  "content": "Sample values: 21.2, 21.8, 22, 21.5, 22.3",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "field_data_q3.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-5",
+                  "title": "Column: turbidity_NTU",
+                  "content": "Sample values: 3.2, 2.8, 4.1, 2.5, 5.6",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "field_data_q3.csv"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachment-1",
+              "title": "Attachment: summary_report.pdf",
+              "content": "summary_report.pdf (PDF): 3 pages. Content preview: Environmental Field Study Summary — Q3 2026\nLake Ontario Basin Monitoring Program\n\nExecutive Summary:\nThis report presents water quality data from 8 sampling sites along the Lake Ontario shoreline. The study was conducted between July 1-15, 2026.\n\nKey Findings:\n1. Overall water quality is acceptable with pH within normal range (7.3-8.0)\n2. Dissolved oxygen levels improved 15% compared to Q2 2026\n3. Site S7 shows critical phosphorus levels (0.067 mg/L) — 2.7x EPA threshold\n4. Water temperatures a",
+              "tags": [
+                "attachment",
+                "pdf"
+              ],
+              "sources": [
+                "summary_report.pdf"
+              ],
+              "children": [
+                {
+                  "id": "att-1-kw-0",
+                  "title": "Key concept: 2026",
+                  "content": "Found in summary_report.pdf",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "summary_report.pdf"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-1-kw-1",
+                  "title": "Key concept: water",
+                  "content": "Found in summary_report.pdf",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "summary_report.pdf"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-1-kw-2",
+                  "title": "Key concept: environmental",
+                  "content": "Found in summary_report.pdf",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "summary_report.pdf"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-1-kw-3",
+                  "title": "Key concept: study",
+                  "content": "Found in summary_report.pdf",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "summary_report.pdf"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-1-kw-4",
+                  "title": "Key concept: summary",
+                  "content": "Found in summary_report.pdf",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "summary_report.pdf"
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mindmap": {
+        "root": {
+          "id": "root",
+          "label": "Q3 Environmental Field Study Results — Lake Ontario Basin",
+          "children": [
+            {
+              "id": "sender",
+              "label": "Sender",
+              "color": "#3b82f6",
+              "children": []
+            },
+            {
+              "id": "body",
+              "label": "Email Body",
+              "color": "#10b981",
+              "children": [
+                {
+                  "id": "body-kw-0",
+                  "label": "environmental",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-1",
+                  "label": "levels",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-2",
+                  "label": "phosphorus",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-3",
+                  "label": "team",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-4",
+                  "label": "find",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-5",
+                  "label": "attached",
+                  "color": "#ec4899",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachments",
+              "label": "Attachments (2)",
+              "color": "#f59e0b",
+              "children": [
+                {
+                  "id": "att-0",
+                  "label": "field_data_q3.csv",
+                  "color": "#ef4444",
+                  "children": [
+                    {
+                      "id": "att-0-type",
+                      "label": "csv",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "id": "att-1",
+                  "label": "summary_report.pdf",
+                  "color": "#f59e0b",
+                  "children": [
+                    {
+                      "id": "att-1-type",
+                      "label": "pdf",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "concepts",
+              "label": "Key Concepts",
+              "color": "#8b5cf6",
+              "children": [
+                {
+                  "id": "concept-0",
+                  "label": "environmental",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-1",
+                  "label": "levels",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "concept-2",
+                  "label": "phosphorus",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "concept-3",
+                  "label": "team",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "concept-4",
+                  "label": "find",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "concept-5",
+                  "label": "attached",
+                  "color": "#ec4899",
+                  "children": []
+                },
+                {
+                  "id": "concept-6",
+                  "label": "site",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-7",
+                  "label": "ph",
+                  "color": "#f59e0b",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "execution": {
+        "steps": [
+          {
+            "id": "step-1",
+            "order": 1,
+            "action": "Parse Email",
+            "description": "Extract metadata and body from email \"Q3 Environmental Field Study Results — Lake Ontario Basin\"",
+            "status": "completed",
+            "inputs": [
+              "email_raw"
+            ],
+            "outputs": [
+              "email_metadata",
+              "email_body"
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "step-2",
+            "order": 2,
+            "action": "Extract Attachments",
+            "description": "Parse 2 attachment(s): field_data_q3.csv, summary_report.pdf",
+            "status": "completed",
+            "inputs": [
+              "email_attachments"
+            ],
+            "outputs": [
+              "parsed_attachments"
+            ],
+            "dependencies": [
+              "step-1"
+            ]
+          },
+          {
+            "id": "step-3",
+            "order": 3,
+            "action": "Analyze Attachment Data",
+            "description": "Extract key fields, patterns, and scientific data from parsed attachments",
+            "status": "in_progress",
+            "inputs": [
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "extracted_fields",
+              "data_tables"
+            ],
+            "dependencies": [
+              "step-2"
+            ]
+          },
+          {
+            "id": "step-4",
+            "order": 4,
+            "action": "Generate WikiTree",
+            "description": "Build hierarchical knowledge tree from email and attachment content",
+            "status": "completed",
+            "inputs": [
+              "email_metadata",
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "wikitree"
+            ],
+            "dependencies": [
+              "step-3"
+            ]
+          },
+          {
+            "id": "step-5",
+            "order": 5,
+            "action": "Generate Mindmap",
+            "description": "Create visual mindmap of key concepts and relationships",
+            "status": "completed",
+            "inputs": [
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "mindmap"
+            ],
+            "dependencies": [
+              "step-5"
+            ]
+          },
+          {
+            "id": "step-6",
+            "order": 6,
+            "action": "Create Execution Plan",
+            "description": "Define actionable steps based on email content and data analysis",
+            "status": "in_progress",
+            "inputs": [
+              "wikitree",
+              "mindmap",
+              "extracted_fields"
+            ],
+            "outputs": [
+              "execution_plan"
+            ],
+            "dependencies": [
+              "step-6"
+            ]
+          },
+          {
+            "id": "step-7",
+            "order": 7,
+            "action": "Export Results",
+            "description": "Generate spreadsheet export with extracted data and analysis",
+            "status": "pending",
+            "inputs": [
+              "execution_plan",
+              "extracted_fields",
+              "data_tables"
+            ],
+            "outputs": [
+              "export_file"
+            ],
+            "dependencies": [
+              "step-7"
+            ]
+          }
+        ],
+        "summary": "Automated analysis pipeline for email \"Q3 Environmental Field Study Results — Lake Ontario Basin\" with 2 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+        "estimatedTime": "~2 minutes",
+        "dependencies": [
+          "gmail_connection",
+          "attachment_parser",
+          "llm_extractor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "aWDyPHC4-nEopZ_QCBV-d",
+    "emailId": "demo-Y34M5zmZ",
+    "subject": "Clinical Trial Phase II — Patient Response Data Batch 14",
+    "sender": "Dr. Michael Rodriguez",
+    "receivedDate": "2026-07-26T09:15:00Z",
+    "processedAt": "2026-08-01T03:16:56.358Z",
+    "category": "Clinical Trial",
+    "confidence": 0.85,
+    "fieldCount": 7,
+    "tableCount": 1,
+    "extractedData": {
+      "emailId": "demo-VI3oW7AV",
+      "extractedAt": "2026-08-01T03:16:56.358Z",
+      "fields": [
+        {
+          "key": "patient_id",
+          "value": "P201",
+          "type": "string",
+          "confidence": 0.9
+        },
+        {
+          "key": "age",
+          "value": "54",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "sex",
+          "value": "F",
+          "type": "string",
+          "confidence": 0.9
+        },
+        {
+          "key": "dose_mg",
+          "value": "50",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "response",
+          "value": "positive",
+          "type": "string",
+          "confidence": 0.9
+        },
+        {
+          "key": "response_days",
+          "value": "5",
+          "type": "number",
+          "confidence": 0.9
+        },
+        {
+          "key": "side_effects",
+          "value": "none",
+          "type": "string",
+          "confidence": 0.9
+        }
+      ],
+      "tables": [
+        {
+          "name": "patient_batch14.csv",
+          "headers": [
+            "patient_id",
+            "age",
+            "sex",
+            "dose_mg",
+            "response",
+            "response_days",
+            "side_effects"
+          ],
+          "rows": [
+            {
+              "patient_id": "P201",
+              "age": 54,
+              "sex": "F",
+              "dose_mg": 50,
+              "response": "positive",
+              "response_days": 5,
+              "side_effects": "none"
+            },
+            {
+              "patient_id": "P202",
+              "age": 61,
+              "sex": "M",
+              "dose_mg": 50,
+              "response": "positive",
+              "response_days": 7,
+              "side_effects": "mild_nausea"
+            },
+            {
+              "patient_id": "P203",
+              "age": 47,
+              "sex": "F",
+              "dose_mg": 75,
+              "response": "positive",
+              "response_days": 4,
+              "side_effects": "none"
+            },
+            {
+              "patient_id": "P204",
+              "age": 58,
+              "sex": "M",
+              "dose_mg": 50,
+              "response": "none",
+              "response_days": 14,
+              "side_effects": "none"
+            },
+            {
+              "patient_id": "P205",
+              "age": 63,
+              "sex": "F",
+              "dose_mg": 75,
+              "response": "positive",
+              "response_days": 6,
+              "side_effects": "mild_headache"
+            },
+            {
+              "patient_id": "P206",
+              "age": 52,
+              "sex": "M",
+              "dose_mg": 50,
+              "response": "positive",
+              "response_days": 8,
+              "side_effects": "none"
+            },
+            {
+              "patient_id": "P207",
+              "age": 49,
+              "sex": "F",
+              "dose_mg": 100,
+              "response": "adverse",
+              "response_days": 3,
+              "side_effects": "mild_rash"
+            },
+            {
+              "patient_id": "P208",
+              "age": 67,
+              "sex": "M",
+              "dose_mg": 75,
+              "response": "positive",
+              "response_days": 5,
+              "side_effects": "none"
+            }
+          ],
+          "source": "patient_batch14.csv"
+        }
+      ],
+      "summary": "Automated analysis pipeline for email \"Clinical Trial Phase II — Patient Response Data Batch 14\" with 1 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+      "category": "Clinical Trial",
+      "confidence": 0.85,
+      "source": "attachment"
+    },
+    "analysis": {
+      "wikitree": {
+        "root": {
+          "id": "root",
+          "title": "Clinical Trial Phase II — Patient Response Data Batch 14",
+          "content": "Analysis of email from Dr. Michael Rodriguez with 1 attachment(s)",
+          "tags": [
+            "root",
+            "analysis"
+          ],
+          "sources": [
+            "email",
+            "attachments"
+          ],
+          "children": [
+            {
+              "id": "email-meta",
+              "title": "Email Metadata",
+              "content": "From: Dr. Michael Rodriguez\nSubject: Clinical Trial Phase II — Patient Response Data Batch 14\nReceived: 2026-08-01T03:16:41.356Z",
+              "tags": [
+                "metadata",
+                "email"
+              ],
+              "sources": [
+                "email"
+              ],
+              "children": []
+            },
+            {
+              "id": "email-body",
+              "title": "Email Body Analysis",
+              "content": "Team,\n\nBatch 14 patient response data is attached. This batch covers patients 201-240 in the Phase II trial for compound NRX-417.\n\nSummary:\n- 40 patients evaluated\n- 28 showed positive response (70%)\n- 8 showed no significant change (20%)\n- 4 showed adverse reactions (10%) — all mild, none severe\n- Average response time: 6.3 days\n\nThe CSV contains per-patient metrics. Please analyze for statistical significance and prepare for the safety board review next week.\n\nDr. Rodriguez\nClinical Research Unit",
+              "tags": [
+                "body",
+                "content",
+                "response",
+                "showed",
+                "batch"
+              ],
+              "sources": [
+                "email_body"
+              ],
+              "children": [
+                {
+                  "id": "keyword-0",
+                  "title": "Keyword: response",
+                  "content": "Found keyword \"response\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-1",
+                  "title": "Keyword: showed",
+                  "content": "Found keyword \"showed\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-2",
+                  "title": "Keyword: batch",
+                  "content": "Found keyword \"batch\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-3",
+                  "title": "Keyword: patient",
+                  "content": "Found keyword \"patient\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-4",
+                  "title": "Keyword: patients",
+                  "content": "Found keyword \"patients\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-5",
+                  "title": "Keyword: team",
+                  "content": "Found keyword \"team\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-6",
+                  "title": "Keyword: data",
+                  "content": "Found keyword \"data\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-7",
+                  "title": "Keyword: attached",
+                  "content": "Found keyword \"attached\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-8",
+                  "title": "Keyword: covers",
+                  "content": "Found keyword \"covers\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-9",
+                  "title": "Keyword: phase",
+                  "content": "Found keyword \"phase\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachment-0",
+              "title": "Attachment: patient_batch14.csv",
+              "content": "patient_batch14.csv (csv): 8 rows, columns: patient_id, age, sex, dose_mg, response, response_days, side_effects",
+              "tags": [
+                "attachment",
+                "csv"
+              ],
+              "sources": [
+                "patient_batch14.csv"
+              ],
+              "children": [
+                {
+                  "id": "att-0-col-0",
+                  "title": "Column: patient_id",
+                  "content": "Sample values: P201, P202, P203, P204, P205",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-1",
+                  "title": "Column: age",
+                  "content": "Sample values: 54, 61, 47, 58, 63",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-2",
+                  "title": "Column: sex",
+                  "content": "Sample values: F, M, F, M, F",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-3",
+                  "title": "Column: dose_mg",
+                  "content": "Sample values: 50, 50, 75, 50, 75",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-4",
+                  "title": "Column: response",
+                  "content": "Sample values: positive, positive, positive, none, positive",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-5",
+                  "title": "Column: response_days",
+                  "content": "Sample values: 5, 7, 4, 14, 6",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-col-6",
+                  "title": "Column: side_effects",
+                  "content": "Sample values: none, mild_nausea, none, none, mild_headache",
+                  "tags": [
+                    "data",
+                    "column"
+                  ],
+                  "sources": [
+                    "patient_batch14.csv"
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mindmap": {
+        "root": {
+          "id": "root",
+          "label": "Clinical Trial Phase II — Patient Response Data Batch 14",
+          "children": [
+            {
+              "id": "sender",
+              "label": "Sender",
+              "color": "#3b82f6",
+              "children": []
+            },
+            {
+              "id": "body",
+              "label": "Email Body",
+              "color": "#10b981",
+              "children": [
+                {
+                  "id": "body-kw-0",
+                  "label": "response",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-1",
+                  "label": "showed",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-2",
+                  "label": "batch",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-3",
+                  "label": "patient",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-4",
+                  "label": "patients",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-5",
+                  "label": "team",
+                  "color": "#ec4899",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachments",
+              "label": "Attachments (1)",
+              "color": "#f59e0b",
+              "children": [
+                {
+                  "id": "att-0",
+                  "label": "patient_batch14.csv",
+                  "color": "#ef4444",
+                  "children": [
+                    {
+                      "id": "att-0-type",
+                      "label": "csv",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "concepts",
+              "label": "Key Concepts",
+              "color": "#8b5cf6",
+              "children": [
+                {
+                  "id": "concept-0",
+                  "label": "response",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-1",
+                  "label": "showed",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "concept-2",
+                  "label": "batch",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "concept-3",
+                  "label": "patient",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "concept-4",
+                  "label": "patients",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "concept-5",
+                  "label": "team",
+                  "color": "#ec4899",
+                  "children": []
+                },
+                {
+                  "id": "concept-6",
+                  "label": "patient_id",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-7",
+                  "label": "age",
+                  "color": "#f59e0b",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "execution": {
+        "steps": [
+          {
+            "id": "step-1",
+            "order": 1,
+            "action": "Parse Email",
+            "description": "Extract metadata and body from email \"Clinical Trial Phase II — Patient Response Data Batch 14\"",
+            "status": "completed",
+            "inputs": [
+              "email_raw"
+            ],
+            "outputs": [
+              "email_metadata",
+              "email_body"
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "step-2",
+            "order": 2,
+            "action": "Extract Attachments",
+            "description": "Parse 1 attachment(s): patient_batch14.csv",
+            "status": "completed",
+            "inputs": [
+              "email_attachments"
+            ],
+            "outputs": [
+              "parsed_attachments"
+            ],
+            "dependencies": [
+              "step-1"
+            ]
+          },
+          {
+            "id": "step-3",
+            "order": 3,
+            "action": "Analyze Attachment Data",
+            "description": "Extract key fields, patterns, and scientific data from parsed attachments",
+            "status": "in_progress",
+            "inputs": [
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "extracted_fields",
+              "data_tables"
+            ],
+            "dependencies": [
+              "step-2"
+            ]
+          },
+          {
+            "id": "step-4",
+            "order": 4,
+            "action": "Generate WikiTree",
+            "description": "Build hierarchical knowledge tree from email and attachment content",
+            "status": "completed",
+            "inputs": [
+              "email_metadata",
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "wikitree"
+            ],
+            "dependencies": [
+              "step-3"
+            ]
+          },
+          {
+            "id": "step-5",
+            "order": 5,
+            "action": "Generate Mindmap",
+            "description": "Create visual mindmap of key concepts and relationships",
+            "status": "completed",
+            "inputs": [
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "mindmap"
+            ],
+            "dependencies": [
+              "step-5"
+            ]
+          },
+          {
+            "id": "step-6",
+            "order": 6,
+            "action": "Create Execution Plan",
+            "description": "Define actionable steps based on email content and data analysis",
+            "status": "in_progress",
+            "inputs": [
+              "wikitree",
+              "mindmap",
+              "extracted_fields"
+            ],
+            "outputs": [
+              "execution_plan"
+            ],
+            "dependencies": [
+              "step-6"
+            ]
+          },
+          {
+            "id": "step-7",
+            "order": 7,
+            "action": "Export Results",
+            "description": "Generate spreadsheet export with extracted data and analysis",
+            "status": "pending",
+            "inputs": [
+              "execution_plan",
+              "extracted_fields",
+              "data_tables"
+            ],
+            "outputs": [
+              "export_file"
+            ],
+            "dependencies": [
+              "step-7"
+            ]
+          }
+        ],
+        "summary": "Automated analysis pipeline for email \"Clinical Trial Phase II — Patient Response Data Batch 14\" with 1 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+        "estimatedTime": "~2 minutes",
+        "dependencies": [
+          "gmail_connection",
+          "attachment_parser",
+          "llm_extractor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "3gkdJV7_mUwztpzf4JmD4",
+    "emailId": "demo-yFCwsCWY",
+    "subject": "Lab Results — Spectroscopy Analysis of Compound XJ-22",
+    "sender": "Lab Technician James Park",
+    "receivedDate": "2026-07-25T16:45:00Z",
+    "processedAt": "2026-08-01T03:17:11.362Z",
+    "category": "Lab Results",
+    "confidence": 0.85,
+    "fieldCount": 5,
+    "tableCount": 0,
+    "extractedData": {
+      "emailId": "demo-RBil-iEF",
+      "extractedAt": "2026-08-01T03:17:11.362Z",
+      "fields": [
+        {
+          "key": "Date",
+          "value": "2026-07-25",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Operator",
+          "value": "James Park",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Molecular Formula",
+          "value": "C18H22O5N2",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Molecular Weight",
+          "value": "342.37 g/mol",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Melting Point",
+          "value": "187.2°C",
+          "type": "string",
+          "confidence": 0.7
+        }
+      ],
+      "tables": [],
+      "summary": "Automated analysis pipeline for email \"Lab Results — Spectroscopy Analysis of Compound XJ-22\" with 1 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+      "category": "Lab Results",
+      "confidence": 0.85,
+      "source": "attachment"
+    },
+    "analysis": {
+      "wikitree": {
+        "root": {
+          "id": "root",
+          "title": "Lab Results — Spectroscopy Analysis of Compound XJ-22",
+          "content": "Analysis of email from Lab Technician James Park with 1 attachment(s)",
+          "tags": [
+            "root",
+            "analysis"
+          ],
+          "sources": [
+            "email",
+            "attachments"
+          ],
+          "children": [
+            {
+              "id": "email-meta",
+              "title": "Email Metadata",
+              "content": "From: Lab Technician James Park\nSubject: Lab Results — Spectroscopy Analysis of Compound XJ-22\nReceived: 2026-08-01T03:16:56.358Z",
+              "tags": [
+                "metadata",
+                "email"
+              ],
+              "sources": [
+                "email"
+              ],
+              "children": []
+            },
+            {
+              "id": "email-body",
+              "title": "Email Body Analysis",
+              "content": "Dr. Chen,\n\nThe spectroscopy analysis for compound XJ-22 is complete. Here are the key results:\n\n- Molecular weight: 342.4 g/mol\n- Melting point: 187°C\n- Purity: 98.7% (HPLC)\n- UV-Vis peak: 278 nm\n- IR peaks: 3400, 2920, 1720, 1650, 1540 cm⁻¹\n\nThe full spectral data is in the attached text file. The compound appears to match the expected structure with high confidence.\n\nJames\nAnalytical Chemistry Lab",
+              "tags": [
+                "body",
+                "content",
+                "compound",
+                "1540",
+                "1650"
+              ],
+              "sources": [
+                "email_body"
+              ],
+              "children": [
+                {
+                  "id": "keyword-0",
+                  "title": "Keyword: compound",
+                  "content": "Found keyword \"compound\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-1",
+                  "title": "Keyword: 1540",
+                  "content": "Found keyword \"1540\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-2",
+                  "title": "Keyword: 1650",
+                  "content": "Found keyword \"1650\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-3",
+                  "title": "Keyword: 1720",
+                  "content": "Found keyword \"1720\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-4",
+                  "title": "Keyword: 2920",
+                  "content": "Found keyword \"2920\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-5",
+                  "title": "Keyword: 3400",
+                  "content": "Found keyword \"3400\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-6",
+                  "title": "Keyword: chen",
+                  "content": "Found keyword \"chen\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-7",
+                  "title": "Keyword: spectroscopy",
+                  "content": "Found keyword \"spectroscopy\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-8",
+                  "title": "Keyword: analysis",
+                  "content": "Found keyword \"analysis\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-9",
+                  "title": "Keyword: complete",
+                  "content": "Found keyword \"complete\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachment-0",
+              "title": "Attachment: spectral_data.txt",
+              "content": "spectral_data.txt (text): SPECTROSCOPY REPORT — Compound XJ-22\nDate: 2026-07-25\nOperator: James Park\n\nMolecular Formula: C18H22O5N2\nMolecular Weight: 342.37 g/mol\nMelting Point: 187.2°C\nPurity (HPLC): 98.7%\n\nUV-Vis Spectroscopy:\n  Peak 1: 278 nm (absorbance 0.847)\n  Peak 2: 215 nm (absorbance 1.234)\n\nIR Spectroscopy (cm⁻¹):\n  3400 — O-H stretch\n  2920 — C-H stretch\n  1720 — C=O stretch (ester)\n  1650 — C=O stretch (amide)\n  1540 — N-H bend\n\nNMR (1H, 400MHz, DMSO-d6):\n  δ 9.2 (s, 1H, NH)\n  δ 7.3 (d, 2H, ArH)\n  δ 6.8 (d, 2",
+              "tags": [
+                "attachment",
+                "text"
+              ],
+              "sources": [
+                "spectral_data.txt"
+              ],
+              "children": [
+                {
+                  "id": "att-0-kw-0",
+                  "title": "Key concept: stretch",
+                  "content": "Found in spectral_data.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "spectral_data.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-1",
+                  "title": "Key concept: spectroscopy",
+                  "content": "Found in spectral_data.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "spectral_data.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-2",
+                  "title": "Key concept: molecular",
+                  "content": "Found in spectral_data.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "spectral_data.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-3",
+                  "title": "Key concept: peak",
+                  "content": "Found in spectral_data.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "spectral_data.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-4",
+                  "title": "Key concept: absorbance",
+                  "content": "Found in spectral_data.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "spectral_data.txt"
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mindmap": {
+        "root": {
+          "id": "root",
+          "label": "Lab Results — Spectroscopy Analysis of Compound XJ-22",
+          "children": [
+            {
+              "id": "sender",
+              "label": "Sender",
+              "color": "#3b82f6",
+              "children": []
+            },
+            {
+              "id": "body",
+              "label": "Email Body",
+              "color": "#10b981",
+              "children": [
+                {
+                  "id": "body-kw-0",
+                  "label": "compound",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-1",
+                  "label": "1540",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-2",
+                  "label": "1650",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-3",
+                  "label": "1720",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-4",
+                  "label": "2920",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-5",
+                  "label": "3400",
+                  "color": "#ec4899",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachments",
+              "label": "Attachments (1)",
+              "color": "#f59e0b",
+              "children": [
+                {
+                  "id": "att-0",
+                  "label": "spectral_data.txt",
+                  "color": "#ef4444",
+                  "children": [
+                    {
+                      "id": "att-0-type",
+                      "label": "text",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "concepts",
+              "label": "Key Concepts",
+              "color": "#8b5cf6",
+              "children": [
+                {
+                  "id": "concept-0",
+                  "label": "compound",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-1",
+                  "label": "1540",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "concept-2",
+                  "label": "1650",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "concept-3",
+                  "label": "1720",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "concept-4",
+                  "label": "2920",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "concept-5",
+                  "label": "3400",
+                  "color": "#ec4899",
+                  "children": []
+                },
+                {
+                  "id": "concept-6",
+                  "label": "stretch",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-7",
+                  "label": "spectroscopy",
+                  "color": "#f59e0b",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "execution": {
+        "steps": [
+          {
+            "id": "step-1",
+            "order": 1,
+            "action": "Parse Email",
+            "description": "Extract metadata and body from email \"Lab Results — Spectroscopy Analysis of Compound XJ-22\"",
+            "status": "completed",
+            "inputs": [
+              "email_raw"
+            ],
+            "outputs": [
+              "email_metadata",
+              "email_body"
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "step-2",
+            "order": 2,
+            "action": "Extract Attachments",
+            "description": "Parse 1 attachment(s): spectral_data.txt",
+            "status": "completed",
+            "inputs": [
+              "email_attachments"
+            ],
+            "outputs": [
+              "parsed_attachments"
+            ],
+            "dependencies": [
+              "step-1"
+            ]
+          },
+          {
+            "id": "step-3",
+            "order": 3,
+            "action": "Analyze Attachment Data",
+            "description": "Extract key fields, patterns, and scientific data from parsed attachments",
+            "status": "in_progress",
+            "inputs": [
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "extracted_fields",
+              "data_tables"
+            ],
+            "dependencies": [
+              "step-2"
+            ]
+          },
+          {
+            "id": "step-4",
+            "order": 4,
+            "action": "Generate WikiTree",
+            "description": "Build hierarchical knowledge tree from email and attachment content",
+            "status": "completed",
+            "inputs": [
+              "email_metadata",
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "wikitree"
+            ],
+            "dependencies": [
+              "step-3"
+            ]
+          },
+          {
+            "id": "step-5",
+            "order": 5,
+            "action": "Generate Mindmap",
+            "description": "Create visual mindmap of key concepts and relationships",
+            "status": "completed",
+            "inputs": [
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "mindmap"
+            ],
+            "dependencies": [
+              "step-5"
+            ]
+          },
+          {
+            "id": "step-6",
+            "order": 6,
+            "action": "Create Execution Plan",
+            "description": "Define actionable steps based on email content and data analysis",
+            "status": "in_progress",
+            "inputs": [
+              "wikitree",
+              "mindmap",
+              "extracted_fields"
+            ],
+            "outputs": [
+              "execution_plan"
+            ],
+            "dependencies": [
+              "step-6"
+            ]
+          },
+          {
+            "id": "step-7",
+            "order": 7,
+            "action": "Export Results",
+            "description": "Generate spreadsheet export with extracted data and analysis",
+            "status": "pending",
+            "inputs": [
+              "execution_plan",
+              "extracted_fields",
+              "data_tables"
+            ],
+            "outputs": [
+              "export_file"
+            ],
+            "dependencies": [
+              "step-7"
+            ]
+          }
+        ],
+        "summary": "Automated analysis pipeline for email \"Lab Results — Spectroscopy Analysis of Compound XJ-22\" with 1 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+        "estimatedTime": "~2 minutes",
+        "dependencies": [
+          "gmail_connection",
+          "attachment_parser",
+          "llm_extractor"
+        ]
+      }
+    }
+  },
+  {
+    "id": "yZDunFF0yMjJpQSrlLTG8",
+    "emailId": "demo-ZZ07t_i5",
+    "subject": "Research Collaboration Proposal — Marine Biodiversity Survey",
+    "sender": "Prof. Elena Volkov",
+    "receivedDate": "2026-07-24T11:00:00Z",
+    "processedAt": "2026-08-01T03:17:26.365Z",
+    "category": "Lab Results",
+    "confidence": 0.85,
+    "fieldCount": 6,
+    "tableCount": 0,
+    "extractedData": {
+      "emailId": "demo-mW3ODyWg",
+      "extractedAt": "2026-08-01T03:17:26.365Z",
+      "fields": [
+        {
+          "key": "Proposal Date",
+          "value": "July 24, 2026",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Principal Investigator",
+          "value": "Prof. Elena Volkov",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Duration",
+          "value": "15 days (September 5-19, 2026)",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Sampling Stations",
+          "value": "30",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Budget",
+          "value": "$285,000",
+          "type": "string",
+          "confidence": 0.7
+        },
+        {
+          "key": "Team Size",
+          "value": "16 (12 researchers + 4 crew)",
+          "type": "string",
+          "confidence": 0.7
+        }
+      ],
+      "tables": [],
+      "summary": "Automated analysis pipeline for email \"Research Collaboration Proposal — Marine Biodiversity Survey\" with 1 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+      "category": "Lab Results",
+      "confidence": 0.85,
+      "source": "attachment"
+    },
+    "analysis": {
+      "wikitree": {
+        "root": {
+          "id": "root",
+          "title": "Research Collaboration Proposal — Marine Biodiversity Survey",
+          "content": "Analysis of email from Prof. Elena Volkov with 1 attachment(s)",
+          "tags": [
+            "root",
+            "analysis"
+          ],
+          "sources": [
+            "email",
+            "attachments"
+          ],
+          "children": [
+            {
+              "id": "email-meta",
+              "title": "Email Metadata",
+              "content": "From: Prof. Elena Volkov\nSubject: Research Collaboration Proposal — Marine Biodiversity Survey\nReceived: 2026-08-01T03:17:11.362Z",
+              "tags": [
+                "metadata",
+                "email"
+              ],
+              "sources": [
+                "email"
+              ],
+              "children": []
+            },
+            {
+              "id": "email-body",
+              "title": "Email Body Analysis",
+              "content": "Dear Colleagues,\n\nI'm writing to propose a collaborative marine biodiversity survey in the Gulf of Maine, scheduled for September 2026.\n\nProject scope:\n- 15-day expedition covering 30 sampling stations\n- Multi-depth trawl and eDNA sampling\n- Target species: Atlantic cod, haddock, lobster, and 20+ indicator species\n- Budget: $285,000 (shared between 3 institutions)\n- Team: 12 researchers + 4 crew\n\nThe attached proposal document contains the full methodology, timeline, and budget breakdown. We'd need your institution's commitment by August 10th.\n\nLooking forward to your response.\n\nProf. Elena Volkov\nMarine Biology Department",
+              "tags": [
+                "body",
+                "content",
+                "marine",
+                "sampling",
+                "species"
+              ],
+              "sources": [
+                "email_body"
+              ],
+              "children": [
+                {
+                  "id": "keyword-0",
+                  "title": "Keyword: marine",
+                  "content": "Found keyword \"marine\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-1",
+                  "title": "Keyword: sampling",
+                  "content": "Found keyword \"sampling\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-2",
+                  "title": "Keyword: species",
+                  "content": "Found keyword \"species\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-3",
+                  "title": "Keyword: budget",
+                  "content": "Found keyword \"budget\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-4",
+                  "title": "Keyword: your",
+                  "content": "Found keyword \"your\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-5",
+                  "title": "Keyword: 2026",
+                  "content": "Found keyword \"2026\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-6",
+                  "title": "Keyword: colleagues",
+                  "content": "Found keyword \"colleagues\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-7",
+                  "title": "Keyword: writing",
+                  "content": "Found keyword \"writing\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-8",
+                  "title": "Keyword: propose",
+                  "content": "Found keyword \"propose\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "keyword-9",
+                  "title": "Keyword: collaborative",
+                  "content": "Found keyword \"collaborative\" in email body",
+                  "tags": [
+                    "keyword"
+                  ],
+                  "sources": [
+                    "email_body"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachment-0",
+              "title": "Attachment: proposal_summary.txt",
+              "content": "proposal_summary.txt (text): MARINE BIODIVERSITY SURVEY — GULF OF MAINE\nProposal Date: July 24, 2026\nPrincipal Investigator: Prof. Elena Volkov\n\nDuration: 15 days (September 5-19, 2026)\nSampling Stations: 30\nBudget: $285,000\nTeam Size: 16 (12 researchers + 4 crew)\n\nObjectives:\n1. Assess population health of key commercial species\n2. Document biodiversity changes since 2024 survey\n3. Collect eDNA samples for metagenomic analysis\n4. Monitor ocean acidification impacts on shellfish\n\nMethodology:\n- Multi-depth trawl surveys (0-",
+              "tags": [
+                "attachment",
+                "text"
+              ],
+              "sources": [
+                "proposal_summary.txt"
+              ],
+              "children": [
+                {
+                  "id": "att-0-kw-0",
+                  "title": "Key concept: biodiversity",
+                  "content": "Found in proposal_summary.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "proposal_summary.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-1",
+                  "title": "Key concept: sampling",
+                  "content": "Found in proposal_summary.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "proposal_summary.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-2",
+                  "title": "Key concept: 2026",
+                  "content": "Found in proposal_summary.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "proposal_summary.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-3",
+                  "title": "Key concept: survey",
+                  "content": "Found in proposal_summary.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "proposal_summary.txt"
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "att-0-kw-4",
+                  "title": "Key concept: species",
+                  "content": "Found in proposal_summary.txt",
+                  "tags": [
+                    "concept",
+                    "keyword"
+                  ],
+                  "sources": [
+                    "proposal_summary.txt"
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "mindmap": {
+        "root": {
+          "id": "root",
+          "label": "Research Collaboration Proposal — Marine Biodiversity Survey",
+          "children": [
+            {
+              "id": "sender",
+              "label": "Sender",
+              "color": "#3b82f6",
+              "children": []
+            },
+            {
+              "id": "body",
+              "label": "Email Body",
+              "color": "#10b981",
+              "children": [
+                {
+                  "id": "body-kw-0",
+                  "label": "marine",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-1",
+                  "label": "sampling",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-2",
+                  "label": "species",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-3",
+                  "label": "budget",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-4",
+                  "label": "your",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "body-kw-5",
+                  "label": "2026",
+                  "color": "#ec4899",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "attachments",
+              "label": "Attachments (1)",
+              "color": "#f59e0b",
+              "children": [
+                {
+                  "id": "att-0",
+                  "label": "proposal_summary.txt",
+                  "color": "#ef4444",
+                  "children": [
+                    {
+                      "id": "att-0-type",
+                      "label": "text",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "concepts",
+              "label": "Key Concepts",
+              "color": "#8b5cf6",
+              "children": [
+                {
+                  "id": "concept-0",
+                  "label": "marine",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-1",
+                  "label": "sampling",
+                  "color": "#f59e0b",
+                  "children": []
+                },
+                {
+                  "id": "concept-2",
+                  "label": "species",
+                  "color": "#10b981",
+                  "children": []
+                },
+                {
+                  "id": "concept-3",
+                  "label": "budget",
+                  "color": "#3b82f6",
+                  "children": []
+                },
+                {
+                  "id": "concept-4",
+                  "label": "your",
+                  "color": "#8b5cf6",
+                  "children": []
+                },
+                {
+                  "id": "concept-5",
+                  "label": "2026",
+                  "color": "#ec4899",
+                  "children": []
+                },
+                {
+                  "id": "concept-6",
+                  "label": "biodiversity",
+                  "color": "#ef4444",
+                  "children": []
+                },
+                {
+                  "id": "concept-7",
+                  "label": "survey",
+                  "color": "#f59e0b",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "execution": {
+        "steps": [
+          {
+            "id": "step-1",
+            "order": 1,
+            "action": "Parse Email",
+            "description": "Extract metadata and body from email \"Research Collaboration Proposal — Marine Biodiversity Survey\"",
+            "status": "completed",
+            "inputs": [
+              "email_raw"
+            ],
+            "outputs": [
+              "email_metadata",
+              "email_body"
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "step-2",
+            "order": 2,
+            "action": "Extract Attachments",
+            "description": "Parse 1 attachment(s): proposal_summary.txt",
+            "status": "completed",
+            "inputs": [
+              "email_attachments"
+            ],
+            "outputs": [
+              "parsed_attachments"
+            ],
+            "dependencies": [
+              "step-1"
+            ]
+          },
+          {
+            "id": "step-3",
+            "order": 3,
+            "action": "Analyze Attachment Data",
+            "description": "Extract key fields, patterns, and scientific data from parsed attachments",
+            "status": "in_progress",
+            "inputs": [
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "extracted_fields",
+              "data_tables"
+            ],
+            "dependencies": [
+              "step-2"
+            ]
+          },
+          {
+            "id": "step-4",
+            "order": 4,
+            "action": "Generate WikiTree",
+            "description": "Build hierarchical knowledge tree from email and attachment content",
+            "status": "completed",
+            "inputs": [
+              "email_metadata",
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "wikitree"
+            ],
+            "dependencies": [
+              "step-3"
+            ]
+          },
+          {
+            "id": "step-5",
+            "order": 5,
+            "action": "Generate Mindmap",
+            "description": "Create visual mindmap of key concepts and relationships",
+            "status": "completed",
+            "inputs": [
+              "email_body",
+              "parsed_attachments"
+            ],
+            "outputs": [
+              "mindmap"
+            ],
+            "dependencies": [
+              "step-5"
+            ]
+          },
+          {
+            "id": "step-6",
+            "order": 6,
+            "action": "Create Execution Plan",
+            "description": "Define actionable steps based on email content and data analysis",
+            "status": "in_progress",
+            "inputs": [
+              "wikitree",
+              "mindmap",
+              "extracted_fields"
+            ],
+            "outputs": [
+              "execution_plan"
+            ],
+            "dependencies": [
+              "step-6"
+            ]
+          },
+          {
+            "id": "step-7",
+            "order": 7,
+            "action": "Export Results",
+            "description": "Generate spreadsheet export with extracted data and analysis",
+            "status": "pending",
+            "inputs": [
+              "execution_plan",
+              "extracted_fields",
+              "data_tables"
+            ],
+            "outputs": [
+              "export_file"
+            ],
+            "dependencies": [
+              "step-7"
+            ]
+          }
+        ],
+        "summary": "Automated analysis pipeline for email \"Research Collaboration Proposal — Marine Biodiversity Survey\" with 1 attachment(s). Generated wikitree, mindmap, and 7 execution steps.",
+        "estimatedTime": "~2 minutes",
+        "dependencies": [
+          "gmail_connection",
+          "attachment_parser",
+          "llm_extractor"
+        ]
+      }
+    }
+  }
+]

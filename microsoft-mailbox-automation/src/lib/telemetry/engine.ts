@@ -91,37 +91,68 @@ const VALUATION = {
 
 // ─── Core engine ──────────────────────────────────────────────────
 
+function computeTrend(before: number, after: number): { trend: "up" | "down" | "flat"; changePercent: number } {
+  if (before === 0) {
+    return { trend: after > 0 ? "up" : "flat", changePercent: 0 };
+  }
+  const changePercent = ((after - before) / before) * 100;
+  const trend: "up" | "down" | "flat" = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "flat";
+  return { trend, changePercent: Math.round(changePercent * 10) / 10 };
+}
+
+function computeImprovement(before: number, after: number): number {
+  if (before === 0) return 0;
+  return Math.round(((before - after) / before) * 1000) / 10;
+}
+
 export function generateTelemetry(
   records: ProcessedEmailRecord[],
   userEmail: string = "dr.gilead@mailbox.local"
 ): TelemetryReport {
-  const generatedAt = new Date().toISOString();
+  try {
+    const generatedAt = new Date().toISOString();
 
-  // Group records by sender (proxy for "user" in a shared mailbox context,
-  // or use the single mailbox owner)
-  const userRecords = groupByUser(records, userEmail);
-  const users = userRecords.map((group) =>
-    buildUserTelemetry(group.records, group.user, group.email)
-  );
+    // Filter out null/undefined/malformed records defensively
+    const validRecords = records.filter((r): r is ProcessedEmailRecord =>
+      r != null && typeof r === "object" && "id" in r
+    );
 
-  const aggregateMetrics = buildAggregateMetrics(users);
-  const topInsights = users.flatMap((u) => u.insights).sort(
-    (a, b) => b.estimatedValue - a.estimatedValue
-  ).slice(0, 10);
+    const userRecords = groupByUser(validRecords, userEmail);
+    const users = userRecords.map((group) =>
+      buildUserTelemetry(group.records, group.user, group.email)
+    );
 
-  const revenueByCategory = buildRevenueByCategory(records);
-  const efficiencyGains = buildEfficiencyGains(records, users);
+    const aggregateMetrics = buildAggregateMetrics(users);
+    const topInsights = users.flatMap((u) => u.insights).sort(
+      (a, b) => b.estimatedValue - a.estimatedValue
+    ).slice(0, 10);
 
-  return {
-    generatedAt,
-    user: userEmail,
-    totalUsers: users.length,
-    aggregateMetrics,
-    users,
-    topInsights,
-    revenueByCategory,
-    efficiencyGains,
-  };
+    const revenueByCategory = buildRevenueByCategory(records);
+    const efficiencyGains = buildEfficiencyGains(records, users);
+
+    return {
+      generatedAt,
+      user: userEmail,
+      totalUsers: users.length,
+      aggregateMetrics,
+      users,
+      topInsights,
+      revenueByCategory,
+      efficiencyGains,
+    };
+  } catch (e) {
+    console.error("[telemetry/engine] generateTelemetry error:", e);
+    return {
+      generatedAt: new Date().toISOString(),
+      user: userEmail,
+      totalUsers: 0,
+      aggregateMetrics: [],
+      users: [],
+      topInsights: [],
+      revenueByCategory: [],
+      efficiencyGains: [],
+    };
+  }
 }
 
 function buildUserTelemetry(
@@ -199,8 +230,7 @@ function buildUserTelemetry(
       value: Math.round(totalEstimatedRevenue),
       unit: "USD",
       category: "revenue",
-      trend: "up",
-      changePercent: 12.5,
+      ...computeTrend(0, 0),
       description: `Revenue potential from ${totalEmails} processed emails`,
     },
     {
@@ -209,8 +239,7 @@ function buildUserTelemetry(
       value: Math.round(revenuePerEmail),
       unit: "USD",
       category: "revenue",
-      trend: "up",
-      changePercent: 8.3,
+      ...computeTrend(0, 0),
       description: "Average revenue generated per processed email",
     },
     {
@@ -219,8 +248,7 @@ function buildUserTelemetry(
       value: Math.round(totalTimeSavedHours),
       unit: "hours",
       category: "efficiency",
-      trend: "up",
-      changePercent: 15.0,
+      ...computeTrend(0, 0),
       description: `Equivalent to $${Math.round(totalTimeSavedHours * VALUATION.analystRate).toLocaleString()} in analyst labor`,
     },
     {
@@ -229,8 +257,7 @@ function buildUserTelemetry(
       value: Math.round(efficiencyScore),
       unit: "/100",
       category: "efficiency",
-      trend: "up",
-      changePercent: 5.2,
+      ...computeTrend(0, 0),
       description: "Composite score from extraction rate, automation, and time saved",
     },
     {
@@ -239,8 +266,7 @@ function buildUserTelemetry(
       value: records.reduce((s, r) => s + (r.fieldCount || 0) + (r.tableCount || 0) * 10, 0),
       unit: "fields",
       category: "intelligence",
-      trend: "up",
-      changePercent: 22.0,
+      ...computeTrend(0, 0),
       description: "Structured fields and table rows extracted from attachments",
     },
     {
@@ -249,8 +275,7 @@ function buildUserTelemetry(
       value: Math.round(automationRate * 100),
       unit: "%",
       category: "efficiency",
-      trend: "up",
-      changePercent: 3.1,
+      ...computeTrend(0, 0),
       description: "Percentage of emails processed without manual intervention",
     },
   ];
@@ -303,8 +328,7 @@ function buildAggregateMetrics(users: UserTelemetry[]): TelemetryMetric[] {
       value: Math.round(totalRevenue),
       unit: "USD",
       category: "revenue",
-      trend: "up",
-      changePercent: 18.2,
+      ...computeTrend(0, 0),
       description: `Total revenue across ${users.length} user(s) and ${totalEmails} emails`,
     },
     {
@@ -313,8 +337,7 @@ function buildAggregateMetrics(users: UserTelemetry[]): TelemetryMetric[] {
       value: Math.round(totalTimeSaved),
       unit: "hours",
       category: "efficiency",
-      trend: "up",
-      changePercent: 14.7,
+      ...computeTrend(0, 0),
       description: `Equivalent to $${Math.round(totalTimeSaved * VALUATION.analystRate).toLocaleString()} in labor savings`,
     },
     {
@@ -323,8 +346,7 @@ function buildAggregateMetrics(users: UserTelemetry[]): TelemetryMetric[] {
       value: Math.round(avgEfficiency),
       unit: "/100",
       category: "efficiency",
-      trend: "up",
-      changePercent: 6.8,
+      ...computeTrend(0, 0),
       description: "Mean efficiency score across all users",
     },
     {
@@ -333,8 +355,7 @@ function buildAggregateMetrics(users: UserTelemetry[]): TelemetryMetric[] {
       value: totalEmails,
       unit: "emails",
       category: "intelligence",
-      trend: "up",
-      changePercent: 25.0,
+      ...computeTrend(0, 0),
       description: "Total emails ingested into the telemetry pipeline",
     },
   ];
@@ -369,27 +390,27 @@ function buildEfficiencyGains(records: ProcessedEmailRecord[], users: UserTeleme
   return [
     {
       metric: "Manual Data Entry → Automated Extraction",
-      before: 45, // minutes per email manually
-      after: 2,   // minutes with automation
-      improvement: 95.6,
+      before: 45,
+      after: 2,
+      improvement: computeImprovement(45, 2),
     },
     {
       metric: "Email Triage → AI Categorization",
       before: 15,
       after: 0.5,
-      improvement: 96.7,
+      improvement: computeImprovement(15, 0.5),
     },
     {
       metric: "Attachment Parsing → Structured Fields",
       before: 30,
       after: 1,
-      improvement: 96.7,
+      improvement: computeImprovement(30, 1),
     },
     {
       metric: "Revenue Identification → Telemetry Scoring",
-      before: 60, // minutes to manually assess value
+      before: 60,
       after: Math.max(0.1, avgTimeSaved / Math.max(totalEmails, 1)),
-      improvement: 99.0,
+      improvement: computeImprovement(60, Math.max(0.1, avgTimeSaved / Math.max(totalEmails, 1))),
     },
   ];
 }

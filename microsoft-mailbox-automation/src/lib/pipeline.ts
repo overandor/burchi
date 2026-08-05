@@ -14,6 +14,21 @@ export interface SyncResult {
   records: ProcessedEmailRecord[];
 }
 
+const FETCH_TIMEOUT_MS = 30000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      controller.signal.addEventListener("abort", () => {
+        reject(new Error(`${label} timed out after ${ms}ms`));
+      });
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 export async function syncAndProcess(
   config: AppConfig,
   options?: { processAll?: boolean; maxEmails?: number; userToken?: string }
@@ -29,13 +44,18 @@ export async function syncAndProcess(
 
   let emails: EmailMessage[] = [];
   try {
-    emails = await fetchEmails(
-      config,
-      options?.maxEmails || config.processing.maxEmailsPerSync,
-      "inbox",
-      options?.userToken
+    emails = await withTimeout(
+      fetchEmails(
+        config,
+        options?.maxEmails || config.processing.maxEmailsPerSync,
+        "inbox",
+        options?.userToken
+      ),
+      FETCH_TIMEOUT_MS,
+      "fetchEmails"
     );
   } catch (e: any) {
+    console.error("[pipeline] error:", e);
     errors.push(`Failed to fetch emails: ${e.message}`);
     status.isSyncing = false;
     status.errors = errors;
@@ -56,12 +76,17 @@ export async function syncAndProcess(
       let parsedAttachments: ParsedAttachmentData[] = [];
 
       if (email.hasAttachments) {
-        const attachments = await fetchAttachments(config, email.id, options?.userToken);
+        const attachments = await withTimeout(
+          fetchAttachments(config, email.id, options?.userToken),
+          FETCH_TIMEOUT_MS,
+          `fetchAttachments(${email.id})`
+        );
         for (const att of attachments) {
           try {
             const parsed = await parseAttachment(att);
             parsedAttachments.push(parsed);
           } catch (e: any) {
+            console.error("[pipeline] error:", e);
             errors.push(`Failed to parse attachment ${att.name}: ${e.message}`);
           }
         }
@@ -90,6 +115,7 @@ export async function syncAndProcess(
         emailId: email.id,
         subject: email.subject,
         sender: email.sender,
+        senderEmail: email.senderEmail,
         receivedDate: email.receivedDate,
         processedAt: new Date().toISOString(),
         category: extractedData.category,
@@ -102,6 +128,7 @@ export async function syncAndProcess(
 
       newRecords.push(record);
     } catch (e: any) {
+      console.error("[pipeline] error:", e);
       errors.push(`Failed to process email "${email.subject}": ${e.message}`);
     }
   }

@@ -1,0 +1,13 @@
+[
+  {
+    "employeeId": "emp-001",
+    "highUpsideHypothesesReceived": 2,
+    "builderMissionsReceived": 0,
+    "experimentalRiskAssumed": 0,
+    "successfulReplicationsCompleted": 0,
+    "usefulFailuresGenerated": 0,
+    "strategiesContributed": 0,
+    "goldenNodeCreditEarned": 0,
+    "updatedAt": "2026-08-05T02:11:48.042Z"
+  }
+]

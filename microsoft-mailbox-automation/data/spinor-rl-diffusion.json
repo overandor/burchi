@@ -1,0 +1,13 @@
+[
+  {
+    "hypothesisId": "hn_tOLpVW-m",
+    "stage": "internal_replication",
+    "replicatingEmployees": [],
+    "mutatingEmployees": [],
+    "falsifyingEmployees": [],
+    "failureTestEmployees": [],
+    "lastRetestAt": "2026-08-05T03:06:56.685Z",
+    "llmUsed": false,
+    "updatedAt": "2026-08-05T03:06:56.686Z"
+  }
+]

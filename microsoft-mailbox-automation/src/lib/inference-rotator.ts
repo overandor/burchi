@@ -75,7 +75,13 @@ export class InferenceRotator {
   private healthTTL: number = 60000;
 
   constructor(endpoints: InferenceEndpoint[]) {
-    this.endpoints = endpoints;
+    this.endpoints = endpoints.filter((ep) => {
+      if (!ep.url || (!ep.url.startsWith("http://") && !ep.url.startsWith("https://"))) {
+        console.error(`[inference-rotator] Invalid endpoint URL (must start with http:// or https://): ${ep.url}`);
+        return false;
+      }
+      return true;
+    });
   }
 
   /**
@@ -95,7 +101,8 @@ export class InferenceRotator {
       this.healthCache.set(ep.url, { healthy, checkedAt: Date.now() });
       ep.healthy = healthy;
       return healthy;
-    } catch {
+    } catch (e) {
+      console.error("[inference-rotator] error:", e);
       this.healthCache.set(ep.url, { healthy: false, checkedAt: Date.now() });
       ep.healthy = false;
       return false;
@@ -518,6 +525,15 @@ export class InferenceRotator {
    *   - Each node's KV cache stays small (just its sub-task context)
    */
   async rotate(opts: RotationOptions): Promise<RotationResult> {
+    if (!Array.isArray(opts.messages) || opts.messages.length === 0) {
+      throw new Error("Invalid messages: must be a non-empty array");
+    }
+    for (const msg of opts.messages) {
+      if (!msg || typeof msg.role !== "string" || typeof msg.content !== "string") {
+        throw new Error("Invalid message structure: each message must have {role: string, content: string}");
+      }
+    }
+
     const target = opts.targetTokens || DEFAULT_TARGET_TOKENS;
     const perRequest = opts.maxTokensPerRequest || DEFAULT_TOKENS_PER_REQUEST;
     const temperature = opts.temperature ?? 0.7;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchEmailsREST } from "@/lib/gmail/rest-client";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, getRequestOrigin } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Gmail not connected" }, { status: 401 });
     }
 
-    const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+    const redirectUri = `${normalizeOrigin(getRequestOrigin(request))}/api/gmail/callback`;
     const results = await searchEmailsREST(
       { clientId, clientSecret, redirectUri, refreshToken, emailAddress: "" },
       body.query || "",

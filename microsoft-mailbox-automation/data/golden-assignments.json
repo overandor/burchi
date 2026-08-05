@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ga_HobkgIFcZK",
+    "hypothesisId": "hn_tOLpVW-m",
+    "employeeId": "emp-001",
+    "employeeRole": "field_representative",
+    "kind": "reliable",
+    "state": "assigned",
+    "assignedAt": "2026-08-05T02:11:48.041Z",
+    "eligibleAccountIds": [
+      "acct-001",
+      "acct-002"
+    ],
+    "evaluationPeriodDays": 7,
+    "trialNumber": 1,
+    "allocationReason": "You have 2 eligible accounts and process builder research reliability.",
+    "innovationWindow": [
+      "stakeholder",
+      "timing",
+      "followup_interval"
+    ]
+  },
+  {
+    "id": "ga_sQenmOniL9",
+    "hypothesisId": "hn_tfccybhT",
+    "employeeId": "emp-001",
+    "employeeRole": "field_representative",
+    "kind": "fit",
+    "state": "assigned",
+    "assignedAt": "2026-08-05T02:11:48.041Z",
+    "eligibleAccountIds": [
+      "acct-001",
+      "acct-002"
+    ],
+    "evaluationPeriodDays": 7,
+    "trialNumber": 2,
+    "allocationReason": "You have 2 eligible accounts and process builder research reliability.",
+    "innovationWindow": [
+      "stakeholder",
+      "timing",
+      "channel",
+      "content_sequence",
+      "automation_step",
+      "followup_interval"
+    ]
+  }
+]

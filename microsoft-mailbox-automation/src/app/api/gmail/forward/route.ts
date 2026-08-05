@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { forwardEmailREST } from "@/lib/gmail/rest-client";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, getRequestOrigin } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "messageId and forwardTo are required" }, { status: 400 });
     }
 
-    const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+    const redirectUri = `${normalizeOrigin(getRequestOrigin(request))}/api/gmail/callback`;
     const result = await forwardEmailREST(
       { clientId, clientSecret, redirectUri, refreshToken, emailAddress: "" },
       body.messageId,

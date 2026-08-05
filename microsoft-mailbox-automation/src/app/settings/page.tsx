@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { AppConfig } from "@/types";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, safeJson } from "@/lib/utils";
+import { MicrosoftLogin } from "@/components/MicrosoftLogin";
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -11,6 +12,7 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [gmailServerConfigured, setGmailServerConfigured] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [azureServerConfigured, setAzureServerConfigured] = useState(false);
   const [imapConfigured, setImapConfigured] = useState(false);
   const [imapEmail, setImapEmail] = useState("");
@@ -18,21 +20,24 @@ export default function SettingsPage() {
   const [imapHost, setImapHost] = useState("outlook.office365.com");
   const [imapConnecting, setImapConnecting] = useState(false);
   const [imapConnected, setImapConnected] = useState(false);
+  const [msLoginOpen, setMsLoginOpen] = useState(false);
+  const [msConnected, setMsConnected] = useState(false);
+  const [msUser, setMsUser] = useState<{ name: string; email: string } | null>(null);
 
   useEffect(() => {
     fetchConfig();
     // Check server-side Gmail config
     fetch("/api/gmail/config")
       .then((r) => r.text())
-      .then((text) => { if (text) { const data = JSON.parse(text); setGmailServerConfigured(!!data.configured); } })
-      .catch(() => {});
+      .then((text) => { if (text) { const data = safeJson(text); setGmailServerConfigured(!!data?.configured); } })
+      .catch((e) => { console.error("[settings] error:", e); });
     // Check localStorage for Gmail connection state
     const local = localStorage.getItem("gmail-config");
     if (local) {
       try {
         const parsed = JSON.parse(local);
         setGmailConnected(!!parsed.refreshToken);
-      } catch {}
+      } catch (e) { console.error("[settings] error:", e); }
     }
     // Check server-side Azure config
     setAzureServerConfigured(
@@ -40,8 +45,9 @@ export default function SettingsPage() {
     );
     fetch("/api/azure/config")
       .then((r) => r.text())
-      .then((text) => { if (text) { const data = JSON.parse(text); setAzureServerConfigured(!!data.configured); } })
-      .catch(() => {
+      .then((text) => { if (text) { const data = safeJson(text); setAzureServerConfigured(!!data?.configured); } })
+      .catch((e) => {
+        console.error("[settings] error:", e);
         if (config?.graph?.clientId && config?.graph?.clientSecret) {
           setAzureServerConfigured(true);
         }
@@ -49,8 +55,8 @@ export default function SettingsPage() {
     // Check IMAP config
     fetch("/api/imap/config")
       .then((r) => r.text())
-      .then((text) => { if (text) { const data = JSON.parse(text); setImapConfigured(!!data.configured); setImapEmail(data.email || ""); setImapHost(data.host || "outlook.office365.com"); } })
-      .catch(() => {});
+      .then((text) => { if (text) { const data = safeJson(text); setImapConfigured(!!data?.configured); setImapEmail(data?.email || ""); setImapHost(data?.host || "outlook.office365.com"); } })
+      .catch((e) => { console.error("[settings] error:", e); });
     // Check localStorage for IMAP connection state
     const imapLocal = localStorage.getItem("imap-config");
     if (imapLocal) {
@@ -61,7 +67,18 @@ export default function SettingsPage() {
           setImapEmail(parsed.email);
           setImapHost(parsed.host || "outlook.office365.com");
         }
-      } catch {}
+      } catch (e) { console.error("[settings] error:", e); }
+    }
+    // Check Microsoft connection state
+    const msLocal = localStorage.getItem("microsoft-config");
+    if (msLocal) {
+      try {
+        const parsed = JSON.parse(msLocal);
+        if (parsed.token) {
+          setMsConnected(true);
+          setMsUser({ name: parsed.name || "User", email: parsed.email || "" });
+        }
+      } catch (e) { console.error("[settings] error:", e); }
     }
   }, []);
 
@@ -69,7 +86,7 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/config");
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
       setConfig(data);
     } catch (e: any) {
       setError(e.message);
@@ -78,6 +95,10 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     if (!config) return;
+    if (config.graph?.clientId && config.graph.clientId.length !== 36) {
+      setError("Client ID must be a 36-character UUID-like string.");
+      return;
+    }
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -88,7 +109,7 @@ export default function SettingsPage() {
         body: JSON.stringify(config),
       });
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
       if (!res.ok) {
         setError(data.error || "Failed to save");
       } else {
@@ -106,22 +127,135 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/gmail/auth");
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
       if (!res.ok) {
         setError(data.error || "Gmail is not configured on the server.");
         return;
       }
       if (data.authUrl) {
-        window.location.href = data.authUrl;
+        // If the auth URL uses a different redirect URI (e.g. Netlify for Google OAuth),
+        // open in a popup and poll for the code in the callback URL
+        const authUrl = data.authUrl as string;
+        const urlObj = new URL(authUrl);
+        const redirectUri = urlObj.searchParams.get("redirect_uri") || "";
+        const currentOrigin = window.location.origin;
+
+        if (redirectUri && !redirectUri.startsWith(currentOrigin)) {
+          // OAuth redirect URI is on a different domain (e.g. Netlify)
+          // Open popup and intercept the code from the callback URL
+          const popup = window.open(authUrl, "gmail-oauth", "width=500,height=650");
+          if (!popup) {
+            setError("Popup blocked. Please allow popups for this site.");
+            return;
+          }
+          setConnecting(true);
+          const poll = setInterval(() => {
+            try {
+              const popupUrl = popup.location.href;
+              // Check if the popup reached the callback or connect page with a code
+              if (popupUrl.includes("code=")) {
+                const code = new URL(popupUrl).searchParams.get("code");
+                if (code) {
+                  clearInterval(poll);
+                  popup.close();
+                  // Exchange the code on our server using the registered redirect URI
+                  exchangeGmailCode(code, redirectUri);
+                }
+              }
+              if (popupUrl.includes("gmail_connected=true")) {
+                clearInterval(poll);
+                popup.close();
+                // Token was already stored on the other domain; try to get it from URL
+                const code = new URL(popupUrl).searchParams.get("code");
+                if (code) {
+                  exchangeGmailCode(code, redirectUri);
+                } else {
+                  setError("Gmail connected on the redirect domain. Please close this popup and try syncing.");
+                  setConnecting(false);
+                }
+              }
+            } catch (e) {
+              // Cross-origin: can't read popup URL until it redirects to our domain or the redirect domain
+              // Try checking if popup was closed by user
+              if (popup.closed) {
+                clearInterval(poll);
+                setConnecting(false);
+              }
+            }
+          }, 500);
+          // Timeout after 2 minutes
+          setTimeout(() => {
+            clearInterval(poll);
+            if (!popup.closed) popup.close();
+            setConnecting(false);
+          }, 120000);
+        } else {
+          // Same-domain redirect URI — navigate directly
+          window.location.href = authUrl;
+        }
       }
     } catch (e: any) {
       setError(e.message);
     }
   };
 
+  const exchangeGmailCode = async (code: string, redirectUri: string) => {
+    setConnecting(true);
+    try {
+      const exchangeRes = await fetch("/api/gmail/exchange", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, redirectUri }),
+      });
+      const exchangeText = await exchangeRes.text();
+      const exchangeData = exchangeText ? safeJson(exchangeText) : {};
+
+      if (exchangeRes.ok && exchangeData.refreshToken) {
+        let clientId = "";
+        try {
+          const cfgRes = await fetch("/api/gmail/config");
+          const cfgText = await cfgRes.text();
+          const cfgData = cfgText ? safeJson(cfgText) : {};
+          clientId = cfgData?.clientId || "";
+        } catch (e) { console.error("[settings] error:", e); }
+
+        const gmailConfig: Record<string, string> = {
+          clientId,
+          refreshToken: exchangeData.refreshToken,
+          accessToken: exchangeData.accessToken || "",
+        };
+        localStorage.setItem("gmail-config", JSON.stringify(gmailConfig));
+        setGmailConnected(true);
+        setMessage("Gmail connected successfully!");
+      } else {
+        setError(exchangeData.error || "Token exchange failed.");
+      }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleMsConnected = (data: { token: string; refreshToken: string; name: string; email: string }) => {
+    localStorage.setItem("microsoft-config", JSON.stringify(data));
+    setMsConnected(true);
+    setMsUser({ name: data.name, email: data.email });
+    setMsLoginOpen(false);
+    setMessage(`Connected to Microsoft 365 as ${data.name} (${data.email})`);
+  };
+
   const handleConnectImap = async () => {
     if (!imapEmail || !imapPassword) {
       setError("Enter your Outlook email and app password");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(imapEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!imapHost || !imapHost.includes(".")) {
+      setError("IMAP host must be a valid hostname (e.g. outlook.office365.com).");
       return;
     }
     setImapConnecting(true);
@@ -133,7 +267,8 @@ export default function SettingsPage() {
         body: JSON.stringify({ email: imapEmail, password: imapPassword, host: imapHost }),
       });
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
+      if (!data && text) { setError("Received invalid response from server"); return; }
       if (!res.ok || !data.success) {
         setError(data.error || "IMAP connection failed");
         return;
@@ -231,99 +366,58 @@ export default function SettingsPage() {
           ) : (
             <button
               onClick={handleConnectGmail}
-              disabled={!gmailServerConfigured}
+              disabled={!gmailServerConfigured || connecting}
               className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
-              Connect Gmail
+              {connecting ? "Connecting..." : "Connect Gmail"}
             </button>
           )}
         </div>
 
-        {/* Microsoft 365 / Outlook — IMAP Connection */}
-        <div className="rounded-xl border border-slate-200 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 5h18v14H3z" stroke="#0078d4" strokeWidth="1.5" />
-                  <path d="M3 5l9 7 9-7" stroke="#0078d4" strokeWidth="1.5" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Microsoft 365 / Outlook</p>
-                <p className="text-xs text-slate-500">
-                  {imapConnected
-                    ? `Connected as ${imapEmail}`
-                    : "Sign in with email + app password (no Azure AD needed)"}
-                </p>
-              </div>
+        {/* Microsoft 365 / Outlook — Popup Login */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 transition-all hover:border-slate-300">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+              <svg className="h-5 w-5" viewBox="0 0 23 23" fill="none">
+                <path fill="#f25022" d="M1 1h10v10H1z" />
+                <path fill="#7fba00" d="M12 1h10v10H12z" />
+                <path fill="#00a4ef" d="M1 12h10v10H1z" />
+                <path fill="#ffb900" d="M12 12h10v10H12z" />
+              </svg>
             </div>
-            {imapConnected && (
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Microsoft 365 / Outlook</p>
+              <p className="text-xs text-slate-500">
+                {msConnected
+                  ? `Connected as ${msUser?.name} (${msUser?.email})`
+                  : "Click Connect to sign in with your Microsoft account"}
+              </p>
+            </div>
+          </div>
+          {msConnected ? (
+            <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                 Connected
               </span>
-            )}
-          </div>
-
-          {!imapConnected && (
-            <div className="space-y-2 border-t border-slate-100 pt-3">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <input
-                  type="email"
-                  placeholder="your.email@outlook.com"
-                  value={imapEmail}
-                  onChange={(e) => setImapEmail(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-                <input
-                  type="password"
-                  placeholder="App password (not your regular password)"
-                  value={imapPassword}
-                  onChange={(e) => setImapPassword(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="IMAP host"
-                  value={imapHost}
-                  onChange={(e) => setImapHost(e.target.value)}
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-                <button
-                  onClick={handleConnectImap}
-                  disabled={imapConnecting || !imapEmail || !imapPassword}
-                  className="rounded-lg bg-[#0078d4] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#106ebe] disabled:opacity-50"
-                >
-                  {imapConnecting ? "Connecting..." : "Connect"}
-                </button>
-              </div>
-              <p className="text-xs text-slate-400">
-                Need an app password? Enable 2FA at{" "}
-                <a href="https://account.microsoft.com/security" target="_blank" rel="noopener" className="text-blue-500 hover:underline">
-                  account.microsoft.com/security
-                </a>
-                , then create one at{" "}
-                <a href="https://account.live.com/proofs/AppPassword" target="_blank" rel="noopener" className="text-blue-500 hover:underline">
-                  account.live.com/proofs/AppPassword
-                </a>
-              </p>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("microsoft-config");
+                  setMsConnected(false);
+                  setMsUser(null);
+                  setMessage("Microsoft 365 disconnected");
+                }}
+                className="text-xs text-slate-400 hover:text-red-500"
+              >
+                Disconnect
+              </button>
             </div>
-          )}
-
-          {imapConnected && (
+          ) : (
             <button
-              onClick={() => {
-                localStorage.removeItem("imap-config");
-                setImapConnected(false);
-                setImapPassword("");
-                setMessage("Microsoft 365 disconnected");
-              }}
-              className="text-xs text-slate-400 hover:text-red-500"
+              onClick={() => setMsLoginOpen(true)}
+              className="rounded-lg bg-[#0078d4] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#106ebe]"
             >
-              Disconnect
+              Connect Microsoft
             </button>
           )}
         </div>
@@ -478,6 +572,13 @@ export default function SettingsPage() {
           {saving ? "Saving..." : "Save Configuration"}
         </button>
       </div>
+
+      {msLoginOpen && (
+        <MicrosoftLogin
+          onConnected={handleMsConnected}
+          onClose={() => setMsLoginOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ProcessedEmailRecord } from "@/types";
+import { safeJson } from "@/lib/utils";
 
 interface TelemetryMetric {
   key: string;
@@ -99,7 +100,7 @@ export default function TelemetryPage() {
       const local = localStorage.getItem("processed-emails");
       let records: ProcessedEmailRecord[] = [];
       if (local) {
-        try { records = JSON.parse(local); } catch {}
+        try { records = JSON.parse(local); } catch (e) { console.error("[telemetry] error:", e); }
       }
 
       // Also try fetching from the API
@@ -107,12 +108,12 @@ export default function TelemetryPage() {
         const res = await fetch("/api/sheets/export?format=json");
         const text = await res.text();
         if (text) {
-          const data = JSON.parse(text);
+          const data = safeJson(text);
           if (data.records && data.records.length > 0) {
             records = data.records;
           }
         }
-      } catch {}
+      } catch (e) { console.error("[telemetry] error:", e); }
 
       // Call MCP endpoint with records via POST (avoids 414 URI Too Long)
       const res = await fetch(`/api/mcp?action=report`, {
@@ -121,13 +122,14 @@ export default function TelemetryPage() {
         body: JSON.stringify({ records, action: "report" }),
       });
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
       if (data.error) {
         setError(data.error);
       } else {
         setReport(data);
       }
     } catch (e: any) {
+      console.error("[telemetry] error:", e);
       setError(e.message);
     } finally {
       setLoading(false);
@@ -138,17 +140,17 @@ export default function TelemetryPage() {
     try {
       const local = localStorage.getItem("processed-emails");
       let records: any[] = [];
-      if (local) { try { records = JSON.parse(local); } catch {} }
+      if (local) { try { records = JSON.parse(local); } catch (e) { console.error("[telemetry] error:", e); } }
       const res = await fetch(`/api/mcp?action=manifest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ records, action: "manifest" }),
       });
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
       setMcpManifest(data);
     } catch (e: any) {
-      console.error("MCP manifest error:", e);
+      console.error("[telemetry] error:", e);
     }
   }, []);
 
@@ -187,7 +189,7 @@ export default function TelemetryPage() {
     );
   }
 
-  if (!report || report.users.length === 0 || report.aggregateMetrics[3]?.value === 0) {
+  if (!report || report.users.length === 0 || (report.aggregateMetrics?.length > 0 && report.aggregateMetrics.every((m) => m.value === 0))) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center max-w-md">

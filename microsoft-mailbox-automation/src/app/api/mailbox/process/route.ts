@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       emailId: email.id,
       subject: email.subject,
       sender: email.sender,
+      senderEmail: email.senderEmail,
       receivedDate: email.receivedDate,
       processedAt: new Date().toISOString(),
       category: extractedData.category,

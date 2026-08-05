@@ -1,0 +1,278 @@
+[
+  {
+    "id": "k8_zn1jOkola",
+    "strategyId": "strat_territory_cluster",
+    "employeeId": "emp_demo_1",
+    "employeeRole": "field_representative",
+    "strategyClass": "proven",
+    "assignmentReason": "exploit",
+    "assignedAt": "2026-08-05T01:09:32.835Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "accounts_visited_per_day",
+        "baseline": 6,
+        "expected": 9,
+        "observed": 0,
+        "unit": "count",
+        "higherIsBetter": true
+      },
+      {
+        "metric": "travel_time_pct",
+        "baseline": 45,
+        "expected": 30,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": false
+      }
+    ],
+    "contextSnapshot": {
+      "territoryType": "geographic",
+      "workloadLevel": "high"
+    },
+    "trialNumber": 1,
+    "confidenceAtAssignment": 0.85
+  },
+  {
+    "id": "ImET-I9t0d6o",
+    "strategyId": "strat_proactive_compliance",
+    "employeeId": "emp_demo_1",
+    "employeeRole": "field_representative",
+    "strategyClass": "proven",
+    "assignmentReason": "exploit",
+    "assignedAt": "2026-08-05T01:09:32.835Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "compliance_violations_per_month",
+        "baseline": 3.5,
+        "expected": 0.5,
+        "observed": 0,
+        "unit": "count",
+        "higherIsBetter": false
+      },
+      {
+        "metric": "content_turnaround_hours",
+        "baseline": 48,
+        "expected": 24,
+        "observed": 0,
+        "unit": "hours",
+        "higherIsBetter": false
+      }
+    ],
+    "contextSnapshot": {
+      "territoryType": "geographic",
+      "workloadLevel": "high"
+    },
+    "trialNumber": 2,
+    "confidenceAtAssignment": 0.85
+  },
+  {
+    "id": "n5s9GrudJ11l",
+    "strategyId": "strat_stakeholder_matrix",
+    "employeeId": "emp_demo_2",
+    "employeeRole": "regional_manager",
+    "strategyClass": "proven",
+    "assignmentReason": "exploit",
+    "assignedAt": "2026-08-05T01:09:38.871Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "stakeholder_coverage_pct",
+        "baseline": 60,
+        "expected": 85,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": true
+      },
+      {
+        "metric": "engagement_quality_score",
+        "baseline": 3.2,
+        "expected": 4.1,
+        "observed": 0,
+        "unit": "score",
+        "higherIsBetter": true
+      }
+    ],
+    "contextSnapshot": {
+      "workloadLevel": "medium"
+    },
+    "trialNumber": 1,
+    "confidenceAtAssignment": 0.65
+  },
+  {
+    "id": "5yjMnHI_BxNV",
+    "strategyId": "strat_cross_function_sync",
+    "employeeId": "emp_demo_2",
+    "employeeRole": "regional_manager",
+    "strategyClass": "personalized",
+    "assignmentReason": "personalized_fit",
+    "assignedAt": "2026-08-05T01:09:38.871Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "cross_function_alignment_score",
+        "baseline": 2.8,
+        "expected": 4,
+        "observed": 0,
+        "unit": "score",
+        "higherIsBetter": true
+      },
+      {
+        "metric": "action_item_completion_pct",
+        "baseline": 50,
+        "expected": 80,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": true
+      }
+    ],
+    "contextSnapshot": {
+      "workloadLevel": "medium"
+    },
+    "trialNumber": 2,
+    "confidenceAtAssignment": 0.45
+  },
+  {
+    "id": "P4WYo2vWnL5-",
+    "strategyId": "strat_resource_reallocation",
+    "employeeId": "emp_demo_2",
+    "employeeRole": "regional_manager",
+    "strategyClass": "experimental",
+    "assignmentReason": "explore",
+    "assignedAt": "2026-08-05T01:09:38.871Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "overall_roi",
+        "baseline": 1.2,
+        "expected": 1.8,
+        "observed": 0,
+        "unit": "ratio",
+        "higherIsBetter": true
+      },
+      {
+        "metric": "wasted_budget_pct",
+        "baseline": 25,
+        "expected": 10,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": false
+      }
+    ],
+    "contextSnapshot": {
+      "workloadLevel": "medium"
+    },
+    "trialNumber": 3,
+    "confidenceAtAssignment": 0.25
+  },
+  {
+    "id": "y_CmCT056si1",
+    "strategyId": "strat_territory_cluster",
+    "employeeId": "health-check",
+    "employeeRole": "field_representative",
+    "strategyClass": "proven",
+    "assignmentReason": "exploit",
+    "assignedAt": "2026-08-05T01:09:40.393Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "accounts_visited_per_day",
+        "baseline": 6,
+        "expected": 9,
+        "observed": 0,
+        "unit": "count",
+        "higherIsBetter": true
+      },
+      {
+        "metric": "travel_time_pct",
+        "baseline": 45,
+        "expected": 30,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": false
+      }
+    ],
+    "contextSnapshot": {},
+    "trialNumber": 1,
+    "confidenceAtAssignment": 0.85
+  },
+  {
+    "id": "cXVr9EJgXQzc",
+    "strategyId": "strat_proactive_compliance",
+    "employeeId": "health-check",
+    "employeeRole": "field_representative",
+    "strategyClass": "proven",
+    "assignmentReason": "exploit",
+    "assignedAt": "2026-08-05T01:09:40.393Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "compliance_violations_per_month",
+        "baseline": 3.5,
+        "expected": 0.5,
+        "observed": 0,
+        "unit": "count",
+        "higherIsBetter": false
+      },
+      {
+        "metric": "content_turnaround_hours",
+        "baseline": 48,
+        "expected": 24,
+        "observed": 0,
+        "unit": "hours",
+        "higherIsBetter": false
+      }
+    ],
+    "contextSnapshot": {},
+    "trialNumber": 2,
+    "confidenceAtAssignment": 0.85
+  },
+  {
+    "id": "a7GZAzBY3Rkh",
+    "strategyId": "strat_data_driven_targeting",
+    "employeeId": "health-check",
+    "employeeRole": "field_representative",
+    "strategyClass": "experimental",
+    "assignmentReason": "explore",
+    "assignedAt": "2026-08-05T01:24:11.335Z",
+    "active": true,
+    "employeeAccepted": false,
+    "employeeModified": false,
+    "expectedOutcomeMetrics": [
+      {
+        "metric": "target_accuracy_pct",
+        "baseline": 55,
+        "expected": 75,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": true
+      },
+      {
+        "metric": "wasted_visits_pct",
+        "baseline": 20,
+        "expected": 8,
+        "observed": 0,
+        "unit": "percent",
+        "higherIsBetter": false
+      }
+    ],
+    "contextSnapshot": {},
+    "trialNumber": 3,
+    "confidenceAtAssignment": 0.25
+  }
+]

@@ -23,6 +23,11 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json() as Partial<AppConfig>;
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Request body must be a valid configuration object" }, { status: 400 });
+    }
+
     const current = loadConfig();
 
     const updated: AppConfig = {

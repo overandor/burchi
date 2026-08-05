@@ -3,6 +3,8 @@ import { loadConfig } from "@/lib/config";
 import { syncAndProcess } from "@/lib/pipeline";
 import { validateConfig } from "@/lib/graph/client";
 import { generateTelemetry } from "@/lib/telemetry/engine";
+import { detectCommitments } from "@/lib/commitment/detector";
+import { upsertCommitmentByEmailId } from "@/lib/commitment/store";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -35,7 +37,21 @@ export async function POST(request: NextRequest) {
       console.error("Telemetry generation failed:", e.message);
     }
 
-    return NextResponse.json({ ...result, telemetry });
+    let commitments = [] as any[];
+    try {
+      commitments = detectCommitments(result.records || []);
+      for (const c of commitments) {
+        try {
+          upsertCommitmentByEmailId(c);
+        } catch (e: any) {
+          console.error("[mailbox/sync] commitment upsert error:", e.message);
+        }
+      }
+    } catch (e: any) {
+      console.error("[mailbox/sync] commitment detection error:", e.message);
+    }
+
+    return NextResponse.json({ ...result, telemetry, commitments });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

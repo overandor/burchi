@@ -72,6 +72,7 @@ export function IframeAuth({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
       if (event.data?.type === "auth-token" && event.data?.token) {
         onToken(event.data.token, {
           name: event.data.name || "User",

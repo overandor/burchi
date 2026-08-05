@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, safeJson } from "@/lib/utils";
 
 function ConnectContent() {
   const router = useRouter();
@@ -12,10 +12,15 @@ function ConnectContent() {
 
   useEffect(() => {
     (async () => {
-      const code = searchParams.get("code");
+      const code = searchParams?.get("code");
       if (!code) {
         setStatus("error");
         setErrorMsg("No authorization code received from Google.");
+        return;
+      }
+      if (code.length < 10) {
+        setStatus("error");
+        setErrorMsg("Authorization code is too short to be valid.");
         return;
       }
 
@@ -29,7 +34,7 @@ function ConnectContent() {
           body: JSON.stringify({ code, redirectUri }),
         });
         const serverText = await serverRes.text();
-        const serverData = serverText ? JSON.parse(serverText) : {};
+        const serverData = serverText ? safeJson(serverText) : {};
 
         if (serverRes.ok && serverData.refreshToken) {
           // Get clientId from server config for localStorage
@@ -37,9 +42,9 @@ function ConnectContent() {
           try {
             const cfgRes = await fetch("/api/gmail/config");
             const cfgText = await cfgRes.text();
-            const cfgData = cfgText ? JSON.parse(cfgText) : {};
-            clientId = cfgData.clientId || "";
-          } catch {}
+            const cfgData = cfgText ? safeJson(cfgText) : {};
+            clientId = cfgData?.clientId || "";
+          } catch (e) { console.error("[gmail-connect] error:", e); }
 
           const gmailConfig: Record<string, string> = {
             clientId,
@@ -57,6 +62,7 @@ function ConnectContent() {
         setStatus("error");
         setErrorMsg(serverData.error || "Token exchange failed. Make sure Gmail OAuth credentials are configured on the server.");
       } catch (e: any) {
+        console.error("[gmail-connect] error:", e);
         setStatus("error");
         setErrorMsg(e.message || "Failed to exchange authorization code.");
       }

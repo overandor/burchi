@@ -1,0 +1,232 @@
+[
+  {
+    "id": "hn_tfccybhT",
+    "priorArtId": "pa_X3gOy1dBiW",
+    "priorArtStatus": "transfer_candidate",
+    "createdAt": "2026-08-05T02:11:48.038Z",
+    "origin": "research",
+    "kind": "fit",
+    "researchRisk": "low",
+    "claim": "Digitally engaged physicians may prefer configurable, asynchronous follow-up systems over repeated scheduled contact.",
+    "sourceDomains": [
+      "Enterprise onboarding",
+      "Professional education",
+      "Digital health engagement"
+    ],
+    "targetCondition": "Accounts showing strong digital interaction behavior",
+    "intervention": "Offer an approved self-service information and workflow pathway",
+    "control": "Standard representative-led follow-up",
+    "primaryOutcome": "Meaningful account progression",
+    "secondaryOutcomes": [
+      "Time saved",
+      "Response rate",
+      "Workflow completion",
+      "Representative effort",
+      "Account satisfaction"
+    ],
+    "knownConfounders": [
+      "Existing relationship strength",
+      "Practice size",
+      "Digital infrastructure",
+      "Staff involvement"
+    ],
+    "complianceBoundary": "Approved information and workflows only",
+    "expectedValue": "Potential reduction in representative follow-up time",
+    "primaryUncertainty": "Whether physicians will actually use the self-service system",
+    "novelComponent": "Allow the account to configure its own approved follow-up pathway",
+    "fixedConstraints": [
+      "Approved information",
+      "Eligibility rules",
+      "Contact limits"
+    ],
+    "modifiableDimensions": [
+      "stakeholder",
+      "timing",
+      "channel",
+      "content_sequence",
+      "automation_step",
+      "followup_interval"
+    ],
+    "targetEngagementModes": [
+      "system_oriented",
+      "hybrid"
+    ]
+  },
+  {
+    "id": "hn_tOLpVW-m",
+    "priorArtId": "pa_uyBBlKAN5C",
+    "priorArtStatus": "established",
+    "createdAt": "2026-08-05T02:11:48.039Z",
+    "origin": "research",
+    "kind": "reliable",
+    "researchRisk": "low",
+    "claim": "Office-manager-first outreach improves workflow resolution for digitally responsive accounts.",
+    "sourceDomains": [
+      "Enterprise SaaS onboarding",
+      "Practice management"
+    ],
+    "targetCondition": "Accounts with an active office manager and digital responsiveness",
+    "intervention": "Route initial outreach through the office manager before physician contact",
+    "control": "Physician-first outreach",
+    "primaryOutcome": "Workflow resolution rate",
+    "secondaryOutcomes": [
+      "Time to resolution",
+      "Physician touchpoints avoided",
+      "Account satisfaction"
+    ],
+    "knownConfounders": [
+      "Office manager authority variance",
+      "Turnover",
+      "Practice size"
+    ],
+    "complianceBoundary": "Approved information and workflows only; no clinical-judgment manipulation",
+    "expectedValue": "Higher workflow resolution with fewer physician interruptions",
+    "primaryUncertainty": "Whether office manager authority is sufficient across account structures",
+    "novelComponent": null,
+    "fixedConstraints": [
+      "Approved information",
+      "Contact limits"
+    ],
+    "modifiableDimensions": [
+      "stakeholder",
+      "timing",
+      "followup_interval"
+    ],
+    "targetEngagementModes": [
+      "system_oriented",
+      "hybrid"
+    ]
+  },
+  {
+    "id": "hn_w5lQwIx6",
+    "priorArtId": "pa_oh8zcRL5Kh",
+    "priorArtStatus": "transfer_candidate",
+    "createdAt": "2026-08-05T02:11:48.039Z",
+    "origin": "research",
+    "kind": "fit",
+    "researchRisk": "low",
+    "claim": "A short self-service workflow outperforms a comprehensive workflow for first-time digital accounts.",
+    "sourceDomains": [
+      "Consumer onboarding",
+      "UX research"
+    ],
+    "targetCondition": "First-time digital accounts with no prior self-service adoption",
+    "intervention": "Three-step approved self-service workflow",
+    "control": "Comprehensive single-form workflow",
+    "primaryOutcome": "Workflow completion rate",
+    "secondaryOutcomes": [
+      "Time to completion",
+      "Drop-off step",
+      "Account satisfaction"
+    ],
+    "knownConfounders": [
+      "Account maturity",
+      "Content depth preference"
+    ],
+    "complianceBoundary": "Approved information and workflows only",
+    "expectedValue": "Higher completion rate with lower cognitive load",
+    "primaryUncertainty": "Optimal step count for pharma access workflows",
+    "novelComponent": "Three-step progressive disclosure sequence for access workflows",
+    "fixedConstraints": [
+      "Approved information",
+      "Eligibility rules"
+    ],
+    "modifiableDimensions": [
+      "content_sequence",
+      "automation_step",
+      "followup_interval"
+    ],
+    "targetEngagementModes": [
+      "system_oriented",
+      "hybrid"
+    ]
+  },
+  {
+    "id": "hn_O6gPT2EN",
+    "priorArtId": "pa_D7K38SDeyO",
+    "priorArtStatus": "transfer_candidate",
+    "createdAt": "2026-08-05T02:11:48.039Z",
+    "origin": "research",
+    "kind": "fit",
+    "researchRisk": "low",
+    "claim": "Automated reminders improve self-service workflow completion for digitally responsive accounts.",
+    "sourceDomains": [
+      "Patient portal engagement",
+      "Behavioral nudges"
+    ],
+    "targetCondition": "Accounts that opened but did not complete a self-service workflow",
+    "intervention": "One automated reminder 48 hours after workflow start",
+    "control": "No reminder",
+    "primaryOutcome": "Workflow completion rate",
+    "secondaryOutcomes": [
+      "Time to completion",
+      "Opt-out rate",
+      "Account satisfaction"
+    ],
+    "knownConfounders": [
+      "Reminder fatigue",
+      "Trust erosion",
+      "Channel preference"
+    ],
+    "complianceBoundary": "Approved information and workflows only; respect opt-out and contact limits",
+    "expectedValue": "Higher completion rate",
+    "primaryUncertainty": "Whether reminders reduce trust in this context",
+    "novelComponent": null,
+    "fixedConstraints": [
+      "Approved information",
+      "Contact limits",
+      "Opt-out rules"
+    ],
+    "modifiableDimensions": [
+      "timing",
+      "channel",
+      "followup_interval"
+    ],
+    "targetEngagementModes": [
+      "system_oriented"
+    ]
+  },
+  {
+    "id": "hn_pB2d1Cm7",
+    "priorArtId": "pa_i_HBQ6QLnF",
+    "priorArtStatus": "transfer_candidate",
+    "createdAt": "2026-08-05T02:11:48.039Z",
+    "origin": "research",
+    "kind": "fit",
+    "researchRisk": "low",
+    "claim": "Human-guided accounts convert better when technology runs behind the scenes while preserving a personal face.",
+    "sourceDomains": [
+      "Field execution observation"
+    ],
+    "targetCondition": "Human-guided accounts preferring personal interaction",
+    "intervention": "Representative-led contact with automated preparation and follow-up behind the scenes",
+    "control": "Pure representative-led contact without automation support",
+    "primaryOutcome": "Account progression",
+    "secondaryOutcomes": [
+      "Representative time used",
+      "Preparation completeness",
+      "Follow-up latency"
+    ],
+    "knownConfounders": [
+      "Representative availability",
+      "Account relationship strength"
+    ],
+    "complianceBoundary": "Approved information and workflows only; human-facing experience preserved",
+    "expectedValue": "Same or better progression with less representative effort",
+    "primaryUncertainty": "Whether the tech-back component is the active ingredient",
+    "novelComponent": "Automation in the operational layer behind a human front",
+    "fixedConstraints": [
+      "Approved information",
+      "Human-facing experience preserved"
+    ],
+    "modifiableDimensions": [
+      "automation_step",
+      "timing",
+      "followup_interval"
+    ],
+    "targetEngagementModes": [
+      "human_guided",
+      "hybrid"
+    ]
+  }
+]

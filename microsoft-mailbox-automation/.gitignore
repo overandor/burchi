@@ -3,7 +3,6 @@ node_modules/
 out/
 build/
 dist/
-data/
 exports/
 app-config.json
 *.log

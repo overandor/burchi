@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTelemetry, generateMCPContext } from "@/lib/telemetry/engine";
 import { loadProcessedEmails } from "@/lib/config";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, getRequestOrigin } from "@/lib/utils";
 import {
   searchEmailsREST,
   fetchEmailREST,
@@ -51,7 +51,7 @@ function getGmailConfig(request: NextRequest, body: any): GmailConfig | null {
     body?.refreshToken ||
     request.cookies.get("gmail-refresh-token")?.value ||
     "";
-  const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+  const redirectUri = `${normalizeOrigin(getRequestOrigin(request))}/api/gmail/callback`;
 
   if (!clientId || !refreshToken) return null;
 
@@ -229,13 +229,17 @@ export async function GET(request: NextRequest) {
   let records: any[] = [];
   try {
     records = loadProcessedEmails();
-  } catch {}
+  } catch (e) {
+    console.error("[mcp] loadProcessedEmails error:", e);
+  }
 
   const recordsParam = searchParams.get("records");
   if (recordsParam) {
     try {
       records = JSON.parse(decodeURIComponent(recordsParam));
-    } catch {}
+    } catch (e) {
+      console.error("[mcp] records param parse error:", e);
+    }
   }
 
   const userEmail = searchParams.get("user") || "dr.gilead@mailbox.local";
@@ -297,7 +301,7 @@ export async function POST(request: NextRequest) {
     if (body.records && Array.isArray(body.records)) {
       records = body.records;
     } else {
-      try { records = loadProcessedEmails(); } catch {}
+      try { records = loadProcessedEmails(); } catch (e) { console.error("[mcp] loadProcessedEmails error:", e); }
     }
 
     const report = generateTelemetry(records, userEmail);

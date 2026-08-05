@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ProcessedEmailRecord } from "@/types";
-import { formatDate, truncate } from "@/lib/utils";
+import { formatDate, truncate, safeJson } from "@/lib/utils";
 
 export default function SheetsPage() {
   const [records, setRecords] = useState<ProcessedEmailRecord[]>([]);
@@ -17,10 +17,10 @@ export default function SheetsPage() {
     try {
       const res = await fetch("/api/mailbox/status");
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
       setRecords(data.recentRecords || []);
     } catch (e) {
-      console.error(e);
+      console.error("[sheets] error:", e);
     } finally {
       setLoading(false);
     }
@@ -31,6 +31,10 @@ export default function SheetsPage() {
   }, [fetchRecords]);
 
   const handleExport = async (format: "excel" | "csv") => {
+    if (format !== "excel" && format !== "csv") {
+      setError("Invalid export format. Must be 'excel' or 'csv'.");
+      return;
+    }
     setExporting(true);
     setError(null);
     setExportResult(null);
@@ -41,7 +45,8 @@ export default function SheetsPage() {
         body: JSON.stringify({ format, category: categoryFilter || undefined }),
       });
       const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
+      const data = text ? safeJson(text) : {};
+      if (!data && text) { setError("Received invalid response from server"); return; }
       if (!res.ok) {
         setError(data.error);
       } else {
@@ -81,11 +86,11 @@ export default function SheetsPage() {
   const categories = Array.from(new Set(records.map((r) => r.category)));
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto max-w-7xl space-y-6 px-6 py-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Extracted Data Sheets</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Extracted Data Sheets</h2>
+          <p className="mt-1 text-sm text-slate-500">
             View and export all scientifically extracted data in spreadsheet format
           </p>
         </div>
@@ -93,14 +98,14 @@ export default function SheetsPage() {
           <button
             onClick={() => handleExport("excel")}
             disabled={exporting || filteredRecords.length === 0}
-            className="btn btn-primary"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
             {exporting ? "Exporting..." : "Export Excel"}
           </button>
           <button
             onClick={() => handleExport("csv")}
             disabled={exporting || filteredRecords.length === 0}
-            className="btn btn-outline"
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
           >
             Export CSV
           </button>
@@ -108,27 +113,28 @@ export default function SheetsPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="animate-fade-in rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {exportResult && (
-        <div className="rounded-lg border border-green-500/50 bg-green-500/10 p-4 text-sm text-green-700">
-          {exportResult}
+        <div className="animate-fade-in rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+            {exportResult}
+          </div>
         </div>
       )}
 
       <div className="flex items-center gap-4">
-        <div className="flex gap-1 rounded-lg border p-1">
+        <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
           {(["fields", "tables", "summary"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
-                view === v
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-accent"
+              className={`rounded-md px-4 py-1.5 text-sm font-semibold capitalize transition-all ${
+                view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               {v}
@@ -138,7 +144,7 @@ export default function SheetsPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="input w-48"
+          className="w-48 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -148,49 +154,52 @@ export default function SheetsPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <div className="flex h-32 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-500"></div>
+        </div>
       ) : filteredRecords.length === 0 ? (
-        <div className="card p-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            No data available. Process emails from the dashboard first.
-          </p>
+        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-slate-300"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+          </div>
+          <p className="text-sm text-slate-400">No data available. Process emails from the dashboard first.</p>
         </div>
       ) : view === "fields" ? (
-        <div className="card overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left py-3 px-4 font-medium">Email</th>
-                <th className="text-left py-3 px-4 font-medium">Category</th>
-                <th className="text-left py-3 px-4 font-medium">Field Key</th>
-                <th className="text-left py-3 px-4 font-medium">Value</th>
-                <th className="text-left py-3 px-4 font-medium">Type</th>
-                <th className="text-left py-3 px-4 font-medium">Unit</th>
-                <th className="text-left py-3 px-4 font-medium">Confidence</th>
+              <tr className="border-b border-slate-200 bg-slate-50/50">
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Category</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Field Key</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Value</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Type</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Unit</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Confidence</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {allFields.slice(0, 100).map((field, i) => (
-                <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="py-2 px-4 max-w-[200px] truncate">{truncate(field.emailSubject, 30)}</td>
-                  <td className="py-2 px-4">
-                    <span className="badge border-primary/30 bg-primary/10 text-primary">
+                <tr key={i} className="hover:bg-slate-50/50">
+                  <td className="max-w-[200px] truncate px-4 py-2 text-slate-700">{truncate(field.emailSubject, 30)}</td>
+                  <td className="px-4 py-2">
+                    <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
                       {field.category}
                     </span>
                   </td>
-                  <td className="py-2 px-4 font-medium">{field.key}</td>
-                  <td className="py-2 px-4 max-w-[200px] truncate">{field.value}</td>
-                  <td className="py-2 px-4">
-                    <span className="badge border-secondary bg-secondary text-secondary-foreground">
+                  <td className="px-4 py-2 font-semibold text-slate-900">{field.key}</td>
+                  <td className="max-w-[200px] truncate px-4 py-2 text-slate-700">{field.value}</td>
+                  <td className="px-4 py-2">
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                       {field.type}
                     </span>
                   </td>
-                  <td className="py-2 px-4 text-muted-foreground">{field.unit || "—"}</td>
-                  <td className="py-2 px-4">
-                    <span className={
-                      field.confidence >= 0.8 ? "text-green-600" :
-                      field.confidence >= 0.5 ? "text-orange-600" : "text-red-600"
-                    }>
+                  <td className="px-4 py-2 text-slate-400">{field.unit || "—"}</td>
+                  <td className="px-4 py-2">
+                    <span className={`font-semibold ${
+                      field.confidence >= 0.8 ? "text-emerald-600" :
+                      field.confidence >= 0.5 ? "text-amber-600" : "text-red-600"
+                    }`}>
                       {(field.confidence * 100).toFixed(0)}%
                     </span>
                   </td>
@@ -199,7 +208,7 @@ export default function SheetsPage() {
             </tbody>
           </table>
           {allFields.length > 100 && (
-            <p className="p-3 text-xs text-muted-foreground text-center">
+            <p className="p-3 text-center text-xs text-slate-400">
               Showing 100 of {allFields.length} fields. Export to see all.
             </p>
           )}
@@ -207,37 +216,37 @@ export default function SheetsPage() {
       ) : view === "tables" ? (
         <div className="space-y-4">
           {allTables.length === 0 ? (
-            <div className="card p-12 text-center">
-              <p className="text-sm text-muted-foreground">No tables extracted.</p>
+            <div className="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+              <p className="text-sm text-slate-400">No tables extracted.</p>
             </div>
           ) : (
             allTables.map((table, i) => (
-              <div key={i} className="card p-4">
-                <div className="flex items-center justify-between mb-3">
+              <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="mb-3 flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{table.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="font-semibold text-slate-900">{table.name}</p>
+                    <p className="text-xs text-slate-400">
                       From: {truncate(table.emailSubject, 40)} &middot; Source: {table.source} &middot; {table.rows.length} rows
                     </p>
                   </div>
-                  <span className="badge border-primary/30 bg-primary/10 text-primary">
+                  <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
                     {table.category}
                   </span>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-lg border border-slate-100">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b">
+                      <tr className="border-b border-slate-200 bg-slate-50/50">
                         {table.headers.map((h, j) => (
-                          <th key={j} className="text-left py-2 px-3 font-medium">{h}</th>
+                          <th key={j} className="px-3 py-2 text-left font-bold text-slate-600">{h}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                       {table.rows.slice(0, 15).map((row, j) => (
-                        <tr key={j} className="border-b last:border-0">
+                        <tr key={j} className="hover:bg-slate-50/50">
                           {table.headers.map((h, k) => (
-                            <td key={k} className="py-2 px-3">{String(row[h] ?? "")}</td>
+                            <td key={k} className="px-3 py-2 text-slate-700">{String(row[h] ?? "")}</td>
                           ))}
                         </tr>
                       ))}
@@ -245,7 +254,7 @@ export default function SheetsPage() {
                   </table>
                 </div>
                 {table.rows.length > 15 && (
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="mt-2 text-xs text-slate-400">
                     Showing 15 of {table.rows.length} rows
                   </p>
                 )}
@@ -254,44 +263,44 @@ export default function SheetsPage() {
           )}
         </div>
       ) : (
-        <div className="card overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left py-3 px-4 font-medium">Subject</th>
-                <th className="text-left py-3 px-4 font-medium">Sender</th>
-                <th className="text-left py-3 px-4 font-medium">Category</th>
-                <th className="text-left py-3 px-4 font-medium">Confidence</th>
-                <th className="text-left py-3 px-4 font-medium">Fields</th>
-                <th className="text-left py-3 px-4 font-medium">Tables</th>
-                <th className="text-left py-3 px-4 font-medium">Summary</th>
-                <th className="text-left py-3 px-4 font-medium">Processed</th>
+              <tr className="border-b border-slate-200 bg-slate-50/50">
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Subject</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Sender</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Category</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Confidence</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Fields</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Tables</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Summary</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-slate-600">Processed</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {filteredRecords.map((r) => (
-                <tr key={r.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="py-2 px-4 max-w-[200px] truncate font-medium">{truncate(r.subject, 30)}</td>
-                  <td className="py-2 px-4 max-w-[150px] truncate">{r.sender}</td>
-                  <td className="py-2 px-4">
-                    <span className="badge border-primary/30 bg-primary/10 text-primary">
+                <tr key={r.id} className="hover:bg-slate-50/50">
+                  <td className="max-w-[200px] truncate px-4 py-2 font-semibold text-slate-900">{truncate(r.subject, 30)}</td>
+                  <td className="max-w-[150px] truncate px-4 py-2 text-slate-700">{r.sender}</td>
+                  <td className="px-4 py-2">
+                    <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
                       {r.category}
                     </span>
                   </td>
-                  <td className="py-2 px-4">
-                    <span className={
-                      r.confidence >= 0.8 ? "text-green-600" :
-                      r.confidence >= 0.5 ? "text-orange-600" : "text-red-600"
-                    }>
+                  <td className="px-4 py-2">
+                    <span className={`font-semibold ${
+                      r.confidence >= 0.8 ? "text-emerald-600" :
+                      r.confidence >= 0.5 ? "text-amber-600" : "text-red-600"
+                    }`}>
                       {(r.confidence * 100).toFixed(0)}%
                     </span>
                   </td>
-                  <td className="py-2 px-4">{r.fieldCount}</td>
-                  <td className="py-2 px-4">{r.tableCount}</td>
-                  <td className="py-2 px-4 max-w-[300px] truncate text-muted-foreground">
+                  <td className="px-4 py-2 text-slate-700">{r.fieldCount}</td>
+                  <td className="px-4 py-2 text-slate-700">{r.tableCount}</td>
+                  <td className="max-w-[300px] truncate px-4 py-2 text-slate-400">
                     {truncate(r.extractedData.summary, 50)}
                   </td>
-                  <td className="py-2 px-4 text-xs text-muted-foreground">{formatDate(r.processedAt)}</td>
+                  <td className="px-4 py-2 text-xs text-slate-400">{formatDate(r.processedAt)}</td>
                 </tr>
               ))}
             </tbody>

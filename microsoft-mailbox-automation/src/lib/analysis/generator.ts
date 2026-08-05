@@ -8,41 +8,50 @@ interface AnalysisInput {
 }
 
 export function generateAnalysis(input: AnalysisInput): EmailAnalysis {
-  const { subject, sender, body, attachments } = input;
+  try {
+    const { subject, sender, body, attachments } = input;
 
-  const attachmentSummaries = attachments.map((a) => {
-    const data = a.parsedData;
-    if (data?.type === "csv" || data?.type === "excel") {
-      const rowCount = data.metadata?.rowCount || data.rows?.length || 0;
-      const headers = data.metadata?.headers || [];
-      return `${a.name} (${a.type}): ${rowCount} rows, columns: ${Array.isArray(headers) ? headers.join(", ") : "unknown"}`;
-    }
-    if (data?.type === "pdf") {
-      const pages = data.metadata?.pages || "?";
-      const textPreview = (data.text || "").substring(0, 500);
-      return `${a.name} (PDF): ${pages} pages. Content preview: ${textPreview}`;
-    }
-    if (data?.type === "text") {
-      const textPreview = (data.text || "").substring(0, 500);
-      return `${a.name} (text): ${textPreview}`;
-    }
-    return `${a.name} (${a.type || "unknown"})`;
-  });
+    const attachmentSummaries = attachments.map((a) => {
+      const data = a.parsedData;
+      if (data?.type === "csv" || data?.type === "excel") {
+        const rowCount = data.metadata?.rowCount || data.rows?.length || 0;
+        const headers = data.metadata?.headers || [];
+        return `${a.name} (${a.type}): ${rowCount} rows, columns: ${Array.isArray(headers) ? headers.join(", ") : "unknown"}`;
+      }
+      if (data?.type === "pdf") {
+        const pages = data.metadata?.pages || "?";
+        const textPreview = (data.text || "").substring(0, 500);
+        return `${a.name} (PDF): ${pages} pages. Content preview: ${textPreview}`;
+      }
+      if (data?.type === "text") {
+        const textPreview = (data.text || "").substring(0, 500);
+        return `${a.name} (text): ${textPreview}`;
+      }
+      return `${a.name} (${a.type || "unknown"})`;
+    });
 
-  const allContent = [
-    `Subject: ${subject}`,
-    `From: ${sender}`,
-    `Body: ${body.substring(0, 2000)}`,
-    `Attachments: ${attachmentSummaries.join("\n")}`,
-  ].join("\n");
+    const allContent = [
+      `Subject: ${subject}`,
+      `From: ${sender}`,
+      `Body: ${body.substring(0, 2000)}`,
+      `Attachments: ${attachmentSummaries.join("\n")}`,
+    ].join("\n");
 
-  const wikitree = buildWikiTree(input, attachmentSummaries);
-  const mindmap = buildMindmap(input, attachmentSummaries);
-  const mindmapMermaid = buildMermaidMindmap(input, attachmentSummaries);
-  const execution = buildExecutionPlan(input, attachments);
-  const valueExtraction = buildValueExtraction(input, attachments);
+    const wikitree = buildWikiTree(input, attachmentSummaries);
+    const mindmap = buildMindmap(input, attachmentSummaries);
+    const mindmapMermaid = buildMermaidMindmap(input, attachmentSummaries);
+    const execution = buildExecutionPlan(input, attachments);
+    const valueExtraction = buildValueExtraction(input, attachments);
 
-  return { wikitree, mindmap, execution, mindmapMermaid, valueExtraction } as any;
+    return { wikitree, mindmap, execution, mindmapMermaid, valueExtraction } as any;
+  } catch (e) {
+    console.error("[analysis/generator] generateAnalysis error:", e);
+    return {
+      wikitree: { root: { id: "root", title: "Email Analysis", content: "", tags: [], sources: [], children: [] } },
+      mindmap: { root: { id: "root", label: "Email", children: [] } },
+      execution: { steps: [], summary: "Analysis failed to generate", estimatedTime: "", dependencies: [] },
+    } as any;
+  }
 }
 
 function buildWikiTree(

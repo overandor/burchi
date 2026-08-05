@@ -1,0 +1,579 @@
+import { StrategyGenome, StrategyDomain, RoleType } from "@/types";
+import { loadStrategies, saveStrategies } from "@/lib/config";
+
+const now = () => new Date().toISOString();
+
+function makeId(prefix: string): string {
+  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// ─── Seed Strategy Genomes ─────────────────────────────────────────
+
+const SEED_STRATEGIES: StrategyGenome[] = [
+  {
+    id: "strat_territory_cluster",
+    name: "Territory Cluster Routing",
+    description:
+      "Group accounts by geographic cluster and sequence visits to minimize travel time while maximizing face-to-face coverage of high-priority targets.",
+    domain: "territory_planning" as StrategyDomain,
+    strategyClass: "proven",
+    components: [
+      {
+        id: "comp_cluster_1",
+        name: "Geographic clustering",
+        description: "K-means style grouping of accounts by lat/long proximity",
+        category: "approach",
+        parameters: { clusterSize: 8, maxTravelMinutes: 45 },
+      },
+      {
+        id: "comp_cluster_2",
+        name: "Priority-weighted sequencing",
+        description: "Order clusters by aggregate priority score, visit highest first",
+        category: "sequence",
+        parameters: { sortMetric: "priority_score", descending: true },
+      },
+      {
+        id: "comp_cluster_3",
+        name: "Buffer insertion",
+        description: "Insert 15-min buffers between clusters for unplanned detours",
+        category: "tactic",
+        parameters: { bufferMinutes: 15 },
+      },
+    ],
+    applicableContext: [
+      { field: "role", operator: "equals", value: "field_representative" },
+      { field: "territory_type", operator: "contains", value: "geographic" },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Load territory accounts",
+        "Compute geographic clusters",
+        "Rank clusters by aggregate priority",
+        "Sequence visits within each cluster",
+        "Insert travel buffers",
+        "Generate daily route plan",
+      ],
+      toolsUsed: ["territory_scorer", "route_optimizer"],
+      timeAllocation: { phase: "planning", percentage: 20 },
+      decisionRules: [
+        "If cluster has >3 high-priority accounts, schedule full day",
+        "If travel time exceeds 60 min between clusters, split across days",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "accounts_visited_per_day", baseline: 6, expected: 9, observed: 0, unit: "count", higherIsBetter: true },
+      { metric: "travel_time_pct", baseline: 45, expected: 30, observed: 0, unit: "percent", higherIsBetter: false },
+    ],
+    evidenceLevel: "experimentally_supported",
+    evidenceCount: 12,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "No external communication or claim modification involved.",
+  },
+  {
+    id: "strat_stakeholder_matrix",
+    name: "Stakeholder Influence Matrix",
+    description:
+      "Map stakeholders on a 2x2 influence-vs-interest grid and tailor engagement frequency and depth accordingly.",
+    domain: "stakeholder_engagement",
+    strategyClass: "proven",
+    components: [
+      {
+        id: "comp_matrix_1",
+        name: "Influence-interest scoring",
+        description: "Score each stakeholder 1-5 on influence and interest dimensions",
+        category: "approach",
+        parameters: { dimensions: 2, scaleMax: 5 },
+      },
+      {
+        id: "comp_matrix_2",
+        name: "Quadrant assignment",
+        description: "Assign stakeholders to Manage Closely / Keep Satisfied / Keep Informed / Monitor quadrants",
+        category: "tactic",
+        parameters: { quadrants: 4 },
+      },
+      {
+        id: "comp_matrix_3",
+        name: "Cadence by quadrant",
+        description: "Weekly for Manage Closely, biweekly for Keep Satisfied, monthly for Keep Informed, quarterly for Monitor",
+        category: "behavior",
+        parameters: { cadenceManageClosely: "weekly", cadenceMonitor: "quarterly" },
+      },
+    ],
+    applicableContext: [
+      { field: "role", operator: "equals", value: "regional_manager" },
+      { field: "stakeholder_segment", operator: "contains", value: "mixed" },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "List all active stakeholders",
+        "Score influence and interest",
+        "Assign quadrant",
+        "Set engagement cadence",
+        "Review and adjust quarterly",
+      ],
+      toolsUsed: ["crm_export", "stakeholder_mapper"],
+      timeAllocation: { phase: "analysis", percentage: 35 },
+      decisionRules: [
+        "If stakeholder influence >4 and interest <2, escalate to director",
+        "If stakeholder is formulary decision-maker, always assign Manage Closely",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "stakeholder_coverage_pct", baseline: 60, expected: 85, observed: 0, unit: "percent", higherIsBetter: true },
+      { metric: "engagement_quality_score", baseline: 3.2, expected: 4.1, observed: 0, unit: "score", higherIsBetter: true },
+    ],
+    evidenceLevel: "probable_contribution",
+    evidenceCount: 7,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "Engagement frequency must respect do-not-contact lists and approved channel preferences.",
+  },
+  {
+    id: "strat_batch_communication",
+    name: "Batched Communication Windows",
+    description:
+      "Consolidate email and message responses into two dedicated windows per day (morning and late afternoon) to preserve deep-work blocks.",
+    domain: "communication",
+    strategyClass: "personalized",
+    components: [
+      {
+        id: "comp_batch_1",
+        name: "Time-boxed response windows",
+        description: "Process inbox only at 9:00-9:30 and 16:00-16:30",
+        category: "behavior",
+        parameters: { morningWindow: "09:00-09:30", afternoonWindow: "16:00-16:30" },
+      },
+      {
+        id: "comp_batch_2",
+        name: "Priority triage",
+        description: "Flag messages from authority figures or with deadline <24h for immediate response outside windows",
+        category: "tactic",
+        parameters: { urgencyThresholdHours: 24 },
+      },
+      {
+        id: "comp_batch_3",
+        name: "Deep-work protection",
+        description: "Block calendar 10:00-12:00 and 13:00-15:30 for focused work, no notifications",
+        category: "mindset",
+        parameters: { deepWorkBlocks: 2 },
+      },
+    ],
+    applicableContext: [
+      { field: "workload_level", operator: "equals", value: "high" },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Open inbox at designated window",
+        "Triage by sender authority and deadline urgency",
+        "Batch similar responses (approvals, status updates, info requests)",
+        "Draft responses using templates",
+        "Send batch",
+        "Close inbox and enter deep-work block",
+      ],
+      toolsUsed: ["mail_watcher", "commitment_detector"],
+      timeAllocation: { phase: "communication", percentage: 15 },
+      decisionRules: [
+        "If sender is direct manager or compliance officer, respond immediately regardless of window",
+        "If email contains regulatory deadline, escalate outside batch window",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "response_time_hours", baseline: 4.5, expected: 3.0, observed: 0, unit: "hours", higherIsBetter: false },
+      { metric: "deep_work_hours_per_day", baseline: 2.1, expected: 4.0, observed: 0, unit: "hours", higherIsBetter: true },
+    ],
+    evidenceLevel: "observed_association",
+    evidenceCount: 4,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "Must not delay compliance-critical or regulatory communications beyond 4 hours.",
+  },
+  {
+    id: "strat_data_driven_targeting",
+    name: "Data-Driven Account Targeting",
+    description:
+      "Use historical prescribing data, formulary status, and engagement history to compute a dynamic priority score for each account, updated weekly.",
+    domain: "data_utilization",
+    strategyClass: "experimental",
+    components: [
+      {
+        id: "comp_ddt_1",
+        name: "Multi-signal scoring",
+        description: "Weighted composite of Rx volume (40%), formulary status (25%), last-visit recency (20%), access level (15%)",
+        category: "approach",
+        parameters: { weights: "0.4,0.25,0.2,0.15", refreshCadence: "weekly" },
+      },
+      {
+        id: "comp_ddt_2",
+        name: "Decile-based tiering",
+        description: "Assign accounts to deciles; focus field time on top 3 deciles",
+        category: "tactic",
+        parameters: { focusDeciles: 3 },
+      },
+      {
+        id: "comp_ddt_3",
+        name: "Weekly recalibration",
+        description: "Recompute scores every Monday using latest CRM and claims data",
+        category: "sequence",
+        parameters: { recalibrationDay: "Monday" },
+      },
+    ],
+    applicableContext: [
+      { field: "role", operator: "equals", value: "field_representative" },
+      { field: "product_portfolio", operator: "contains", value: "specialty" },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Pull latest Rx, formulary, and CRM data",
+        "Compute composite score per account",
+        "Assign decile tiers",
+        "Generate weekly target list (top 3 deciles)",
+        "Feed target list to route optimizer",
+      ],
+      toolsUsed: ["territory_scorer", "crm_export", "claims_data_feed"],
+      timeAllocation: { phase: "analysis", percentage: 25 },
+      decisionRules: [
+        "If account drops >2 deciles in one week, flag for investigation",
+        "If new product launch, boost accounts in launch territory by 1 decile",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "target_accuracy_pct", baseline: 55, expected: 75, observed: 0, unit: "percent", higherIsBetter: true },
+      { metric: "wasted_visits_pct", baseline: 20, expected: 8, observed: 0, unit: "percent", higherIsBetter: false },
+    ],
+    evidenceLevel: "unresolved",
+    evidenceCount: 2,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "Data sources must be HIPAA-compliant. No patient-level targeting. Aggregate only.",
+  },
+  {
+    id: "strat_proactive_compliance",
+    name: "Proactive Compliance Pre-Check",
+    description:
+      "Before any external communication or content distribution, run a automated compliance pre-check against approved claims, formulary status, and channel rules.",
+    domain: "compliance_navigation",
+    strategyClass: "proven",
+    components: [
+      {
+        id: "comp_pcc_1",
+        name: "Claim verification",
+        description: "Cross-reference every claim in draft against approved claims database",
+        category: "tool_usage",
+        parameters: { strictMatch: true },
+      },
+      {
+        id: "comp_pcc_2",
+        name: "Channel rule enforcement",
+        description: "Verify recipient channel preferences and do-not-contact status",
+        category: "tactic",
+        parameters: { checkDNC: true, checkConsent: true },
+      },
+      {
+        id: "comp_pcc_3",
+        name: "Fair-balance check",
+        description: "Ensure safety information is present and proportionate to benefit claims",
+        category: "behavior",
+        parameters: { requireSafetyInfo: true },
+      },
+    ],
+    applicableContext: [
+      { field: "role", operator: "in_range", value: ["field_representative", "medical_affairs", "market_access"] },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Extract claims from draft content",
+        "Check each claim against approved database",
+        "Verify recipient DNC and consent status",
+        "Check fair-balance (safety info presence)",
+        "If all pass, approve for sending",
+        "If any fail, flag for revision",
+      ],
+      toolsUsed: ["compliance_db", "dnc_registry", "content_validator"],
+      timeAllocation: { phase: "quality_gate", percentage: 10 },
+      decisionRules: [
+        "If any claim is not in approved database, block sending and escalate",
+        "If recipient is on DNC list, block and log",
+        "If safety info missing, block and request addition",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "compliance_violations_per_month", baseline: 3.5, expected: 0.5, observed: 0, unit: "count", higherIsBetter: false },
+      { metric: "content_turnaround_hours", baseline: 48, expected: 24, observed: 0, unit: "hours", higherIsBetter: false },
+    ],
+    evidenceLevel: "experimentally_supported",
+    evidenceCount: 15,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "This strategy is itself a compliance control. It must never be bypassed or weakened.",
+  },
+  {
+    id: "strat_cross_function_sync",
+    name: "Cross-Functional Sync Cadence",
+    description:
+      "Establish a structured weekly sync between field, medical affairs, and market access to share intelligence and align on territory priorities.",
+    domain: "collaboration",
+    strategyClass: "personalized",
+    components: [
+      {
+        id: "comp_cfs_1",
+        name: "Standing weekly meeting",
+        description: "30-min structured sync with rotating facilitator",
+        category: "sequence",
+        parameters: { duration: 30, frequency: "weekly" },
+      },
+      {
+        id: "comp_cfs_2",
+        name: "Pre-circulated brief",
+        description: "Each function submits a 1-page brief 24h before sync covering wins, blockers, and asks",
+        category: "tactic",
+        parameters: { briefDeadlineHours: 24, maxLength: 1 },
+      },
+      {
+        id: "comp_cfs_3",
+        name: "Action item tracking",
+        description: "Capture action items with owner and due date; review at next sync",
+        category: "behavior",
+        parameters: { trackIn: "shared_doc" },
+      },
+    ],
+    applicableContext: [
+      { field: "role", operator: "in_range", value: ["regional_manager", "medical_affairs", "market_access"] },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Distribute brief template 48h before sync",
+        "Collect briefs 24h before",
+        "Hold 30-min sync with structured agenda",
+        "Capture action items",
+        "Share minutes within 2h",
+        "Review action items at next sync",
+      ],
+      toolsUsed: ["shared_doc", "calendar"],
+      timeAllocation: { phase: "collaboration", percentage: 10 },
+      decisionRules: [
+        "If no briefs submitted by deadline, sync is cancelled and rescheduled",
+        "If >3 action items are overdue, escalate to functional heads",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "cross_function_alignment_score", baseline: 2.8, expected: 4.0, observed: 0, unit: "score", higherIsBetter: true },
+      { metric: "action_item_completion_pct", baseline: 50, expected: 80, observed: 0, unit: "percent", higherIsBetter: true },
+    ],
+    evidenceLevel: "observed_association",
+    evidenceCount: 5,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "No patient-level data or unapproved claims may be discussed in sync briefs.",
+  },
+  {
+    id: "strat_time_block_discipline",
+    name: "Time-Block Discipline",
+    description:
+      "Allocate the workday into fixed blocks for proactive work, reactive work, admin, and learning, with strict boundary enforcement.",
+    domain: "time_management",
+    strategyClass: "experimental",
+    components: [
+      {
+        id: "comp_tbd_1",
+        name: "Fixed block schedule",
+        description: "Proactive 60%, Reactive 20%, Admin 10%, Learning 10%",
+        category: "approach",
+        parameters: { proactivePct: 60, reactivePct: 20, adminPct: 10, learningPct: 10 },
+      },
+      {
+        id: "comp_tbd_2",
+        name: "Boundary enforcement",
+        description: "Calendar blocks are marked busy; notifications silenced during proactive blocks",
+        category: "behavior",
+        parameters: { silenceNotifications: true },
+      },
+      {
+        id: "comp_tbd_3",
+        name: "Weekly review",
+        description: "Friday 30-min review of actual vs planned time allocation",
+        category: "sequence",
+        parameters: { reviewDay: "Friday", reviewMinutes: 30 },
+      },
+    ],
+    applicableContext: [
+      { field: "workload_level", operator: "in_range", value: ["medium", "high"] },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Plan blocks for upcoming week on Friday",
+        "Set calendar blocks and notification rules",
+        "Execute blocks with boundary enforcement",
+        "Track actual time spent per block",
+        "Review variance on Friday",
+        "Adjust next week's plan",
+      ],
+      toolsUsed: ["calendar", "time_tracker"],
+      timeAllocation: { phase: "planning", percentage: 10 },
+      decisionRules: [
+        "If reactive work exceeds 30% in a day, flag for root-cause analysis",
+        "If learning blocks are skipped >2 weeks, alert manager",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "proactive_time_pct", baseline: 35, expected: 55, observed: 0, unit: "percent", higherIsBetter: true },
+      { metric: "task_completion_rate", baseline: 65, expected: 85, observed: 0, unit: "percent", higherIsBetter: true },
+    ],
+    evidenceLevel: "unresolved",
+    evidenceCount: 3,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "Reactive blocks must still accommodate compliance-critical communications within 4 hours.",
+  },
+  {
+    id: "strat_resource_reallocation",
+    name: "Dynamic Resource Reallocation",
+    description:
+      "Monthly review of resource allocation across territory activities, shifting budget and time from low-yield to high-yield activities based on ROI tracking.",
+    domain: "resource_allocation",
+    strategyClass: "experimental",
+    components: [
+      {
+        id: "comp_drr_1",
+        name: "ROI tracking per activity",
+        description: "Track time and budget spent per activity category and compute estimated ROI",
+        category: "tool_usage",
+        parameters: { categories: "field_visits,dinners,samples,education,admin" },
+      },
+      {
+        id: "comp_drr_2",
+        name: "Low-yileld identification",
+        description: "Flag activities in bottom quartile of ROI for reduction or elimination",
+        category: "tactic",
+        parameters: { threshold: "bottom_quartile" },
+      },
+      {
+        id: "comp_drr_3",
+        name: "Reallocation rule",
+        description: "Shift 50% of saved resources to top-quartile activities, 50% to experimental new activities",
+        category: "approach",
+        parameters: { topQuartilePct: 50, experimentalPct: 50 },
+      },
+    ],
+    applicableContext: [
+      { field: "role", operator: "in_range", value: ["regional_manager", "market_access"] },
+    ],
+    executionPattern: {
+      stepOrder: [
+        "Compile monthly activity and spend data",
+        "Compute ROI per activity category",
+        "Identify bottom-quartile activities",
+        "Propose reallocation plan",
+        "Review with manager",
+        "Execute reallocation",
+      ],
+      toolsUsed: ["budget_tracker", "activity_log", "roi_calculator"],
+      timeAllocation: { phase: "analysis", percentage: 15 },
+      decisionRules: [
+        "If activity is compliance-mandated, exclude from reallocation",
+        "If experimental allocation fails after 2 months, revert to proven activity",
+      ],
+    },
+    expectedOutcomes: [
+      { metric: "overall_roi", baseline: 1.2, expected: 1.8, observed: 0, unit: "ratio", higherIsBetter: true },
+      { metric: "wasted_budget_pct", baseline: 25, expected: 10, observed: 0, unit: "percent", higherIsBetter: false },
+    ],
+    evidenceLevel: "unresolved",
+    evidenceCount: 1,
+    parentIds: [],
+    childIds: [],
+    version: 1,
+    createdAt: now(),
+    updatedAt: now(),
+    deprecated: false,
+    complianceValidated: true,
+    complianceNotes: "Reallocation must not reduce compliance-mandated activities. Transfer-of-value rules apply to all reallocated spend.",
+  },
+];
+
+// ─── Library Management ────────────────────────────────────────────
+
+export function getSeedStrategies(): StrategyGenome[] {
+  return SEED_STRATEGIES.map((s) => ({ ...s }));
+}
+
+export function ensureStrategiesSeeded(): StrategyGenome[] {
+  const existing = loadStrategies();
+  if (existing.length === 0) {
+    saveStrategies(SEED_STRATEGIES);
+    return SEED_STRATEGIES.map((s) => ({ ...s }));
+  }
+  return existing;
+}
+
+export function getStrategyById(id: string): StrategyGenome | undefined {
+  const strategies = ensureStrategiesSeeded();
+  return strategies.find((s) => s.id === id);
+}
+
+export function upsertStrategy(genome: StrategyGenome): void {
+  const strategies = ensureStrategiesSeeded();
+  const idx = strategies.findIndex((s) => s.id === genome.id);
+  if (idx >= 0) {
+    strategies[idx] = { ...genome, updatedAt: now() };
+  } else {
+    strategies.push(genome);
+  }
+  saveStrategies(strategies);
+}
+
+export function listStrategiesByDomain(domain: StrategyDomain): StrategyGenome[] {
+  return ensureStrategiesSeeded().filter((s) => s.domain === domain && !s.deprecated);
+}
+
+export function listStrategiesByRole(role: RoleType): StrategyGenome[] {
+  return ensureStrategiesSeeded().filter((s) => {
+    if (s.deprecated) return false;
+    return s.applicableContext.some(
+      (c) =>
+        c.field === "role" &&
+        (c.operator === "equals"
+          ? c.value === role
+          : Array.isArray(c.value) && c.value.includes(role))
+    );
+  });
+}
+
+export function listStrategiesByClass(strategyClass: "proven" | "personalized" | "experimental"): StrategyGenome[] {
+  return ensureStrategiesSeeded().filter((s) => s.strategyClass === strategyClass && !s.deprecated);
+}

@@ -42,7 +42,47 @@ export function truncate(text: string, max: number): string {
  * on a different port than what's registered in the Google/Azure console.
  */
 export function normalizeOrigin(origin: string): string {
-  const override = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE;
-  if (override) return override.replace(/\/$/, "");
+  // Always use the actual request origin so OAuth redirect URIs match
+  // the domain the user is browsing. This works correctly across
+  // Netlify, Fly.io, localhost, and any other deployment target.
   return origin.replace(/127\.0\.0\.1/, "localhost");
+}
+
+/**
+ * Get the external origin from a Next.js request, accounting for reverse proxies
+ * (Fly.io, Netlify, etc.) that set X-Forwarded-Host / X-Forwarded-Proto headers.
+ */
+export function getRequestOrigin(request: { headers: Headers; nextUrl: URL }): string {
+  const xfHost = request.headers.get("x-forwarded-host");
+  const xfProto = request.headers.get("x-forwarded-proto") || "https";
+  const host = xfHost || request.headers.get("host") || request.nextUrl.host;
+  return `${xfProto}://${host}`;
+}
+
+/**
+ * Safely parse a string as JSON. Returns null if the string is empty, null,
+ * or not valid JSON (e.g. an HTML error page returned by a serverless
+ * function or reverse proxy). This prevents the common
+ * "Unexpected token '<'" crash when a fetch returns HTML instead of JSON.
+ */
+export function safeJson<T = any>(text: string | null | undefined): T | null {
+  if (!text) return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  // Fast reject: JSON never starts with '<' (HTML) or '<!' (doctype)
+  if (trimmed[0] === "<") return null;
+  try {
+    return JSON.parse(trimmed) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse a Response body as JSON defensively. Reads text first so we never
+ * throw on non-JSON bodies, and returns null instead of crashing.
+ */
+export async function safeJsonResponse<T = any>(res: Response): Promise<T | null> {
+  const text = await res.text().catch(() => "");
+  return safeJson<T>(text);
 }

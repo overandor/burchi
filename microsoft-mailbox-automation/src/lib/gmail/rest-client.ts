@@ -11,16 +11,27 @@ async function getAccessToken(config: GmailConfig): Promise<string> {
     throw new Error("No refresh token — connect Gmail first");
   }
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: config.clientId,
-      client_secret: config.clientSecret || "",
-      refresh_token: config.refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let res: Response;
+  try {
+    res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: config.clientId,
+        client_secret: config.clientSecret || "",
+        refresh_token: config.refreshToken,
+        grant_type: "refresh_token",
+      }),
+      signal: controller.signal,
+    });
+  } catch (e: any) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error("Token refresh timed out");
+    throw e;
+  }
+  clearTimeout(timeout);
 
   const text = await res.text();
   if (!res.ok) {
@@ -32,9 +43,20 @@ async function getAccessToken(config: GmailConfig): Promise<string> {
 }
 
 async function gmailFetch(accessToken: string, path: string): Promise<any> {
-  const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  let res: Response;
+  try {
+    res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal,
+    });
+  } catch (e: any) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error(`Gmail API request timed out: ${path}`);
+    throw e;
+  }
+  clearTimeout(timeout);
 
   const text = await res.text();
   if (!res.ok) {
@@ -54,8 +76,16 @@ export async function fetchEmailsREST(
   const messageIds: { id: string }[] = [];
   let pageToken: string | undefined = undefined;
   let fetched = 0;
+  const seenPageTokens = new Set<string>();
+  let pages = 0;
 
   while (fetched < maxResults) {
+    if (pages >= 50) break;
+    if (pageToken) {
+      if (seenPageTokens.has(pageToken)) break;
+      seenPageTokens.add(pageToken);
+    }
+    pages++;
     const batchSize = Math.min(maxResults - fetched, 500);
     let path = `messages?maxResults=${batchSize}&q=has:attachment`;
     if (pageToken) path += `&pageToken=${pageToken}`;
@@ -70,14 +100,20 @@ export async function fetchEmailsREST(
   }
 
   const emails: EmailMessage[] = [];
+  const CONCURRENCY = 10;
 
-  for (const msg of messageIds) {
-    if (!msg.id) continue;
-    try {
-      const email = await fetchEmailREST(config, msg.id, accessToken);
-      if (email) emails.push(email);
-    } catch (e: any) {
-      console.error(`Failed to fetch email ${msg.id}: ${e.message}`);
+  for (let i = 0; i < messageIds.length; i += CONCURRENCY) {
+    const chunk = messageIds.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(
+      chunk.map(async (msg) => {
+        if (!msg.id) return null;
+        return await fetchEmailREST(config, msg.id, accessToken);
+      })
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) {
+        emails.push(r.value);
+      }
     }
   }
 
@@ -119,6 +155,64 @@ export async function fetchEmailREST(
     categories: msg.labelIds || [],
     processed: false,
   };
+}
+
+/**
+ * Fetch only metadata (headers + labels) for an email — much faster than full fetch.
+ * Uses format=metadata with specific headers to minimize payload size.
+ */
+export async function fetchEmailMetadataREST(
+  config: GmailConfig,
+  messageId: string,
+  existingToken?: string
+): Promise<EmailMessage | null> {
+  const accessToken = existingToken || await getAccessToken(config);
+  const metaHeaders = ["Subject", "From", "Date", "Content-Type"];
+  const msg = await gmailFetch(
+    accessToken,
+    `messages/${messageId}?format=metadata&metadataHeaders=${metaHeaders.join("&metadataHeaders=")}`
+  );
+
+  const headers = msg.payload?.headers || [];
+  const subject = headers.find((h: any) => h.name === "Subject")?.value || "";
+  const from = headers.find((h: any) => h.name === "From")?.value || "";
+  const date = headers.find((h: any) => h.name === "Date")?.value || "";
+
+  const senderMatch = from.match(/^(.*?)\s*<(.*)>$/);
+  const sender = senderMatch ? senderMatch[1].trim().replace(/"/g, "") : from;
+  const senderEmail = senderMatch ? senderMatch[2] : from;
+
+  const hasAttachments = (msg.labelIds || []).includes("CATEGORY_UPDATES") ||
+    (msg.sizeEstimate || 0) > 50000;
+
+  return {
+    id: messageId,
+    subject,
+    sender,
+    senderEmail,
+    receivedDate: date,
+    bodyPreview: "",
+    body: "",
+    hasAttachments,
+    attachments: [],
+    isRead: !msg.labelIds?.includes("UNREAD"),
+    importance: "normal",
+    categories: msg.labelIds || [],
+    processed: false,
+  };
+}
+
+/**
+ * Fetch only the body of an email (on demand when user clicks to read).
+ */
+export async function fetchEmailBodyREST(
+  config: GmailConfig,
+  messageId: string,
+  existingToken?: string
+): Promise<string> {
+  const accessToken = existingToken || await getAccessToken(config);
+  const msg = await gmailFetch(accessToken, `messages/${messageId}?format=full`);
+  return extractBody(msg.payload);
 }
 
 export async function fetchAttachmentContentREST(
@@ -185,14 +279,25 @@ function extractAttachments(payload: any): EmailAttachment[] {
 // ─── Email Action Functions ───────────────────────────────────────
 
 async function gmailPost(accessToken: string, path: string, body: any): Promise<any> {
-  const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  let res: Response;
+  try {
+    res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (e: any) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error(`Gmail API request timed out: ${path}`);
+    throw e;
+  }
+  clearTimeout(timeout);
 
   const text = await res.text();
   if (!res.ok) {
@@ -206,6 +311,11 @@ async function gmailPost(accessToken: string, path: string, body: any): Promise<
  * Search emails using Gmail search operators.
  * Supports: from:, to:, subject:, has:attachment, label:, is:unread, after:, before:, etc.
  */
+/**
+ * Search emails using Gmail search operators — metadata only (fast).
+ * Bodies are fetched on demand when the user clicks an email.
+ * Supports: from:, to:, subject:, has:attachment, label:, is:unread, after:, before:, etc.
+ */
 export async function searchEmailsREST(
   config: GmailConfig,
   query: string,
@@ -216,8 +326,16 @@ export async function searchEmailsREST(
   const messageIds: { id: string; threadId: string }[] = [];
   let pageToken: string | undefined = undefined;
   let fetched = 0;
+  const seenPageTokens = new Set<string>();
+  let pages = 0;
 
   while (fetched < maxResults) {
+    if (pages >= 50) break;
+    if (pageToken) {
+      if (seenPageTokens.has(pageToken)) break;
+      seenPageTokens.add(pageToken);
+    }
+    pages++;
     const batchSize = Math.min(maxResults - fetched, 500);
     let path = `messages?maxResults=${batchSize}&q=${encodeURIComponent(query)}`;
     if (pageToken) path += `&pageToken=${pageToken}`;
@@ -231,17 +349,25 @@ export async function searchEmailsREST(
     if (!pageToken || batch.length === 0) break;
   }
 
+  // Fetch metadata in parallel batches (10 at a time).
+  // Metadata-only fetch is ~5x faster than full fetch (no body download).
   const emails: EmailMessage[] = [];
-  for (const msg of messageIds) {
-    if (!msg.id) continue;
-    try {
-      const email = await fetchEmailREST(config, msg.id, accessToken);
-      if (email) {
-        email.threadId = msg.threadId;
-        emails.push(email);
+  const CONCURRENCY = 10;
+
+  for (let i = 0; i < messageIds.length; i += CONCURRENCY) {
+    const chunk = messageIds.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(
+      chunk.map(async (msg) => {
+        if (!msg.id) return null;
+        const email = await fetchEmailMetadataREST(config, msg.id, accessToken);
+        if (email) email.threadId = msg.threadId;
+        return email;
+      })
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) {
+        emails.push(r.value);
       }
-    } catch (e: any) {
-      console.error(`Failed to fetch email ${msg.id}: ${e.message}`);
     }
   }
 
@@ -471,17 +597,28 @@ export async function modifyLabelsREST(
 ): Promise<void> {
   const accessToken = await getAccessToken(config);
 
-  const res = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
-    }
-  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+        signal: controller.signal,
+      }
+    );
+  } catch (e: any) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error(`Gmail API request timed out: messages/${messageId}/modify`);
+    throw e;
+  }
+  clearTimeout(timeout);
 
   if (!res.ok) {
     const text = await res.text();
@@ -522,13 +659,24 @@ export async function archiveEmailREST(config: GmailConfig, messageId: string): 
  */
 export async function trashEmailREST(config: GmailConfig, messageId: string): Promise<void> {
   const accessToken = await getAccessToken(config);
-  const res = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/trash`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/trash`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: controller.signal,
+      }
+    );
+  } catch (e: any) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error(`Gmail API request timed out: messages/${messageId}/trash`);
+    throw e;
+  }
+  clearTimeout(timeout);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Gmail API error (${res.status}): ${text.slice(0, 200)}`);

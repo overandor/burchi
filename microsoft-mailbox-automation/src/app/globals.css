@@ -4,44 +4,67 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    /* Hypothesis Garden — Bioluminescent dark theme */
+    --background: 185 30% 4%;
+    --foreground: 180 20% 92%;
+    --card: 185 25% 7%;
+    --card-foreground: 180 20% 92%;
+    --primary: 172 80% 40%;
+    --primary-foreground: 185 30% 4%;
+    --secondary: 185 20% 12%;
+    --secondary-foreground: 180 20% 92%;
+    --muted: 185 18% 14%;
+    --muted-foreground: 185 12% 50%;
+    --accent: 280 70% 55%;
+    --accent-foreground: 180 20% 98%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 180 20% 98%;
+    --border: 185 20% 14%;
+    --input: 185 20% 14%;
+    --ring: 172 80% 40%;
+    --radius: 1rem;
+
+    /* Strategy class colors — organic evidence progression */
+    --strat-experimental: 280 70% 55%;
+    --strat-personalized: 45 85% 55%;
+    --strat-proven: 172 75% 42%;
+
+    /* Evidence levels */
+    --evidence-unresolved: 0 0% 45%;
+    --evidence-observed: 45 70% 50%;
+    --evidence-probable: 200 70% 52%;
+    --evidence-experimental: 172 75% 42%;
+
+    /* SPINOR organic color system
+       blue: supported evidence · violet: emerging novelty · green: replicated
+       value · gold: Golden Node · red: risk or contradiction · gray: unresolved */
+    --spinor-blue: 200 90% 60%;
+    --spinor-violet: 255 80% 75%;
+    --spinor-green: 152 70% 55%;
+    --spinor-gold: 43 95% 60%;
+    --spinor-red: 0 80% 70%;
+    --spinor-gray: 215 15% 60%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+  .light {
+    color-scheme: light;
+    --background: 180 30% 97%;
+    --foreground: 185 35% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 185 35% 8%;
+    --primary: 172 70% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 20% 92%;
+    --secondary-foreground: 185 35% 8%;
+    --muted: 180 15% 90%;
+    --muted-foreground: 185 10% 42%;
+    --accent: 280 60% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 180 15% 86%;
+    --input: 180 15% 86%;
+    --ring: 172 70% 35%;
   }
 }
 
@@ -54,142 +77,155 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv01", "cv02";
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    * {
+      transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+  }
+
+  .light body {
+    @apply bg-background text-foreground;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border bg-card text-card-foreground shadow-sm;
+    @apply rounded-2xl border border-border bg-card text-card-foreground;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-xl text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 h-10 px-4 py-2;
+    @apply bg-primary text-primary-foreground hover:bg-primary/85 h-10 px-5 py-2 shadow-lg shadow-primary/20;
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/70 h-10 px-5 py-2;
   }
 
   .btn-outline {
-    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
+    @apply border border-input bg-transparent hover:bg-accent/10 hover:text-accent-foreground h-10 px-5 py-2;
   }
 
   .btn-danger {
-    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2;
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/85 h-10 px-5 py-2;
   }
 
   .input {
-    @apply flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all;
+    @apply flex h-10 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all;
   }
 
   .badge {
     @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors;
   }
 
-  /* Glassmorphism */
-  .glass {
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  .status-dot {
+    @apply inline-block h-2 w-2 rounded-full;
   }
 
-  .glass-dark {
-    background: rgba(15, 23, 42, 0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  .done-section-label {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
 
-  /* Gradient text */
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900;
+  /* ── Hypothesis Garden Components ── */
+
+  .glass-card {
+    @apply rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl;
+    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.08), inset 0 1px 0 0 hsl(0 0% 100% / 0.03);
   }
 
-  .text-gradient-blue {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600;
+  .glass-card-hover {
+    @apply transition-all duration-500;
   }
 
-  .text-gradient-white {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-white;
-  }
-
-  /* Premium card hover */
-  .card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl;
-  }
-
-  /* Animated gradient mesh background */
-  .mesh-bg {
-    background-image:
-      radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.10) 0px, transparent 50%),
-      radial-gradient(at 0% 80%, rgba(59, 130, 246, 0.10) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
-  }
-
-  .mesh-bg-dark {
-    background-image:
-      radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 80%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.10) 0px, transparent 50%);
-  }
-
-  /* Bento card */
-  .bento {
-    @apply rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300;
-  }
-
-  .bento:hover {
-    @apply shadow-xl border-slate-300;
+  .glass-card-hover:hover {
+    box-shadow: 0 0 60px -10px hsl(var(--primary) / 0.15), inset 0 1px 0 0 hsl(0 0% 100% / 0.05);
     transform: translateY(-2px);
   }
 
-  /* Stat card */
-  .stat-card {
-    @apply rounded-2xl border p-5 transition-all duration-300;
+  .evidence-bar {
+    @apply relative h-1.5 w-full overflow-hidden rounded-full bg-muted;
   }
 
-  /* Shine effect on hover */
-  .shine {
-    position: relative;
-    overflow: hidden;
+  .evidence-bar-fill {
+    @apply absolute left-0 top-0 h-full rounded-full transition-all duration-700;
   }
 
-  .shine::after {
+  .strat-glow-experimental {
+    box-shadow: 0 0 20px -4px hsl(var(--strat-experimental) / 0.4);
+  }
+
+  .strat-glow-personalized {
+    box-shadow: 0 0 20px -4px hsl(var(--strat-personalized) / 0.4);
+  }
+
+  .strat-glow-proven {
+    box-shadow: 0 0 20px -4px hsl(var(--strat-proven) / 0.4);
+  }
+
+  .dna-strand {
+    background-image: repeating-linear-gradient(90deg,
+        transparent,
+        transparent 8px,
+        hsl(var(--primary) / 0.15) 8px,
+        hsl(var(--primary) / 0.15) 10px,
+        transparent 10px,
+        transparent 18px,
+        hsl(var(--accent) / 0.15) 18px,
+        hsl(var(--accent) / 0.15) 20px);
+  }
+
+  .organic-border {
+    border-radius: 42% 58% 56% 44% / 48% 42% 58% 52%;
+  }
+
+  .organic-border-2 {
+    border-radius: 60% 40% 52% 48% / 42% 58% 42% 58%;
+  }
+
+  .leaderboard-row {
+    @apply relative flex items-center gap-4 rounded-xl border border-transparent px-4 py-3 transition-all duration-300;
+  }
+
+  .leaderboard-row:hover {
+    @apply border-primary/20 bg-primary/5;
+  }
+
+  .spore-dot {
+    @apply absolute rounded-full;
+    animation: spore-float 8s ease-in-out infinite;
+  }
+
+  .hypothesis-card {
+    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-500;
+  }
+
+  .hypothesis-card::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-    transition: left 0.6s;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.06), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
   }
 
-  .shine:hover::after {
-    left: 100%;
+  .hypothesis-card:hover::before {
+    opacity: 1;
+  }
+
+  .hypothesis-card:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--primary) / 0.2);
   }
 }
 
 @layer utilities {
-
-  /* Animations */
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -200,63 +236,75 @@
     }
   }
 
-  @keyframes scale-in {
+  @keyframes fade-in-up {
     from {
       opacity: 0;
-      transform: scale(0.95);
+      transform: translateY(16px);
     }
 
     to {
       opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes slide-in-right {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes pulse-glow {
-
-    0%,
-    100% {
-      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-    }
-
-    50% {
-      box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
-    }
-  }
-
-  @keyframes float {
-
-    0%,
-    100% {
       transform: translateY(0);
     }
-
-    50% {
-      transform: translateY(-8px);
-    }
   }
 
-  @keyframes gradient-shift {
+  @keyframes pulse-working {
 
     0%,
     100% {
-      background-position: 0% 50%;
+      opacity: 1;
     }
 
     50% {
-      background-position: 100% 50%;
+      opacity: 0.4;
+    }
+  }
+
+  @keyframes spore-float {
+
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.3;
+    }
+
+    25% {
+      transform: translate(10px, -15px) scale(1.1);
+      opacity: 0.6;
+    }
+
+    50% {
+      transform: translate(-5px, -25px) scale(0.9);
+      opacity: 0.4;
+    }
+
+    75% {
+      transform: translate(-12px, -10px) scale(1.05);
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes grow-up {
+    from {
+      transform: scaleY(0);
+      opacity: 0;
+    }
+
+    to {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes glow-pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px -4px hsl(var(--primary) / 0.3);
+    }
+
+    50% {
+      box-shadow: 0 0 40px -4px hsl(var(--primary) / 0.5);
     }
   }
 
@@ -270,57 +318,66 @@
     }
   }
 
-  .animate-fade-in-up {
-    animation: fade-in-up 0.6s ease-out forwards;
+  @keyframes orbit {
+    from {
+      transform: rotate(0deg) translateX(120px) rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg) translateX(120px) rotate(-360deg);
+    }
   }
 
   .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
+    animation: fade-in 0.4s ease-out forwards;
   }
 
-  .animate-scale-in {
-    animation: scale-in 0.4s ease-out forwards;
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
   }
 
-  .animate-slide-in-right {
-    animation: slide-in-right 0.5s ease-out forwards;
+  .animate-pulse-working {
+    animation: pulse-working 2s ease-in-out infinite;
   }
 
-  .animate-pulse-glow {
-    animation: pulse-glow 3s ease-in-out infinite;
+  .animate-grow-up {
+    animation: grow-up 0.6s ease-out forwards;
+    transform-origin: bottom;
   }
 
-  .animate-float {
-    animation: float 4s ease-in-out infinite;
+  .animate-glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite;
   }
 
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient-shift 8s ease infinite;
+  .animate-orbit {
+    animation: orbit 20s linear infinite;
   }
 
-  /* Stagger delays */
-  .delay-100 {
-    animation-delay: 100ms;
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
-  .delay-200 {
-    animation-delay: 200ms;
+  .animate-slide-in-left {
+    animation: slide-in-left 0.4s ease-out forwards;
   }
 
-  .delay-300 {
-    animation-delay: 300ms;
+  .shimmer-bg {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        hsl(var(--primary) / 0.05) 50%,
+        transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
   }
 
-  .delay-400 {
-    animation-delay: 400ms;
-  }
-
-  .delay-500 {
-    animation-delay: 500ms;
-  }
-
-  /* Scrollbar styling */
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -331,30 +388,154 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full;
+    @apply bg-muted-foreground/30 rounded-full;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    @apply bg-muted-foreground/50;
   }
 
-  /* Gradient border */
-  .gradient-border {
-    position: relative;
-    background: white;
-    border-radius: 1rem;
+  .text-balance {
+    text-wrap: balance;
   }
 
-  .gradient-border::before {
-    content: "";
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* ── SPINOR Hypothesis Organism ── */
+
+  .spinor-canvas {
+    background:
+      radial-gradient(circle at 50% 50%, hsl(var(--spinor-gold) / 0.04), transparent 65%);
+  }
+
+  .spinor-aurora {
     position: absolute;
     inset: 0;
-    border-radius: 1rem;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.3), rgba(59, 130, 246, 0.2));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
     pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 20% 20%, hsl(var(--spinor-violet) / 0.08), transparent 70%),
+      radial-gradient(50% 50% at 80% 30%, hsl(var(--spinor-blue) / 0.07), transparent 70%),
+      radial-gradient(55% 55% at 70% 80%, hsl(var(--spinor-green) / 0.06), transparent 70%);
+    animation: spinor-aurora-shift 18s ease-in-out infinite alternate;
+  }
+
+  @keyframes spinor-aurora-shift {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.7;
+    }
+
+    100% {
+      transform: translate3d(2%, -2%, 0) scale(1.05);
+      opacity: 1;
+    }
+  }
+
+  .spinor-seed-pulse {
+    animation: spinor-seed-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes spinor-seed-pulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--spinor-gold) / 0.5);
+    }
+
+    50% {
+      transform: scale(1.12);
+      box-shadow: 0 0 0 12px hsl(var(--spinor-gold) / 0);
+    }
+  }
+
+  .spinor-core-pulse {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: spinor-core-pulse 3.5s ease-in-out infinite;
+  }
+
+  @keyframes spinor-core-pulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.3;
+    }
+
+    50% {
+      transform: scale(1.18);
+      opacity: 0.5;
+    }
+  }
+
+  .spinor-node-pulse {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: spinor-node-pulse 2.8s ease-in-out infinite;
+  }
+
+  @keyframes spinor-node-pulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+
+    50% {
+      transform: scale(1.35);
+      opacity: 0.1;
+    }
+  }
+
+  /* Roots extend when replication increases; stems grow gently. */
+  .spinor-root {
+    stroke-dashoffset: 0;
+    animation: spinor-root-extend 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes spinor-root-extend {
+    0% {
+      stroke-dashoffset: 0;
+      opacity: 0.4;
+    }
+
+    100% {
+      stroke-dashoffset: -14;
+      opacity: 0.7;
+    }
+  }
+
+  .spinor-stem {
+    animation: spinor-stem-sway 7s ease-in-out infinite alternate;
+    transform-origin: center;
+  }
+
+  @keyframes spinor-stem-sway {
+    0% {
+      opacity: 0.35;
+    }
+
+    100% {
+      opacity: 0.6;
+    }
+  }
+
+  .spinor-node {
+    transition: transform 0.25s ease;
+  }
+
+  .spinor-node:hover {
+    transform: scale(1.12);
+  }
+
+  .spinor-node-label {
+    font-size: 10px;
+    font-weight: 500;
+    pointer-events: none;
+    text-shadow: 0 0 6px hsl(var(--background));
   }
 }

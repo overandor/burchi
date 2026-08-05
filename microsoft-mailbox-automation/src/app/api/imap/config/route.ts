@@ -24,24 +24,36 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    // Store in env-like fashion — on Netlify serverless, we can't persist env vars
-    // at runtime, so we store in the config file
+
+    if (!body.email || typeof body.email !== "string" || !body.email.includes("@")) {
+      return NextResponse.json({ error: "email is required and must be a valid email address" }, { status: 400 });
+    }
+    if (!body.host || typeof body.host !== "string" || body.host.trim() === "") {
+      return NextResponse.json({ error: "host is required" }, { status: 400 });
+    }
+
     const { loadConfig, saveConfig } = await import("@/lib/config");
     const config = loadConfig();
 
-    // Save IMAP creds in the graph section (reusing the mailbox field)
+    const passwordProvided = !!(body.password && typeof body.password === "string" && body.password.trim() !== "");
+
     const updated = {
       ...config,
       graph: {
         ...config.graph,
         mailbox: body.email || config.graph.mailbox,
-        clientSecret: body.password || config.graph.clientSecret,
+        imap: {
+          ...(config.graph as any).imap,
+          host: body.host,
+          port: body.port || 993,
+          passwordConfigured: passwordProvided || (config.graph as any).imap?.passwordConfigured || false,
+        },
       },
     };
     saveConfig(updated);
 
     return NextResponse.json({
-      configured: !!(body.email && body.password),
+      configured: !!(body.email && (passwordProvided || (config.graph as any).imap?.passwordConfigured)),
       email: body.email || "",
       host: body.host || "outlook.office365.com",
       port: body.port || 993,

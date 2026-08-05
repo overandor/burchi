@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { ProcessedEmailRecord, ParsedAttachmentData } from "@/types";
 import { generateAnalysis } from "@/lib/analysis/generator";
 import { saveProcessedEmails, loadProcessedEmails, saveSyncStatus } from "@/lib/config";
+import { generateSampleCommitments } from "@/lib/commitment/detector";
+import { listCommitments, upsertCommitment } from "@/lib/commitment/store";
 import { nanoid } from "nanoid";
 
 export const dynamic = "force-dynamic";
@@ -172,11 +174,12 @@ Marine Biology Department`,
 ];
 
 export async function POST() {
+  try {
   let existing: ProcessedEmailRecord[] = [];
   try {
     existing = loadProcessedEmails();
-  } catch {
-    // Filesystem not available (Netlify serverless) — start fresh
+  } catch (e) {
+    console.error("[demo/seed] loadProcessedEmails error:", e);
   }
   const records: ProcessedEmailRecord[] = [...existing];
 
@@ -272,8 +275,30 @@ export async function POST() {
       isSyncing: false,
       errors: [],
     });
-  } catch {
-    // Filesystem not available — return records in response for client-side storage
+  } catch (e) {
+    console.error("[demo/seed] persist error:", e);
+  }
+
+  let commitments: any[] = [];
+  let commitmentsSeeded = 0;
+  try {
+    const existingCommitments = listCommitments();
+    if (existingCommitments.length === 0) {
+      const samples = generateSampleCommitments();
+      for (const c of samples) {
+        try {
+          upsertCommitment(c);
+          commitmentsSeeded++;
+        } catch (e: any) {
+          console.error("[demo/seed] commitment seed error:", e.message);
+        }
+      }
+      commitments = samples;
+    } else {
+      commitments = existingCommitments;
+    }
+  } catch (e: any) {
+    console.error("[demo/seed] commitments error:", e.message);
   }
 
   return NextResponse.json({
@@ -281,6 +306,8 @@ export async function POST() {
     total: records.length,
     message: `Loaded ${records.length - existing.length} real processed emails through the analysis pipeline`,
     records, // Include records so frontend can store them in localStorage
+    commitments,
+    commitmentsSeeded,
     status: {
       lastSync: new Date().toISOString(),
       totalEmails: records.length,
@@ -290,6 +317,10 @@ export async function POST() {
       errors: [],
     },
   });
+  } catch (e: any) {
+    console.error("[demo/seed] error:", e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
 
 function categorizeEmail(email: SampleEmail): string {
@@ -312,8 +343,8 @@ export async function DELETE() {
       isSyncing: false,
       errors: [],
     });
-  } catch {
-    // Filesystem not available — client should clear localStorage
+  } catch (e) {
+    console.error("[demo/seed] delete error:", e);
   }
   return NextResponse.json({ cleared: true });
 }

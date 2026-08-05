@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "NEXT_PUBLIC_DEMO=true npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "env": {
+    "NEXT_PUBLIC_DEMO": "true"
+  },
+  "functions": {
+    "src/app/api/**/route.ts": {
+      "maxDuration": 120
+    }
+  }
+}

@@ -8,7 +8,7 @@ import {
   snoozeEmailREST,
   modifyLabelsREST,
 } from "@/lib/gmail/rest-client";
-import { normalizeOrigin } from "@/lib/utils";
+import { normalizeOrigin, getRequestOrigin } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "messageId is required" }, { status: 400 });
     }
 
-    const redirectUri = `${normalizeOrigin(request.nextUrl.origin)}/api/gmail/callback`;
+    const redirectUri = `${normalizeOrigin(getRequestOrigin(request))}/api/gmail/callback`;
     const config = { clientId, clientSecret, redirectUri, refreshToken, emailAddress: "" };
 
     switch (body.action) {

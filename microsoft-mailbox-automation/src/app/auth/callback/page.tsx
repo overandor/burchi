@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { safeJson } from "@/lib/utils";
 
 export default function AuthCallbackPage() {
   const { loading } = useAuth();
   const [status, setStatus] = useState<"processing" | "done" | "error">("processing");
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
   useEffect(() => {
     const handleRedirect = async () => {
       try {
         const res = await fetch("/api/config");
         const text = await res.text();
-        const config = text ? JSON.parse(text) : {};
+        const config = text ? safeJson(text) : {};
 
         const { PublicClientApplication } = await import("@azure/msal-browser");
         const { getMsalConfig, GRAPH_SCOPES } = await import("@/lib/auth/msal-config");
@@ -39,8 +41,9 @@ export default function AuthCallbackPage() {
             window.location.href = "/";
           }, 1500);
         }
-      } catch (e) {
-        console.error("Auth callback error:", e);
+      } catch (e: any) {
+        console.error("[auth-callback] error:", e);
+        setErrorMsg(e?.message || "An unexpected error occurred during authentication.");
         setStatus("error");
       }
     };
@@ -78,6 +81,9 @@ export default function AuthCallbackPage() {
               </svg>
             </div>
             <p className="mt-4 text-sm text-destructive">Authentication failed. Please try again.</p>
+            {errorMsg && (
+              <p className="mt-2 text-xs text-destructive/80 break-words">{errorMsg}</p>
+            )}
             <a href="/login" className="mt-4 inline-block btn btn-primary">Back to Login</a>
           </>
         )}
