@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeSpinorRequest, SpinorAccessError } from "@/lib/spinor/access";
 import {
   assertComplianceTransition,
   calculateEffect,
@@ -12,6 +13,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 interface EvaluateRequest {
+  organizationId?: string;
   effect?: Record<string, unknown>;
   attribution?: {
     baseConfidence?: number;
@@ -32,7 +34,12 @@ interface EvaluateRequest {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as EvaluateRequest;
+    const organizationId = body.organizationId?.trim();
+    if (!organizationId) throw new Error("organizationId is required.");
+    authorizeSpinorRequest(request, organizationId);
+
     const result: Record<string, unknown> = {
+      organizationId,
       evaluatedAt: new Date().toISOString(),
     };
 
@@ -72,7 +79,7 @@ export async function POST(request: NextRequest) {
       result.complianceTransition = { valid: true, from, to };
     }
 
-    if (Object.keys(result).length === 1) {
+    if (Object.keys(result).length === 2) {
       return NextResponse.json(
         { error: "Provide at least one of: effect, attribution, evidence, goldenNode, activityGenome, or complianceTransition." },
         { status: 400 },
@@ -81,6 +88,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error: unknown) {
+    if (error instanceof SpinorAccessError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "SPINOR evaluation failed." },
       { status: 400 },
