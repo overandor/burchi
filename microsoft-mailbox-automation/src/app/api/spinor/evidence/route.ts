@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadProcessedEmails } from "@/lib/config";
+import { authorizeSpinorRequest, SpinorAccessError } from "@/lib/spinor/access";
 import { mailboxRecordsToEvidence } from "@/lib/spinor/mailbox-adapter";
 import { createSpinorRepository } from "@/lib/spinor/repository";
 
@@ -13,9 +14,20 @@ function required(value: unknown, name: string): string {
   return value.trim();
 }
 
+function errorResponse(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : fallback;
+  if (error instanceof SpinorAccessError) {
+    return NextResponse.json({ error: message }, { status: error.status });
+  }
+  const unavailable = message.includes("SPINOR_STORE_URL is required");
+  return NextResponse.json({ error: message }, { status: unavailable ? 503 : 400 });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const organizationId = required(request.nextUrl.searchParams.get("organizationId"), "organizationId");
+    authorizeSpinorRequest(request, organizationId);
+
     const provider = request.nextUrl.searchParams.get("provider")?.trim() || "mailbox-scientific-data";
     const mailbox = request.nextUrl.searchParams.get("mailbox")?.trim() || null;
     const limit = Math.min(
@@ -39,10 +51,7 @@ export async function GET(request: NextRequest) {
       evidence,
     });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to normalize mailbox evidence." },
-      { status: 400 },
-    );
+    return errorResponse(error, "Failed to normalize mailbox evidence.");
   }
 }
 
@@ -58,6 +67,8 @@ export async function POST(request: NextRequest) {
     };
 
     const organizationId = required(body.organizationId, "organizationId");
+    authorizeSpinorRequest(request, organizationId);
+
     const actorId = required(body.actorId, "actorId");
     const provider = required(body.provider, "provider");
     const requestedIds = new Set(Array.isArray(body.recordIds) ? body.recordIds : []);
@@ -103,11 +114,6 @@ export async function POST(request: NextRequest) {
       receipts,
     }, { status: 201 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Mailbox evidence import failed.";
-    const missingProductionStore = message.includes("SPINOR_STORE_URL is required");
-    return NextResponse.json(
-      { error: message },
-      { status: missingProductionStore ? 503 : 400 },
-    );
+    return errorResponse(error, "Mailbox evidence import failed.");
   }
 }
