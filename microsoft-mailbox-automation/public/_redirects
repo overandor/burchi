@@ -16,3 +16,11 @@
 /experiments /experiments.html 200
 /spinor      /spinor.html      200
 /spin-lifecycle /spin-lifecycle.html 200
+/etl         /etl.html         200
+
+# API routes and static assets must be served before the catch-all SPA rewrite.
+/api/*       /api/:splat        200
+/_next/*     /_next/:splat      200
+
+# Catch-all for any client-routed path that does not match a generated HTML file.
+/*           /index.html        200
