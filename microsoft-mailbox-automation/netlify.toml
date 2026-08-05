@@ -10,5 +10,4 @@
   package = "@netlify/plugin-nextjs"
 
 [functions]
-  # Allow up to 120s for LLM inference and sync operations
-  max_duration = 120
+  node_bundler = "esbuild"
