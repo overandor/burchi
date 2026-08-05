@@ -15,38 +15,43 @@ Observed stack:
 - Next.js 14 App Router, React 18, TypeScript, Tailwind.
 - Node test runner through `node --test --import tsx`.
 - Mailbox, ETL, Golden Node, SPINOR-RL, SPIN lifecycle, and LLM fallback modules already exist.
-- The latest commits claim clean TypeScript compilation and passing focused SPIN tests, but the latest commit has no published GitHub combined-status checks.
+- Recent commits claim clean TypeScript compilation and passing focused SPIN tests, but the latest commit has no published GitHub combined-status checks.
 - Storage is a portable JSON/file-backed implementation with in-memory fallback rather than the directive's durable multi-tenant relational model.
-- `src/lib/game/data.ts` contains production-looking static missions, experiments, results, leaderboards, and Golden Nodes. These records are useful fixtures, but they must be explicitly isolated from production data paths.
-- Authentication, organization isolation, versioned admissibility policy, and production-safe demo-data boundaries remain unverified.
+- `src/lib/game/data.ts` and `src/lib/golden/seed.ts` contain production-looking static missions, employees, accounts, experiments, results, and Golden Nodes.
+- `/api/spinor/organism` previously seeded fixture hypotheses and allocated a fixture employee on demand without a production/demo boundary.
+- Authentication, organization isolation, versioned admissibility policy, and durable production storage remain unverified.
 
 ## Active tasks
 
 ### SPINOR-001 — Establish reproducible execution state
 
-Status: IN_PROGRESS
+Status: VERIFIED
 Risk: Low
-
-Acceptance criteria:
-
-- Persistent task ledger exists.
-- Machine-readable session state exists.
-- Exact next action is recorded.
-- Branch is isolated from `main`.
-
-Verification:
-
-- Confirm all state files exist on `feat/spinor-production-foundation`.
-
-### SPINOR-002 — Prevent demo records from masquerading as production evidence
-
-Status: SPECIFIED
-Risk: High
 
 Evidence:
 
-- `src/lib/game/data.ts` exports static 2026 missions, results, Golden Nodes, and leaderboard metrics.
-- The production directive prohibits blending fixtures with real records.
+- Isolated branch `feat/spinor-production-foundation` exists.
+- `TASK_LEDGER.md`, `hyperflow/session_state.json`, and `hyperflow/next.md` exist on the branch.
+
+### SPINOR-002 — Prevent demo records from masquerading as production evidence
+
+Status: PATCHED
+Risk: High
+
+Implemented:
+
+- Added `src/lib/spinor/demo-policy.ts`.
+- Production now defaults to demo data disabled unless `SPINOR_DEMO_MODE` or legacy `NEXT_PUBLIC_DEMO` explicitly enables it.
+- Added unit tests for production, development, explicit enable/disable, precedence, and accepted boolean forms.
+- Updated `/api/spinor/organism` so production no longer seeds fixture hypotheses or silently allocates fixture employees.
+- Production now requires an explicit `employeeId` and returns a useful empty state when no approved assignment exists.
+- Organism responses identify `demoMode` and `dataOrigin`.
+
+Remaining scope:
+
+- Trace and gate the other `ensureGoldenSeeded()` call sites in Golden Node, health, hypothesis, LLM, allocation, and SPINOR-RL paths.
+- Mark every fixture object with a durable origin field where the type model permits it.
+- Update UI empty states to consume the explicit API empty-state contract.
 
 Acceptance criteria:
 
@@ -62,13 +67,14 @@ npm test
 npm run build
 ```
 
-Exact next action:
+Verification state:
 
-- Trace every import and API consumer of `src/lib/game/data.ts` and identify the smallest central boundary where demo-mode gating can be enforced.
+- PARTIALLY VERIFIED by static inspection.
+- Runtime tests and production build have not yet been independently executed on this branch.
 
 ### SPINOR-003 — Verify current build and test surface
 
-Status: DISCOVERED
+Status: BLOCKED
 Risk: High
 
 Acceptance criteria:
@@ -79,7 +85,11 @@ Acceptance criteria:
 
 Blocker:
 
-- The current GitHub connector can inspect and modify files but does not provide a local shell. Verification requires an available CI workflow or a checked-out workspace.
+- The GitHub connector can inspect and modify repository files but does not expose a local shell, and the latest commit has no published combined-status checks.
+
+Exact unblock action:
+
+- Run the two verification commands in a checked-out workspace or attach a CI workflow to the branch.
 
 ### SPINOR-004 — Replace process-local persistence for production-critical records
 
@@ -121,8 +131,8 @@ Acceptance criteria:
 
 ## Priority order
 
-1. SPINOR-003 — establish verified baseline.
-2. SPINOR-002 — isolate demo data from production evidence.
+1. SPINOR-003 — establish a verified baseline.
+2. Finish SPINOR-002 across every seed call site.
 3. SPINOR-005 — tenancy and authorization boundary.
 4. SPINOR-004 — durable relational persistence.
 5. SPINOR-006 — admissibility and promotion gates.
