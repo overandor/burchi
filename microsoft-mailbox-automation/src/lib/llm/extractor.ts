@@ -77,8 +77,14 @@ ${attachmentSummaries ? `\nAttachments:\n${attachmentSummaries}` : ""}`;
     });
   } catch (e) {
     clearTimeout(timer);
-    console.error("[extractor] OpenAI API call failed:", e);
-    throw e;
+    console.error("[extractor] OpenAI API call failed, trying LLM7 fallback:", e);
+    // Try free LLM7 fallback before giving up
+    const fallbackContent = await tryLLM7Extraction(systemMessage, userMessage);
+    if (fallbackContent) {
+      response = { choices: [{ message: { content: fallbackContent } }] } as any;
+    } else {
+      throw e;
+    }
   }
   clearTimeout(timer);
 
@@ -139,4 +145,42 @@ function stripHtml(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Free LLM7 fallback for email extraction when the primary OpenAI endpoint fails.
+ * Returns the raw JSON string content from the LLM response, or null on failure.
+ */
+async function tryLLM7Extraction(systemMessage: string, userMessage: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    const res = await fetch("https://api.llm7.io/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "gpt-oss:20b",
+        messages: [
+          { role: "system", content: systemMessage },
+          { role: "user", content: userMessage },
+        ],
+        max_tokens: 4096,
+        temperature: 0.1,
+      }),
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && !text.trim().startsWith("<")) {
+        const data = JSON.parse(text);
+        const content = data.choices?.[0]?.message?.content || "";
+        const reasoning = data.choices?.[0]?.message?.reasoning || "";
+        return content || reasoning || null;
+      }
+    }
+  } catch (e) {
+    console.error("[extractor] LLM7 fallback error:", e);
+  }
+  return null;
 }

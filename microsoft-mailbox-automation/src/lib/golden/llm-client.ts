@@ -11,7 +11,7 @@
 
 import { loadConfig } from "@/lib/config";
 
-const LLM_TIMEOUT_MS = 30000;
+const LLM_TIMEOUT_MS = 55000;
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -70,6 +70,12 @@ export async function callLLM(messages: ChatMessage[], opts?: {
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      // Primary endpoint returned HTTP error (402 billing, 503 loading, etc).
+      // Try free fallbacks before giving up.
+      const llm7Content = await tryLLM7Fallback(messages, opts);
+      if (llm7Content) return { content: llm7Content, used: true, provider: "llm7-fallback" };
+      const pollinationsContent = await tryPollinationsFallback(messages);
+      if (pollinationsContent) return { content: pollinationsContent, used: true, provider: "pollinations-fallback" };
       return { content: "", used: false, provider: "none", error: `LLM HTTP ${res.status}: ${text.slice(0, 200)}` };
     }
 
@@ -83,10 +89,92 @@ export async function callLLM(messages: ChatMessage[], opts?: {
       }
       return { content: "", used: false, provider: data.model || "unknown", error: "Empty LLM response" };
     }
+    // Guard against HTML responses (some endpoints return HTML error pages with 200)
+    if (typeof content === "string" && content.trim().startsWith("<")) {
+      const llm7Content = await tryLLM7Fallback(messages, opts);
+      if (llm7Content) return { content: llm7Content, used: true, provider: "llm7-fallback" };
+      const pollinationsContent = await tryPollinationsFallback(messages);
+      if (pollinationsContent) return { content: pollinationsContent, used: true, provider: "pollinations-fallback" };
+      return { content: "", used: false, provider: "none", error: "Endpoint returned HTML instead of JSON" };
+    }
     return { content, used: true, provider: data.model || model };
   } catch (e: any) {
+    // Primary endpoint failed (timeout, network, DNS). Try free fallbacks
+    // so the golden/spinor engines still get LLM-enhanced output.
+    const llm7Content = await tryLLM7Fallback(messages, opts);
+    if (llm7Content) return { content: llm7Content, used: true, provider: "llm7-fallback" };
+    const pollinationsContent = await tryPollinationsFallback(messages);
+    if (pollinationsContent) return { content: pollinationsContent, used: true, provider: "pollinations-fallback" };
     return { content: "", used: false, provider: "none", error: e.message };
   }
+}
+
+/**
+ * Free, no-API-key OpenAI-compatible fallback (LLM7).
+ * Used when the user's configured endpoint is unreachable or billing-blocked.
+ */
+async function tryLLM7Fallback(messages: ChatMessage[], opts?: { temperature?: number; maxTokens?: number }): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    const res = await fetch("https://api.llm7.io/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "gpt-oss:20b",
+        messages,
+        max_tokens: opts?.maxTokens ?? 1024,
+        temperature: opts?.temperature ?? 0.4,
+      }),
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && !text.trim().startsWith("<")) {
+        const data = JSON.parse(text);
+        const content = data.choices?.[0]?.message?.content || "";
+        if (content) return content;
+        // Reasoning models may put output in "reasoning" field
+        const reasoning = data.choices?.[0]?.message?.reasoning || "";
+        if (reasoning) return reasoning;
+      }
+    }
+  } catch (e) {
+    console.error("[golden/llm-client] llm7 fallback error:", e);
+  }
+  return null;
+}
+
+/**
+ * Free Pollinations fallback (no API key required).
+ */
+async function tryPollinationsFallback(messages: ChatMessage[]): Promise<string | null> {
+  const referrer = (process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE || "mailbox-sci-data.netlify.app").replace(/^https?:\/\//, "");
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch("https://text.pollinations.ai/openai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "openai",
+        messages,
+        max_tokens: 512,
+        seed: Math.floor(Math.random() * 99999),
+        referrer,
+      }),
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || null;
+    }
+  } catch (e) {
+    console.error("[golden/llm-client] pollinations fallback error:", e);
+  }
+  return null;
 }
 
 /** Extract JSON from an LLM response that may contain markdown fences or prose. */

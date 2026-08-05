@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       });
       const text = await res.text();
       if (!res.ok) {
-        const fb = await tryPollinations(messages, model);
+        const fb = await tryLLM7(messages) || await tryPollinations(messages, model);
         if (fb) llmContent = fb;
         else return NextResponse.json({ error: `Ollama failed: ${text}` }, { status: 502 });
       } else {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         clearTimeout(timeout);
         const text = await res.text();
         if (!res.ok) {
-          const fb = await tryPollinations(messages, model);
+          const fb = await tryLLM7(messages) || await tryPollinations(messages, model);
           if (fb) llmContent = fb;
           else return NextResponse.json({ error: `LLM failed: ${text}` }, { status: 502 });
         } else {
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         }
       } catch (err: any) {
         clearTimeout(timeout);
-        const fb = await tryPollinations(messages, model);
+        const fb = await tryLLM7(messages) || await tryPollinations(messages, model);
         if (fb) llmContent = fb;
         else return NextResponse.json({ error: err.message }, { status: 502 });
       }
@@ -132,6 +132,39 @@ export async function POST(request: NextRequest) {
 
 async function tryPollinations(messages: any[], model: string): Promise<string | null> {
   return tryPollinationsDirect(messages, "openai");
+}
+
+/**
+ * Free, no-API-key OpenAI-compatible fallback (LLM7).
+ * Used when the user's configured endpoint is disabled or fails.
+ */
+async function tryLLM7(messages: any[]): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    const res = await fetch("https://api.llm7.io/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "gpt-oss:20b",
+        messages,
+        max_tokens: 1024,
+        temperature: 0.4,
+      }),
+    });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && !text.trim().startsWith("<")) {
+        const data = JSON.parse(text);
+        return data.choices?.[0]?.message?.content || null;
+      }
+    }
+  } catch (e) {
+    console.error("[phones/llm] llm7 fallback error:", e);
+  }
+  return null;
 }
 
 async function tryPollinationsDirect(messages: any[], model: string): Promise<string | null> {

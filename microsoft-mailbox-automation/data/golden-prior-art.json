@@ -183,5 +183,32 @@
     ],
     "researchConfidence": 0.6,
     "researchedAt": "2026-08-05T02:30:02.041Z"
+  },
+  {
+    "id": "pa_DcZlveXTX-",
+    "hypothesisClaim": "Test hypothesis about email follow-up timing",
+    "status": "transfer_candidate",
+    "evidenceState": "inconclusive",
+    "sourceDomains": [
+      "pharma",
+      "marketing"
+    ],
+    "testedInMarket": true,
+    "testedInAdjacentIndustries": true,
+    "adjacentSupportSummary": "Email follow‑up timing is routinely tested in pharma marketing campaigns to optimize patient engagement and in adjacent sectors such as e‑commerce and SaaS for lead nurturing. Studies in these fields show that shorter intervals can increase open rates but may also raise unsubscribe rates, while longer intervals reduce engagement but improve perceived relevance.",
+    "responsibleComponent": "email timing algorithm",
+    "requiredConditions": [
+      "patient or prospect opt‑in",
+      "compliance with data‑privacy regulations"
+    ],
+    "risksAndConfounders": [
+      "spam perception",
+      "regulatory compliance risk"
+    ],
+    "genuinelyUnknown": [
+      "specific impact of email follow‑up timing on clinical trial enrollment rates in pharma"
+    ],
+    "researchConfidence": 0.85,
+    "researchedAt": "2026-08-05T03:27:01.125Z"
   }
 ]
