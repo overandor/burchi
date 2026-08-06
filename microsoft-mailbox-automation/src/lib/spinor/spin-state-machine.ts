@@ -440,7 +440,10 @@ export class SPINStateMachine {
       spin.replicationCount = (ctx.replicationClaims || []).filter(isSignificant).length;
     }
 
-    // Update evidence tier
+    // Update evidence tier — combine context claims with stored claims
+    // so that claims added via addClaimToSPIN are not lost on later transitions.
+    // The caller (spin-engine.ts) is responsible for loading stored claims
+    // and passing them in ctx.claims.
     if ([SPINState.ATTRIBUTED, SPINState.REPLICATED, SPINState.REVALIDATED].includes(to)) {
       const allClaims = [...(ctx.claims || []), ...(ctx.replicationClaims || [])];
       const assessment = computeEvidenceTier(allClaims, spin.requiredReplications);

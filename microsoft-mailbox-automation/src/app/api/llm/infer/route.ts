@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withFoundryVoice } from "@/lib/foundry-voice";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let body: any = {};
   try {
-    const body = await request.json().catch(() => ({}));
+    body = await request.json().catch(() => ({}));
 
     // Load config defensively — may fail on read-only serverless filesystems
     let config: any = { llm: {} };
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
         if (!messages.some((m: any) => m.role === "system")) {
           messages.unshift({
             role: "system",
-            content: `You are a revenue intelligence assistant. Use the mailbox telemetry context below to answer questions and generate insights.\n\n--- MAILBOX TELEMETRY CONTEXT ---\n${telemetryContext}`,
+            content: withFoundryVoice("dashboard", `Use the mailbox telemetry context below to answer questions and generate insights.\n\n--- MAILBOX TELEMETRY CONTEXT ---\n${telemetryContext}`),
           });
         }
       } catch (e) {
@@ -242,8 +245,128 @@ export async function POST(request: NextRequest) {
       if (llm7Result) return NextResponse.json(llm7Result);
       return NextResponse.json({ error: "Endpoint returned invalid JSON. Configure a valid OpenAI-compatible endpoint in Settings." }, { status: 502 });
     }
+
+    // ─── Retry with lower temperature if content is empty ──────────
+    // Some models return empty content at high temperature (e.g. gpt-oss:20b
+    // at temp=0.8). Retry once at temp=0.4 before falling back to LLM7.
+    const content = data.choices?.[0]?.message?.content;
+    if (!content || (typeof content === "string" && content.trim() === "")) {
+      const retryTemp = 0.4;
+      const controller2 = new AbortController();
+      const timeout2 = setTimeout(() => controller2.abort(), 60000);
+      try {
+        const llmRes2 = await fetch(url, {
+          method: "POST",
+          headers,
+          signal: controller2.signal,
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: retryTemp,
+            max_tokens: body.max_tokens ?? 1024,
+            stream: false,
+          }),
+        });
+        clearTimeout(timeout2);
+        const text2 = await llmRes2.text();
+        if (llmRes2.ok && text2 && !text2.trim().startsWith("<")) {
+          try {
+            const data2 = JSON.parse(text2);
+            if (data2.choices?.[0]?.message?.content) {
+              data = data2;
+              data._retry = { reason: "empty_content", originalTemp: body.temperature ?? 0.7, retryTemp };
+            }
+          } catch { }
+        }
+      } catch {
+        clearTimeout(timeout2);
+      }
+      // If still empty, try LLM7 fallback
+      const finalContent = data.choices?.[0]?.message?.content;
+      if (!finalContent || (typeof finalContent === "string" && finalContent.trim() === "")) {
+        const llm7Result = await tryLLM7(messages, model);
+        if (llm7Result) return NextResponse.json(llm7Result);
+      }
+    }
+
+    // ─── Log inference receipt (prompt/version provenance) ────────
+    try {
+      const { createHash } = await import("crypto");
+      const { nanoid } = await import("nanoid");
+      const { getDb } = await import("@/lib/db");
+      const promptHash = createHash("sha256")
+        .update(JSON.stringify(messages))
+        .digest("hex");
+      const responseHash = data.choices?.[0]?.message?.content
+        ? createHash("sha256").update(data.choices[0].message.content).digest("hex")
+        : null;
+      const responseTokens = data.usage?.completion_tokens || data.usage?.total_tokens || null;
+      const receiptId = `rcpt_${nanoid(12)}`;
+      getDb().prepare(`
+        INSERT OR REPLACE INTO llm_receipts (
+          id, org_id, user_id, endpoint, model,
+          prompt_hash, prompt_summary, messages_count,
+          max_tokens, temperature, response_hash, response_tokens,
+          latency_ms, success, error_message
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        receiptId,
+        "foundry",
+        null,
+        endpoint,
+        model,
+        promptHash,
+        messages[0]?.content?.slice(0, 200) || "",
+        messages.length,
+        body.max_tokens || null,
+        body.temperature ?? null,
+        responseHash,
+        responseTokens,
+        Date.now() - startTime,
+        1,
+        null,
+      );
+      // Attach receipt to response for auditability
+      data._receipt = { id: receiptId, promptHash, model, timestamp: new Date().toISOString() };
+    } catch (receiptError: any) {
+      console.error("[llm/infer] receipt logging error (non-blocking):", receiptError.message);
+    }
+
     return NextResponse.json(data);
   } catch (e: any) {
+    // ─── Log failed inference receipt ─────────────────────────────
+    try {
+      const { createHash } = await import("crypto");
+      const { nanoid } = await import("nanoid");
+      const { getDb } = await import("@/lib/db");
+      const promptHash = createHash("sha256")
+        .update(JSON.stringify(body.messages || []))
+        .digest("hex");
+      getDb().prepare(`
+        INSERT OR REPLACE INTO llm_receipts (
+          id, org_id, user_id, endpoint, model,
+          prompt_hash, prompt_summary, messages_count,
+          max_tokens, temperature, response_hash, response_tokens,
+          latency_ms, success, error_message
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `rcpt_${nanoid(12)}`,
+        "foundry",
+        null,
+        body.endpoint || "",
+        body.model || "",
+        promptHash,
+        body.messages?.[0]?.content?.slice(0, 200) || "",
+        body.messages?.length || 0,
+        body.max_tokens || null,
+        body.temperature ?? null,
+        null,
+        null,
+        Date.now() - startTime,
+        0,
+        e.message,
+      );
+    } catch { /* non-blocking */ }
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

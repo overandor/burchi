@@ -18,13 +18,42 @@ export const maxDuration = 120;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const record: PhoneRecord = body.record;
+    let record: any = body.record;
 
     if (!record) {
       return NextResponse.json(
         { error: "record is required" },
         { status: 400 }
       );
+    }
+
+    // Normalize: accept flat records (with callDuration, carrier, notes, etc.)
+    // and convert them to the PhoneRecord shape with events/images arrays.
+    if (!record.events || !Array.isArray(record.events)) {
+      const events: any[] = [];
+      if (record.callDuration || body.callDuration || record.direction || body.direction) {
+        events.push({
+          id: "evt_1",
+          timestamp: record.timestamp || body.timestamp || new Date().toISOString(),
+          type: "call",
+          direction: record.direction || body.direction || "outbound",
+          durationSec: record.callDuration || body.callDuration || 0,
+          notes: record.notes || body.notes || "",
+          metadata: {
+            carrier: record.carrier || body.carrier,
+            contactName: record.contactName || body.contactName,
+            tags: record.tags || body.tags || [],
+          },
+        });
+      }
+      record = {
+        id: record.id || body.id || "recadhoc",
+        phoneNumber: record.phoneNumber || body.phoneNumber || "unknown",
+        label: record.label || record.contactName || body.contactName || record.phoneNumber || "Ad hoc",
+        createdAt: record.createdAt || body.timestamp || new Date().toISOString(),
+        events,
+        images: record.images || [],
+      };
     }
 
     let config: any = { llm: {} };

@@ -39,6 +39,7 @@ import {
   getStateDistribution,
   dbHealth,
 } from "./spin-db";
+import { getEngineStats } from "./email-engine";
 
 export type {
   SPIN,
@@ -98,6 +99,18 @@ export function advanceSPIN(
 ): { spin: SPIN; snapshot: ReturnType<typeof appendSnapshot> } {
   const spin = loadSpin(spinId);
   if (!spin) throw new Error(`SPIN not found: ${spinId}`);
+
+  // For transitions that recompute the evidence tier, merge stored claims
+  // into the context so claims added via addClaimToSPIN are not lost.
+  if ([SPINState.ATTRIBUTED, SPINState.REPLICATED, SPINState.REVALIDATED].includes(toState)) {
+    const storedClaims = loadClaims(spinId);
+    if (storedClaims.length > 0) {
+      const contextClaims = [...(ctx.claims || []), ...(ctx.replicationClaims || [])];
+      const seen = new Set(contextClaims.map((c) => c.claimId));
+      const merged = [...contextClaims, ...storedClaims.filter((c) => !seen.has(c.claimId))];
+      ctx = { ...ctx, claims: merged };
+    }
+  }
 
   const sm = getStateMachine();
   const snapshot = sm.transition(spin, toState, ctx);
@@ -172,6 +185,9 @@ export function getSPINWithClaims(spinId: string): { spin: SPIN; claims: Attribu
 
 export function getDashboardStats(): {
   totalSpins: number;
+  accounts: number;
+  goldenNodes: number;
+  activeExperiments: number;
   stateDistribution: Record<string, number>;
   evidenceDistribution: Record<string, number>;
   reverseTestsPending: number;
@@ -189,8 +205,27 @@ export function getDashboardStats(): {
     if (!verifyChain(spin)) chainOk = false;
   }
 
+  // Aggregate real data from email engine and golden systems
+  const emailStats = { signals: 0, hypotheses: 0, experiments: 0, analyzed: 0, goldenNodes: 0 };
+  try {
+    const stats = getEngineStats();
+    emailStats.signals = stats.signals;
+    emailStats.hypotheses = stats.hypotheses;
+    emailStats.experiments = stats.experiments;
+    emailStats.analyzed = stats.analyzed;
+    emailStats.goldenNodes = stats.goldenNodes;
+    stateDist.executing = (stateDist.executing || 0) + (stats.experiments - stats.analyzed);
+    stateDist.replication_pending = (stateDist.replication_pending || 0) + stats.analyzed - stats.goldenNodes;
+    stateDist.replicated = (stateDist.replicated || 0) + stats.goldenNodes;
+  } catch (e) {
+    console.error("[spin dashboard] email engine error:", e);
+  }
+
   return {
-    totalSpins: allSpins.length,
+    totalSpins: allSpins.length + emailStats.experiments,
+    accounts: emailStats.signals,
+    goldenNodes: emailStats.goldenNodes,
+    activeExperiments: emailStats.experiments,
     stateDistribution: stateDist,
     evidenceDistribution: evidenceDist,
     reverseTestsPending,

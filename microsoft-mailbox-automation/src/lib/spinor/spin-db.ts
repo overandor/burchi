@@ -1,16 +1,14 @@
 /**
- * Portable JSON file persistence for SPINOR OS.
+ * SQLite-backed persistence for SPINOR OS.
  *
- * Works on all platforms (HF Space, Netlify, Vercel, local) without
- * native module compilation. Uses an in-memory cache backed by a JSON
- * file on disk. On serverless platforms where the filesystem is
- * read-only or ephemeral, the in-memory cache still works for the
- * duration of the request.
+ * Migrated from JSON file to SQLite for serverless compatibility.
+ * The JSON file was lost on every cold start because the filesystem
+ * was read-only or ephemeral on Fly.io. SQLite persists to the same
+ * foundry.db that all other data uses.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { dirname, join } from "path";
-import { tmpdir } from "os";
+import { createHash } from "crypto";
+import { getDb } from "@/lib/db";
 import {
   SPIN,
   SPINState,
@@ -18,45 +16,100 @@ import {
 } from "./spin";
 
 // ---------------------------------------------------------------------------
-// Storage
+// Serialization helpers
 // ---------------------------------------------------------------------------
 
-const DB_PATH = process.env.SPINOR_DB_PATH || join(tmpdir(), "spinor-os.json");
-
-interface DBShape {
-  spins: Record<string, SPIN>;
-  claims: Record<string, AttributionClaim[]>;
+interface SpinRow {
+  spin_id: string;
+  hypothesis_id: string | null;
+  employee_owner: string | null;
+  state: string;
+  prior_art: string;
+  contributions: string;
+  modifications: string;
+  experiment_ids: string;
+  mission_ids: string;
+  claim_ids: string;
+  strategy_id: string | null;
+  golden_node_id: string | null;
+  replication_count: number;
+  replication_territories: string;
+  reverse_test: string | null;
+  automation_status: string;
+  evidence_tier: string;
+  snapshots: string;
+  metadata: string;
+  created_at: string;
+  updated_at: string;
 }
 
-let _cache: DBShape | null = null;
-
-function loadDB(): DBShape {
-  if (_cache) return _cache;
-
-  try {
-    if (existsSync(DB_PATH)) {
-      const raw = readFileSync(DB_PATH, "utf-8");
-      _cache = JSON.parse(raw);
-    } else {
-      _cache = { spins: {}, claims: {} };
-      saveDB();
-    }
-  } catch {
-    _cache = { spins: {}, claims: {} };
-  }
-
-  return _cache!;
+function rowToSpin(row: SpinRow): SPIN {
+  const metadata = JSON.parse(row.metadata || "{}");
+  return {
+    spinId: row.spin_id,
+    hypothesisId: row.hypothesis_id || "",
+    employeeOwner: row.employee_owner || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    state: row.state as SPINState,
+    priorArt: JSON.parse(row.prior_art || "{}"),
+    contributions: JSON.parse(row.contributions || "[]"),
+    modifications: JSON.parse(row.modifications || "[]"),
+    experimentIds: JSON.parse(row.experiment_ids || "[]"),
+    missionIds: JSON.parse(row.mission_ids || "[]"),
+    claimIds: JSON.parse(row.claim_ids || "[]"),
+    strategyId: row.strategy_id,
+    goldenNodeId: row.golden_node_id,
+    replicationCount: row.replication_count || 0,
+    requiredReplications: metadata.requiredReplications || 3,
+    automationStatus: JSON.parse(row.automation_status || "{}"),
+    automationLayerId: metadata.automationLayerId || null,
+    reverseTest: row.reverse_test ? JSON.parse(row.reverse_test) : null,
+    snapshots: JSON.parse(row.snapshots || "[]"),
+    evidenceTier: row.evidence_tier as any,
+    tags: metadata.tags || [],
+    claim: metadata.claim || "",
+    intervention: metadata.intervention || "",
+    control: metadata.control || "",
+    population: metadata.population || "",
+    primaryUncertainty: metadata.primaryUncertainty || "",
+    complianceBoundary: metadata.complianceBoundary || "",
+  } as SPIN;
 }
 
-function saveDB(): void {
-  if (!_cache) return;
-  try {
-    const dir = dirname(DB_PATH);
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    writeFileSync(DB_PATH, JSON.stringify(_cache, null, 2), "utf-8");
-  } catch {
-    // Filesystem may be read-only on serverless — cache still works in-memory
-  }
+function spinToRow(spin: SPIN): Omit<SpinRow, "created_at" | "updated_at"> {
+  const metadata: Record<string, unknown> = {
+    requiredReplications: (spin as any).requiredReplications ?? 3,
+    automationLayerId: (spin as any).automationLayerId ?? null,
+    tags: (spin as any).tags || [],
+    claim: (spin as any).claim || "",
+    intervention: (spin as any).intervention || "",
+    control: (spin as any).control || "",
+    population: (spin as any).population || "",
+    primaryUncertainty: (spin as any).primaryUncertainty || "",
+    complianceBoundary: (spin as any).complianceBoundary || "",
+  };
+  return {
+    spin_id: spin.spinId,
+    hypothesis_id: spin.hypothesisId || null,
+    employee_owner: spin.employeeOwner || null,
+    state: spin.state,
+    prior_art: JSON.stringify(spin.priorArt || {}),
+    contributions: JSON.stringify(spin.contributions || []),
+    modifications: JSON.stringify(spin.modifications || []),
+    experiment_ids: JSON.stringify(spin.experimentIds || []),
+    mission_ids: JSON.stringify(spin.missionIds || []),
+    claim_ids: JSON.stringify(spin.claimIds || []),
+    strategy_id: spin.strategyId || null,
+    golden_node_id: spin.goldenNodeId || null,
+    replication_count: spin.replicationCount || 0,
+    replication_territories: JSON.stringify((spin as any).replicationTerritories || []),
+    reverse_test: spin.reverseTest ? JSON.stringify(spin.reverseTest) : null,
+    automation_status: JSON.stringify(spin.automationStatus || {}),
+    evidence_tier: spin.evidenceTier || ("observation" as any),
+    snapshots: JSON.stringify(spin.snapshots || []),
+    metadata: JSON.stringify(metadata),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -64,47 +117,99 @@ function saveDB(): void {
 // ---------------------------------------------------------------------------
 
 export function saveSpin(spin: SPIN): void {
-  const db = loadDB();
-  db.spins[spin.spinId] = spin;
-  saveDB();
+  const row = spinToRow(spin);
+  const db = getDb();
+
+  // Check if the spin already exists — use UPDATE to avoid INSERT OR REPLACE
+  // which DELETEs the row first and cascades to spin_claims (ON DELETE CASCADE),
+  // wiping all stored claims.
+  const existing = db.prepare(`SELECT 1 FROM spin_records WHERE spin_id = ?`).get(spin.spinId);
+  if (existing) {
+    db.prepare(`
+      UPDATE spin_records SET
+        hypothesis_id = @hypothesis_id,
+        employee_owner = @employee_owner,
+        state = @state,
+        prior_art = @prior_art,
+        contributions = @contributions,
+        modifications = @modifications,
+        experiment_ids = @experiment_ids,
+        mission_ids = @mission_ids,
+        claim_ids = @claim_ids,
+        strategy_id = @strategy_id,
+        golden_node_id = @golden_node_id,
+        replication_count = @replication_count,
+        replication_territories = @replication_territories,
+        reverse_test = @reverse_test,
+        automation_status = @automation_status,
+        evidence_tier = @evidence_tier,
+        snapshots = @snapshots,
+        metadata = @metadata,
+        updated_at = datetime('now')
+      WHERE spin_id = @spin_id
+    `).run(row as any);
+  } else {
+    db.prepare(`
+      INSERT INTO spin_records (
+        spin_id, hypothesis_id, employee_owner, state,
+        prior_art, contributions, modifications, experiment_ids,
+        mission_ids, claim_ids, strategy_id, golden_node_id,
+        replication_count, replication_territories, reverse_test,
+        automation_status, evidence_tier, snapshots, metadata,
+        created_at, updated_at
+      ) VALUES (
+        @spin_id, @hypothesis_id, @employee_owner, @state,
+        @prior_art, @contributions, @modifications, @experiment_ids,
+        @mission_ids, @claim_ids, @strategy_id, @golden_node_id,
+        @replication_count, @replication_territories, @reverse_test,
+        @automation_status, @evidence_tier, @snapshots, @metadata,
+        datetime('now'), datetime('now')
+      )
+    `).run(row as any);
+  }
 }
 
 export function loadSpin(spinId: string): SPIN | null {
-  const db = loadDB();
-  return db.spins[spinId] || null;
+  const db = getDb();
+  const row = db.prepare(`SELECT * FROM spin_records WHERE spin_id = ?`).get(spinId) as SpinRow | undefined;
+  return row ? rowToSpin(row) : null;
 }
 
 export function loadAllSpins(): SPIN[] {
-  const db = loadDB();
-  return Object.values(db.spins).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const db = getDb();
+  const rows = db.prepare(`SELECT * FROM spin_records ORDER BY updated_at DESC`).all() as SpinRow[];
+  return rows.map(rowToSpin);
 }
 
 export function loadSpinsByState(state: SPINState): SPIN[] {
-  return loadAllSpins().filter((s) => s.state === state);
+  const db = getDb();
+  const rows = db.prepare(`SELECT * FROM spin_records WHERE state = ? ORDER BY updated_at DESC`).all(state) as SpinRow[];
+  return rows.map(rowToSpin);
 }
 
 export function loadSpinsByEmployee(employeeId: string): SPIN[] {
-  return loadAllSpins().filter((s) => s.employeeOwner === employeeId);
+  const db = getDb();
+  const rows = db.prepare(`SELECT * FROM spin_records WHERE employee_owner = ? ORDER BY updated_at DESC`).all(employeeId) as SpinRow[];
+  return rows.map(rowToSpin);
 }
 
 export function deleteSpin(spinId: string): void {
-  const db = loadDB();
-  delete db.spins[spinId];
-  delete db.claims[spinId];
-  saveDB();
+  const db = getDb();
+  db.prepare(`DELETE FROM spin_records WHERE spin_id = ?`).run(spinId);
+  db.prepare(`DELETE FROM spin_claims WHERE spin_id = ?`).run(spinId);
 }
 
 export function getSpinCount(): number {
-  const db = loadDB();
-  return Object.keys(db.spins).length;
+  const db = getDb();
+  const row = db.prepare(`SELECT COUNT(*) as count FROM spin_records`).get() as { count: number };
+  return row.count;
 }
 
 export function getStateDistribution(): Record<string, number> {
-  const db = loadDB();
+  const db = getDb();
+  const rows = db.prepare(`SELECT state, COUNT(*) as count FROM spin_records GROUP BY state`).all() as { state: string; count: number }[];
   const result: Record<string, number> = {};
-  for (const spin of Object.values(db.spins)) {
-    result[spin.state] = (result[spin.state] || 0) + 1;
-  }
+  for (const r of rows) result[r.state] = r.count;
   return result;
 }
 
@@ -113,21 +218,26 @@ export function getStateDistribution(): Record<string, number> {
 // ---------------------------------------------------------------------------
 
 export function saveClaim(spinId: string, claim: AttributionClaim): void {
-  const db = loadDB();
-  if (!db.claims[spinId]) db.claims[spinId] = [];
-  // Replace if exists, otherwise append
-  const idx = db.claims[spinId].findIndex((c) => c.claimId === claim.claimId);
-  if (idx >= 0) {
-    db.claims[spinId][idx] = claim;
-  } else {
-    db.claims[spinId].push(claim);
+  const db = getDb();
+  db.prepare(`
+    INSERT OR REPLACE INTO spin_claims (spin_id, claim_id, claim_data)
+    VALUES (?, ?, ?)
+  `).run(spinId, claim.claimId, JSON.stringify(claim));
+
+  // Update claim_ids on the spin record
+  const spin = loadSpin(spinId);
+  if (spin) {
+    if (!spin.claimIds.includes(claim.claimId)) {
+      spin.claimIds.push(claim.claimId);
+    }
+    saveSpin(spin);
   }
-  saveDB();
 }
 
 export function loadClaims(spinId: string): AttributionClaim[] {
-  const db = loadDB();
-  return db.claims[spinId] || [];
+  const db = getDb();
+  const rows = db.prepare(`SELECT claim_data FROM spin_claims WHERE spin_id = ?`).all(spinId) as { claim_data: string }[];
+  return rows.map((r) => JSON.parse(r.claim_data) as AttributionClaim);
 }
 
 // ---------------------------------------------------------------------------
@@ -136,12 +246,12 @@ export function loadClaims(spinId: string): AttributionClaim[] {
 
 export function dbHealth(): { ok: boolean; path: string; spinCount: number; claimCount: number } {
   try {
-    const db = loadDB();
-    const spinCount = Object.keys(db.spins).length;
-    const claimCount = Object.values(db.claims).reduce((s, c) => s + c.length, 0);
-    return { ok: true, path: DB_PATH, spinCount, claimCount };
+    const spinCount = getSpinCount();
+    const db = getDb();
+    const row = db.prepare(`SELECT COUNT(*) as count FROM spin_claims`).get() as { count: number };
+    return { ok: true, path: "sqlite:foundry.db", spinCount, claimCount: row.count };
   } catch (e) {
-    return { ok: false, path: DB_PATH, spinCount: 0, claimCount: 0 };
+    return { ok: false, path: "sqlite:foundry.db", spinCount: 0, claimCount: 0 };
   }
 }
 
@@ -150,6 +260,7 @@ export function dbHealth(): { ok: boolean; path: string; spinCount: number; clai
 // ---------------------------------------------------------------------------
 
 export function resetDB(): void {
-  _cache = { spins: {}, claims: {} };
-  saveDB();
+  const db = getDb();
+  db.prepare(`DELETE FROM spin_records`).run();
+  db.prepare(`DELETE FROM spin_claims`).run();
 }
