@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminality Runtime</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+      font-size: 13px;
+      overflow-x: hidden
+    }
+
+    a {
+      color: #58a6ff;
+      text-decoration: none
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      max-width: 1600px;
+      margin: 0 auto
+    }
+
+    .header {
+      grid-column: 1/-1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #21262d
+    }
+
+    .header h1 {
+      font-size: 18px;
+      color: #58a6ff
+    }
+
+    .header .status {
+      display: flex;
+      gap: 16px;
+      align-items: center
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3fb950;
+      display: inline-block
+    }
+
+    .panel {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 14px;
+      overflow: hidden
+    }
+
+    .panel h2 {
+      font-size: 14px;
+      color: #8b949e;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px
+    }
+
+    .stat {
+      display: inline-block;
+      margin-right: 16px
+    }
+
+    .stat .val {
+      font-size: 20px;
+      color: #58a6ff;
+      font-weight: bold
+    }
+
+    .stat .label {
+      font-size: 11px;
+      color: #8b949e
+    }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 4px;
+      padding: 8px;
+      overflow: auto;
+      max-height: 300px;
+      font-size: 12px;
+      white-space: pre-wrap
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 12px
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #58a6ff
+    }
+
+    button {
+      cursor: pointer;
+      background: #1f6feb;
+      border-color: #1f6feb;
+      color: #fff;
+      font-weight: 500
+    }
+
+    button:hover {
+      background: #388bfd
+    }
+
+    button:active {
+      background: #1f6feb
+    }
+
+    button.secondary {
+      background: #21262d;
+      border-color: #30363d;
+      color: #e0e0e0
+    }
+
+    button.secondary:hover {
+      background: #30363d
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center
+    }
+
+    .form-row label {
+      min-width: 100px;
+      color: #8b949e;
+      font-size: 11px
+    }
+
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      flex: 1
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px
+    }
+
+    .node-list {
+      max-height: 300px;
+      overflow: auto
+    }
+
+    .node-item {
+      padding: 6px;
+      border-bottom: 1px solid #21262d;
+      cursor: pointer
+    }
+
+    .node-item:hover {
+      background: #21262d
+    }
+
+    .node-item .kind {
+      color: #f0883e;
+      font-weight: bold;
+      font-size: 11px
+    }
+
+    .node-item .identity {
+      color: #e0e0e0
+    }
+
+    .node-item .hash {
+      color: #8b949e;
+      font-size: 10px
+    }
+
+    .node-item.verified {
+      border-left: 3px solid #3fb950
+    }
+
+    .search-results .result {
+      padding: 6px;
+      border-bottom: 1px solid #21262d
+    }
+
+    .result .score {
+      color: #d2a8ff;
+      font-size: 10px
+    }
+
+    .result .summary {
+      color: #e0e0e0
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 10px
+    }
+
+    .tab {
+      padding: 4px 12px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+      font-size: 11px;
+      color: #8b949e
+    }
+
+    .tab.active {
+      background: #161b22;
+      color: #58a6ff;
+      border-bottom: 1px solid #161b22
+    }
+
+    .tab-content {
+      display: none
+    }
+
+    .tab-content.active {
+      display: block
+    }
+
+    .terminal {
+      background: #000;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 250px;
+      overflow: auto;
+      white-space: pre-wrap;
+      color: #3fb950
+    }
+
+    .market-node {
+      padding: 8px;
+      border-bottom: 1px solid #21262d
+    }
+
+    .market-node .peer {
+      color: #58a6ff;
+      font-weight: bold
+    }
+
+    .market-node .resources {
+      color: #8b949e;
+      font-size: 11px
+    }
+
+    .cap-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #21262d
+    }
+
+    .cap-row .level {
+      color: #f0883e
+    }
+
+    .cap-row .holder {
+      color: #e0e0e0
+    }
+
+    .cap-row .valid {
+      color: #3fb950
+    }
+
+    .cap-row .revoked {
+      color: #f85149
+    }
+
+    .rollup-step {
+      padding: 4px 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 11px
+    }
+
+    .rollup-step .verified {
+      color: #3fb950
+    }
+
+    .rollup-step .unverified {
+      color: #d29922
+    }
+
+    .rollup-step .model {
+      color: #d2a8ff
+    }
+
+    @media(max-width:900px) {
+      .container {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ Terminality Runtime</h1>
+      <div class="status">
+        <span><span class="status-dot" id="status-dot"></span> <span id="uptime">--</span></span>
+        <button class="secondary" onclick="refreshAll()">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="panel" style="grid-column:1/-1">
+      <h2>Runtime Stats</h2>
+      <div id="stats-bar">Loading...</div>
+    </div>
+
+    <!-- Left Column: Execution Graph -->
+    <div class="panel">
+      <h2>Execution Graph</h2>
+      <div class="form-row">
+        <label>Kind</label>
+        <select id="node-kind">
+          <option value="">All</option>
+          <option value="process">Process</option>
+          <option value="file">File</option>
+          <option value="inference">Inference</option>
+          <option value="tool">Tool</option>
+          <option value="command">Command</option>
+          <option value="artifact">Artifact</option>
+          <option value="checkpoint">Checkpoint</option>
+          <option value="verified_fact">Verified Fact</option>
+        </select>
+        <button class="secondary" onclick="loadNodes()">Query</button>
+      </div>
+      <div class="node-list" id="node-list"></div>
+      <div style="margin-top:10px">
+        <h2 style="margin-top:10px">Add Node</h2>
+        <div class="form-row"><label>Kind</label><select id="add-kind">
+            <option value="process">process</option>
+            <option value="file">file</option>
+            <option value="inference">inference</option>
+            <option value="tool">tool</option>
+            <option value="command">command</option>
+            <option value="artifact">artifact</option>
+          </select></div>
+        <div class="form-row"><label>Identity</label><input id="add-identity" placeholder="nginx:reload"></div>
+        <div class="form-row"><label>Data (JSON)</label><input id="add-data" placeholder='{"action":"modified"}'></div>
+        <div class="form-row"><label>Parent</label><input id="add-parent" placeholder="hash (optional)"></div>
+        <div class="form-row"><label>Tags</label><input id="add-tags" placeholder="config, nginx"></div>
+        <button onclick="addNode()">Add to Graph</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Tabs -->
+    <div class="panel">
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('rollups')">Rollups</div>
+        <div class="tab" onclick="switchTab('market')">Market</div>
+        <div class="tab" onclick="switchTab('caps')">Capabilities</div>
+        <div class="tab" onclick="switchTab('search')">Search</div>
+        <div class="tab" onclick="switchTab('mesh')">Mesh</div>
+        <div class="tab" onclick="switchTab('execute')">Execute</div>
+      </div>
+
+      <!-- Rollups Tab -->
+      <div class="tab-content active" id="tab-rollups">
+        <div class="form-row"><label>Objective</label><input id="rollup-objective" placeholder="Build REST API"></div>
+        <button onclick="createRollup()">Create Rollup</button>
+        <div id="rollup-list" style="margin-top:10px"></div>
+        <div style="margin-top:10px">
+          <h2 style="margin-top:10px">Add Step</h2>
+          <div class="form-row"><label>Rollup</label><input id="step-rollup" placeholder="hash"></div>
+          <div class="form-row"><label>Action</label><input id="step-action" placeholder="analyze code"></div>
+          <div class="form-row"><label>Model</label><input id="step-model" placeholder="gpt-oss:20b"></div>
+          <div class="form-row"><label>Tokens</label><input id="step-tokens" type="number" value="100"></div>
+          <button onclick="addStep()">Add Step</button>
+          <button class="secondary" onclick="continueRollup()">Continue (Fork)</button>
+          <button class="secondary" onclick="getPrompt()">Get Prompt</button>
+        </div>
+      </div>
+
+      <!-- Market Tab -->
+      <div class="tab-content" id="tab-market">
+        <h2>Register Node</h2>
+        <div class="form-row"><label>Peer ID</label><input id="reg-peer" placeholder="node_a"></div>
+        <div class="form-row"><label>CPU cores</label><input id="reg-cpu" type="number" value="4"></div>
+        <div class="form-row"><label>RAM (MB)</label><input id="reg-ram" type="number" value="8192"></div>
+        <div class="form-row"><label>GPU</label><select id="reg-gpu">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select></div>
+        <div class="form-row"><label>VRAM (MB)</label><input id="reg-vram" type="number" value="0"></div>
+        <div class="form-row"><label>Models</label><input id="reg-models" placeholder="qwen2:0.5b, llama3:8b"></div>
+        <div class="form-row"><label>$/hour</label><input id="reg-cost" type="number" step="0.01" value="0.50"></div>
+        <button onclick="registerNode()">Register</button>
+        <h2 style="margin-top:14px">Schedule Task</h2>
+        <div class="form-row"><label>Min RAM</label><input id="sched-ram" type="number" value="1024"></div>
+        <div class="form-row"><label>GPU</label><select id="sched-gpu">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select></div>
+        <div class="form-row"><label>Model</label><input id="sched-model" placeholder="qwen2:0.5b"></div>
+        <button onclick="scheduleTask()">Schedule</button>
+        <div id="market-nodes" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Capabilities Tab -->
+      <div class="tab-content" id="tab-caps">
+        <h2>Grant Capability</h2>
+        <div class="form-row"><label>Issuer</label><input id="cap-issuer" placeholder="root"></div>
+        <div class="form-row"><label>Holder</label><input id="cap-holder" placeholder="alice"></div>
+        <div class="form-row"><label>Level</label><select id="cap-level">
+            <option value="admin">admin</option>
+            <option value="execute">execute</option>
+            <option value="write">write</option>
+            <option value="read">read</option>
+            <option value="inference">inference</option>
+            <option value="network">network</option>
+          </select></div>
+        <button onclick="grantCap()">Grant</button>
+        <h2 style="margin-top:14px">Check Action</h2>
+        <div class="form-row"><label>Holder</label><input id="check-holder" placeholder="alice"></div>
+        <div class="form-row"><label>Action</label><input id="check-action" placeholder="execute: ls"></div>
+        <button onclick="checkAction()">Check</button>
+        <div id="cap-list" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Search Tab -->
+      <div class="tab-content" id="tab-search">
+        <h2>Search Index</h2>
+        <div class="form-row"><label>Query</label><input id="search-query" placeholder="nginx"></div>
+        <button onclick="searchIndex()">Search</button>
+        <div class="search-results" id="search-results" style="margin-top:10px"></div>
+        <h2 style="margin-top:14px">Natural Language</h2>
+        <div class="form-row"><label>Question</label><input id="nl-question"
+            placeholder="Which reasoning chain produced this deployment?"></div>
+        <button onclick="nlQuery()">Ask</button>
+        <div id="nl-results" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Execute Tab -->
+      <div class="tab-content" id="tab-execute">
+        <h2>Deterministic Execution</h2>
+        <div class="form-row"><label>Command</label><input id="exec-cmd" placeholder="echo hello"></div>
+        <button onclick="executeCmd()">Execute</button>
+        <div class="terminal" id="terminal-output" style="margin-top:10px">$ awaiting command...</div>
+        <div id="exec-result" style="margin-top:10px"></div>
+      </div>
+
+      <!-- Mesh Tab -->
+      <div class="tab-content" id="tab-mesh">
+        <h2>Reasoning Peers</h2>
+        <div id="mesh-peers" style="margin-bottom:10px"></div>
+        <h2>Register Peer</h2>
+        <div class="form-row"><label>Peer ID</label><input id="mesh-peer-id" placeholder="claude-peer"></div>
+        <div class="form-row"><label>Model</label><input id="mesh-model" placeholder="claude-3.5-sonnet"></div>
+        <div class="form-row"><label>Family</label><input id="mesh-family" placeholder="claude"></div>
+        <div class="form-row"><label>Context</label><input id="mesh-context" type="number" value="200000"></div>
+        <div class="form-row"><label>Endpoint</label><input id="mesh-endpoint"
+            placeholder="https://api.anthropic.com/v1/messages"></div>
+        <div class="form-row"><label>API Key Env</label><input id="mesh-apikey" placeholder="ANTHROPIC_API_KEY"></div>
+        <button onclick="registerMeshPeer()">Register Peer</button>
+        <h2 style="margin-top:14px">Seed Reasoning</h2>
+        <div class="form-row"><label>Rollup Hash</label><input id="seed-rollup" placeholder="hash"></div>
+        <div class="form-row"><label>Confidence</label><input id="seed-confidence" type="number" step="0.1" value="0.8">
+        </div>
+        <button onclick="seedReasoning()">Seed</button>
+        <h2 style="margin-top:14px">Continue Reasoning (Cross-Model)</h2>
+        <div class="form-row"><label>Rollup Hash</label><input id="cont-rollup" placeholder="hash"></div>
+        <div class="form-row"><label>Prompt</label><input id="cont-prompt" placeholder="What is the next step?"></div>
+        <button onclick="continueReasoning()">Route & Continue</button>
+        <div id="mesh-result" style="margin-top:10px"></div>
+        <h2 style="margin-top:14px">Cross-Model Transfer</h2>
+        <div class="form-row"><label>From Peer</label><input id="xfer-from" placeholder="claude-peer"></div>
+        <div class="form-row"><label>To Peer</label><input id="xfer-to" placeholder="server"></div>
+        <div class="form-row"><label>Rollup</label><input id="xfer-rollup" placeholder="hash"></div>
+        <button onclick="crossModelTransfer()">Transfer State</button>
+        <h2 style="margin-top:14px">Find Seeds</h2>
+        <div class="form-row"><label>Objective</label><input id="find-objective" placeholder="build api"></div>
+        <button onclick="findSeeds()">Search Seeds</button>
+        <div id="seed-results" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+    let ws;
+
+    // WebSocket
+    function connectWS() {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}/ws`);
+      ws.onopen = () => { document.getElementById('status-dot').style.background = '#3fb950' };
+      ws.onclose = () => { document.getElementById('status-dot').style.background = '#f85149'; setTimeout(connectWS, 2000) };
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'stats') updateStats(msg);
+      };
+    }
+    connectWS();
+
+    function sendWS(msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)) }
+
+    // Tabs
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    // Stats
+    function updateStats(data) {
+      const g = data.graph, r = data.rollups, c = data.capabilities, m = data.market;
+      const mesh = data.mesh;
+      document.getElementById('stats-bar').innerHTML = `
+    <div class="stat"><span class="val">${g.total_nodes}</span><span class="label">graph nodes</span></div>
+    <div class="stat"><span class="val">${g.total_edges}</span><span class="label">edges</span></div>
+    <div class="stat"><span class="val">${g.verified_nodes}</span><span class="label">verified</span></div>
+    <div class="stat"><span class="val">${r.total_rollups}</span><span class="label">rollups</span></div>
+    <div class="stat"><span class="val">${r.verified_steps}</span><span class="label">verified steps</span></div>
+    <div class="stat"><span class="val">${c.valid}</span><span class="label">capabilities</span></div>
+    <div class="stat"><span class="val">${m.active_nodes || 0}</span><span class="label">market nodes</span></div>
+    <div class="stat"><span class="val">${mesh ? mesh.total_peers : 0}</span><span class="label">mesh peers</span></div>
+  `;
+    }
+
+    function refreshAll() {
+      sendWS({ type: 'stats' });
+      loadNodes();
+      loadRollups();
+      loadMarketNodes();
+      loadCapabilities();
+    }
+
+    // Graph Nodes
+    async function loadNodes() {
+      const kind = document.getElementById('node-kind').value;
+      const url = '/api/graph/nodes' + (kind ? `?kind=${kind}` : '');
+      const res = await fetch(url); const data = await res.json();
+      const el = document.getElementById('node-list');
+      el.innerHTML = data.nodes.map(n => `
+    <div class="node-item ${n.verified ? 'verified' : ''}" onclick="traceNode('${n.hash}')">
+      <span class="kind">${n.kind}</span>
+      <span class="identity">${n.identity}</span>
+      <div class="hash">${n.hash.substring(0, 12)} · ${n.tags.join(', ') || 'no tags'}</div>
+    </div>
+  `).join('') || '<div style="color:#8b949e;padding:8px">No nodes yet</div>';
+    }
+
+    async function traceNode(hash) {
+      const res = await fetch(`/api/graph/causes/${hash}`);
+      const data = await res.json();
+      alert(data.chain.map(n => `${n.kind}: ${n.identity}`).join('\n← '));
+    }
+
+    async function addNode() {
+      const kind = document.getElementById('add-kind').value;
+      const identity = document.getElementById('add-identity').value;
+      const dataStr = document.getElementById('add-data').value;
+      const parent = document.getElementById('add-parent').value;
+      const tags = document.getElementById('add-tags').value;
+      if (!identity) return alert('Identity required');
+      const res = await fetch('/api/graph/nodes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind, identity,
+          data: dataStr ? JSON.parse(dataStr) : {},
+          parent_hash: parent || null,
+          tags: tags ? tags.split(',').map(s => s.trim()) : [],
+          creator: 'web'
+        })
+      });
+      const data = await res.json();
+      if (data.hash) { loadNodes(); refreshAll(); }
+      else alert('Error: ' + JSON.stringify(data));
+    }
+
+    // Rollups
+    async function createRollup() {
+      const obj = document.getElementById('rollup-objective').value;
+      if (!obj) return;
+      const res = await fetch('/api/rollups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ objective: obj }) });
+      const data = await res.json();
+      if (data.hash) { document.getElementById('step-rollup').value = data.hash; loadRollups(); refreshAll(); }
+    }
+
+    async function loadRollups() {
+      const res = await fetch('/api/rollups/stats'); const data = await res.json();
+      const el = document.getElementById('rollup-list');
+      el.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    }
+
+    async function addStep() {
+      const rollup = document.getElementById('step-rollup').value;
+      const action = document.getElementById('step-action').value;
+      const model = document.getElementById('step-model').value;
+      const tokens = parseInt(document.getElementById('step-tokens').value);
+      if (!rollup || !action) return;
+      const res = await fetch('/api/rollups/steps', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollup_hash: rollup, step_id: 's' + Date.now(), action, model_used: model, tokens_consumed: tokens })
+      });
+      const data = await res.json();
+      if (data.new_hash) { document.getElementById('step-rollup').value = data.new_hash; refreshAll(); }
+      else alert('Error: ' + JSON.stringify(data));
+    }
+
+    async function continueRollup() {
+      const rollup = document.getElementById('step-rollup').value;
+      if (!rollup) return;
+      const res = await fetch('/api/rollups/continue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rollup_hash: rollup, model_id: 'fork' }) });
+      const data = await res.json();
+      if (data.hash) { document.getElementById('step-rollup').value = data.hash; refreshAll(); }
+    }
+
+    async function getPrompt() {
+      const rollup = document.getElementById('step-rollup').value;
+      if (!rollup) return;
+      const res = await fetch(`/api/rollups/${rollup}/prompt`);
+      const data = await res.json();
+      alert(data.prompt);
+    }
+
+    // Market
+    async function registerNode() {
+      const res = await fetch('/api/market/nodes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          peer_id: document.getElementById('reg-peer').value,
+          cpu_cores: parseInt(document.getElementById('reg-cpu').value),
+          ram_total_mb: parseInt(document.getElementById('reg-ram').value),
+          ram_available_mb: parseInt(document.getElementById('reg-ram').value),
+          gpu_count: document.getElementById('reg-gpu').value === 'true' ? 1 : 0,
+          gpu_vram_mb: parseInt(document.getElementById('reg-vram').value),
+          gpu_available: document.getElementById('reg-gpu').value === 'true',
+          cached_models: document.getElementById('reg-models').value.split(',').map(s => s.trim()).filter(s => s),
+          cost_per_hour: parseFloat(document.getElementById('reg-cost').value),
+        })
+      });
+      const data = await res.json();
+      if (data.registered) { loadMarketNodes(); refreshAll(); }
+    }
+
+    async function loadMarketNodes() {
+      const res = await fetch('/api/market/state'); const data = await res.json();
+      const el = document.getElementById('market-nodes');
+      el.innerHTML = (data.nodes || []).map(n => `
+    <div class="market-node">
+      <span class="peer">${n.peer_id}</span>
+      <div class="resources">${n.cpu} · ${n.ram} · GPU: ${n.gpu} · ${n.models} models · ${n.reliability} · ${n.cost}</div>
+    </div>
+  `).join('') || '<div style="color:#8b949e;padding:8px">No nodes registered</div>';
+    }
+
+    async function scheduleTask() {
+      const res = await fetch('/api/market/schedule', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          min_ram_mb: parseInt(document.getElementById('sched-ram').value),
+          requires_gpu: document.getElementById('sched-gpu').value === 'true',
+          required_model: document.getElementById('sched-model').value || null,
+        })
+      });
+      const data = await res.json();
+      alert(data.assigned ? `Assigned to ${data.peer_id}` : 'No suitable node');
+    }
+
+    // Capabilities
+    async function grantCap() {
+      const res = await fetch('/api/capabilities/grant', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issuer: document.getElementById('cap-issuer').value,
+          holder: document.getElementById('cap-holder').value,
+          level: document.getElementById('cap-level').value,
+        })
+      });
+      const data = await res.json();
+      if (data.capability_id) { loadCapabilities(); refreshAll(); }
+      else alert('Error: ' + JSON.stringify(data));
+    }
+
+    async function checkAction() {
+      const res = await fetch('/api/capabilities/check', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          holder: document.getElementById('check-holder').value,
+          action: document.getElementById('check-action').value,
+        })
+      });
+      const data = await res.json();
+      alert(`${data.allowed ? '✓ ALLOWED' : '✗ DENIED'}: ${data.reason}`);
+    }
+
+    async function loadCapabilities() {
+      const res = await fetch('/api/capabilities/stats'); const data = await res.json();
+      const el = document.getElementById('cap-list');
+      el.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    }
+
+    // Search
+    async function searchIndex() {
+      const q = document.getElementById('search-query').value;
+      if (!q) return;
+      const res = await fetch('/api/index/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q, limit: 20 }) });
+      const data = await res.json();
+      const el = document.getElementById('search-results');
+      el.innerHTML = data.results.map(r => `
+    <div class="result">
+      <span class="score">score: ${r.score.toFixed(1)}</span>
+      <span class="summary">${r.summary}</span>
+    </div>
+  `).join('') || '<div style="color:#8b949e">No results</div>';
+    }
+
+    async function nlQuery() {
+      const q = document.getElementById('nl-question').value;
+      if (!q) return;
+      const res = await fetch('/api/index/nl-query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }) });
+      const data = await res.json();
+      const el = document.getElementById('nl-results');
+      el.innerHTML = data.results.map(r => `<div class="result"><span class="score">${r.score.toFixed(1)}</span> <span class="summary">${r.summary}</span></div>`).join('') || '<div style="color:#8b949e">No results</div>';
+    }
+
+    // Execute
+    async function executeCmd() {
+      const cmd = document.getElementById('exec-cmd').value;
+      if (!cmd) return;
+      const term = document.getElementById('terminal-output');
+      term.innerHTML += `\n$ ${cmd}`;
+      const res = await fetch('/api/runtime/execute', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: cmd }) });
+      const data = await res.json();
+      if (data.ok) {
+        term.innerHTML += `\n${data.output || ''}`;
+        document.getElementById('exec-result').innerHTML = `<pre>elapsed: ${data.elapsed_ms}ms\nfacts: ${JSON.stringify(data.facts)}</pre>`;
+      } else {
+        term.innerHTML += `\n[ERROR] ${data.error || 'unknown'}`;
+      }
+      term.scrollTop = term.scrollHeight;
+    }
+
+    // Mesh
+    async function loadMeshPeers() {
+      const res = await fetch('/api/mesh/peers');
+      const data = await res.json();
+      const el = document.getElementById('mesh-peers');
+      el.innerHTML = (data.peers || []).map(p => `
+        <div class="market-node">
+          <span class="peer">${p.peer_id}</span>
+          <span style="color:${p.available ? '#3fb950' : '#f85149'}">● ${p.status}</span>
+          <div class="resources">model: ${p.capabilities.model_id} · ctx: ${p.capabilities.context_window} · seeds: ${p.seeds.length} · score: ${p.verification_score}</div>
+        </div>
+      `).join('') || '<div style="color:#8b949e;padding:8px">No peers registered</div>';
+    }
+
+    async function registerMeshPeer() {
+      const res = await fetch('/api/mesh/peers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          peer_id: document.getElementById('mesh-peer-id').value,
+          model_id: document.getElementById('mesh-model').value,
+          model_family: document.getElementById('mesh-family').value,
+          context_window: parseInt(document.getElementById('mesh-context').value),
+          available_context: parseInt(document.getElementById('mesh-context').value),
+          endpoint_url: document.getElementById('mesh-endpoint').value || 'https://api.llm7.io/v1/chat/completions',
+          api_key_env: document.getElementById('mesh-apikey').value,
+        })
+      });
+      const data = await res.json();
+      if (data.registered) { loadMeshPeers(); refreshAll(); }
+      else alert('Error: ' + JSON.stringify(data));
+    }
+
+    async function seedReasoning() {
+      const res = await fetch('/api/mesh/seed', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          rollup_hash: document.getElementById('seed-rollup').value,
+          confidence: parseFloat(document.getElementById('seed-confidence').value),
+        })
+      });
+      const data = await res.json();
+      if (data.seeded) alert(`Seeded! Conclusions: ${data.seed.verified_conclusions.length}, Tokens: ${data.seed.tokens_invested}`);
+      else alert('Error: ' + JSON.stringify(data));
+    }
+
+    async function continueReasoning() {
+      const el = document.getElementById('mesh-result');
+      el.innerHTML = '<div style="color:#d29922">Routing to best peer...</div>';
+      const res = await fetch('/api/mesh/continue', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          rollup_hash: document.getElementById('cont-rollup').value,
+          prompt: document.getElementById('cont-prompt').value,
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        el.innerHTML = `<div style="color:#3fb950">✓ Routed to ${data.routed_to} (${data.model})</div>
+          <pre style="margin-top:8px">${(data.response || '').substring(0, 500)}</pre>
+          <div style="color:#8b949e;margin-top:4px">tokens: ${data.tokens}</div>`;
+      } else {
+        el.innerHTML = `<div style="color:#f85149">✗ ${data.error}</div>`;
+      }
+      loadMeshPeers();
+      refreshAll();
+    }
+
+    async function crossModelTransfer() {
+      const res = await fetch('/api/mesh/transfer', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          from_peer_id: document.getElementById('xfer-from').value,
+          to_peer_id: document.getElementById('xfer-to').value,
+          rollup_hash: document.getElementById('xfer-rollup').value,
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert(`Transferred: ${data.from_model} → ${data.to_model}\nFacts: ${data.verified_facts}, Steps: ${data.steps}`);
+      } else {
+        alert('Error: ' + JSON.stringify(data));
+      }
+    }
+
+    async function findSeeds() {
+      const res = await fetch('/api/mesh/find-seeds', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          objective: document.getElementById('find-objective').value || null,
+        })
+      });
+      const data = await res.json();
+      const el = document.getElementById('seed-results');
+      el.innerHTML = (data.seeds || []).map(s => `
+        <div class="result">
+          <span class="score">confidence: ${s.confidence}</span>
+          <span class="summary">${s.objective}</span>
+          <div style="color:#8b949e;font-size:10px">peer: ${s.peer_id} · conclusions: ${s.verified_conclusions.length} · tokens: ${s.tokens_invested} · downloads: ${s.seed_count}</div>
+        </div>
+      `).join('') || '<div style="color:#8b949e">No seeds found</div>';
+    }
+
+    // Init
+    refreshAll();
+    loadMeshPeers();
+    setInterval(() => sendWS({ type: 'stats' }), 5000);
+  </script>
+</body>
+
+</html>
