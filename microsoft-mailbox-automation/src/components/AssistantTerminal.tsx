@@ -118,20 +118,30 @@ function detectPageErrors(): { errors: string[]; hasErrors: boolean } {
 
 export function AssistantTerminal() {
   const router = useRouter();
-  const persisted = useRef<Partial<PersistedState>>(loadPersistedState());
-  const [open, setOpen] = useState(persisted.current.open ?? false);
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [history, setHistory] = useState<TerminalMessage[]>(persisted.current.history ?? []);
-  const [cmdHistory, setCmdHistory] = useState<string[]>(persisted.current.cmdHistory ?? []);
+  const [history, setHistory] = useState<TerminalMessage[]>([]);
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [cmdIndex, setCmdIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(persisted.current.conversationId ?? null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const persisted = loadPersistedState();
+    if (persisted.open) setOpen(persisted.open);
+    if (persisted.history) setHistory(persisted.history);
+    if (persisted.cmdHistory) setCmdHistory(persisted.cmdHistory);
+    if (persisted.conversationId) setConversationId(persisted.conversationId);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     savePersistedState({ open, history, cmdHistory, conversationId });
-  }, [open, history, cmdHistory, conversationId]);
+  }, [hydrated, open, history, cmdHistory, conversationId]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
