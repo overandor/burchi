@@ -63,8 +63,10 @@ export function assignVariant(
   }
 
   const minCount = Math.min(...variantRoles.map((r) => counts.get(r) || 0));
-  const leastAssigned = variantRoles.filter((r) => counts.get(r) === minCount);
-  const chosen = leastAssigned[Math.floor(Math.random() * leastAssigned.length)];
+  const leastAssigned = variantRoles
+    .filter((r) => counts.get(r) === minCount)
+    .sort((a, b) => a.localeCompare(b));
+  const chosen = leastAssigned[0];
 
   return chosen;
 }

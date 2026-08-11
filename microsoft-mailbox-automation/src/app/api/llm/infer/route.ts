@@ -78,10 +78,11 @@ export async function POST(request: NextRequest) {
     // Detect API format: Ollama vs Torrent GGUF vs OpenAI-compatible
     // Note: if endpoint contains /v1, it's Ollama's OpenAI-compatible mode —
     // treat it as OpenAI-compatible, not native Ollama /api/chat.
-    const isOllama = (endpoint.includes("/api/chat") || endpoint.includes(":11434")) && !endpoint.includes("/v1");
+    const isOllamaChat = (endpoint.includes("/api/chat") || (endpoint.includes(":11434") && !endpoint.includes("/api/generate"))) && !endpoint.includes("/v1");
+    const isOllamaGenerate = endpoint.includes("/api/generate") && !endpoint.includes("/v1");
     const isTorrentGGUF = endpoint.includes("/api/inference") || endpoint.includes("backend-five-eta");
 
-    if (isOllama) {
+    if (isOllamaChat) {
       // Ollama format: POST /api/chat with { model, messages, stream }
       const url = endpoint.endsWith("/api/chat")
         ? endpoint
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: model || "alpha-gpt:latest",
+          model: model || "llama3.2:1b",
           messages,
           stream: false,
         }),
@@ -110,6 +111,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         choices: [{
           message: { role: "assistant", content: data.message?.content || "" },
+          finish_reason: "stop",
+        }],
+        model: data.model || model,
+        usage: { total_tokens: data.eval_count || 0 },
+        _raw: data,
+      });
+    }
+
+    if (isOllamaGenerate) {
+      // Ollama /api/generate format: POST with { model, prompt, system, stream }
+      // Returns { response: "...", done: true }
+      const url = endpoint.endsWith("/api/generate")
+        ? endpoint
+        : `${endpoint.replace(/\/$/, "")}/api/generate`;
+
+      // Extract system + user content from messages array
+      const systemMsg = messages.find((m: any) => m.role === "system");
+      const userMsg = messages.find((m: any) => m.role === "user");
+      const prompt = userMsg?.content || messages.map((m: any) => m.content).join("\n\n");
+      const systemPrompt = systemMsg?.content || "";
+
+      const llmRes = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: model || "llama3.2:1b",
+          prompt,
+          system: systemPrompt,
+          stream: false,
+        }),
+      });
+
+      const text = await llmRes.text();
+      if (!llmRes.ok) {
+        const pollinationsResult = await tryPollinations(messages);
+        if (pollinationsResult) return NextResponse.json(pollinationsResult);
+        return NextResponse.json({ error: `Ollama generate request failed: ${text || llmRes.statusText}` }, { status: 502 });
+      }
+
+      const data = text && !text.trim().startsWith("<") ? JSON.parse(text) : {};
+      // Normalize to OpenAI-like format for the frontend
+      return NextResponse.json({
+        choices: [{
+          message: { role: "assistant", content: data.response || "" },
           finish_reason: "stop",
         }],
         model: data.model || model,

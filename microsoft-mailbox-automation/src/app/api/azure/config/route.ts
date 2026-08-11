@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { loadConfig } from "@/lib/config";
+import {
+  resolveMicrosoftClientId,
+  resolveMicrosoftTenantId,
+  BUILTIN_MICROSOFT_CLIENT_ID,
+} from "@/lib/auth/microsoft-public-client";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Returns whether Azure AD / Microsoft Graph OAuth is configured server-side.
- * Exposes the clientId (not secret) so the client knows it can initiate auth.
+ * Always returns configured=true because a built-in Microsoft Graph Command
+ * Line Tools public client ID is used as a default, allowing users to sign
+ * in without registering their own Azure AD application.
  */
 export async function GET() {
   let config;
@@ -16,18 +23,20 @@ export async function GET() {
     config = { graph: {} };
   }
 
-  const clientId =
+  const configuredClientId =
     process.env.AZURE_AD_CLIENT_ID ||
     process.env.AZURE_CLIENT_ID ||
     process.env.MICROSOFT_CLIENT_ID ||
     config.graph?.clientId ||
     "";
-  const tenantId =
+
+  const configuredTenant =
     process.env.AZURE_AD_TENANT_ID ||
     process.env.AZURE_TENANT_ID ||
     process.env.MICROSOFT_TENANT_ID ||
     config.graph?.tenantId ||
     "";
+
   const clientSecret =
     process.env.AZURE_AD_CLIENT_SECRET ||
     process.env.AZURE_CLIENT_SECRET ||
@@ -39,11 +48,16 @@ export async function GET() {
     config.graph?.mailbox ||
     "";
 
+  const clientId = resolveMicrosoftClientId(configuredClientId);
+  const tenantId = resolveMicrosoftTenantId(configuredTenant);
+  const usingBuiltinClient = clientId === BUILTIN_MICROSOFT_CLIENT_ID;
+
   return NextResponse.json({
-    configured: !!(clientId && tenantId && clientSecret),
+    configured: true,
     clientId,
     tenantId,
     hasSecret: !!clientSecret,
     mailbox,
+    usingBuiltinClient,
   });
 }

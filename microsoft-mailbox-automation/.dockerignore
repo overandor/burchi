@@ -1,6 +1,7 @@
 node_modules
 .next
 .git
+.netlify
 .env.local
 .env*.bak
 data

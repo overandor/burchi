@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
 /* ──────────────────────────────────────────────────────────────────
@@ -64,50 +64,12 @@ const evidenceMeta: Record<string, { label: string; pct: number; color: string }
   experimentally_supported: { label: "Supported", pct: 85, color: "var(--evidence-experimental)" },
 };
 
-const activityTemplates = [
-  { type: "assignment" as const, title: "Strategy assigned", detail: "assigned to field rep in Northern California", actor: "Assignment Engine", reward: "context-fit" },
-  { type: "outcome" as const, title: "Outcome recorded", detail: "accounts_visited_per_day improved from 6 to 9", actor: "Field Rep A", reward: "evidence-contribution" },
-  { type: "attribution" as const, title: "Attribution computed", detail: "42% contribution attributed to Territory Cluster Routing", actor: "Attribution Engine", reward: "causal-evidence" },
-  { type: "evolution" as const, title: "Evolution proposal", detail: "Recombining Stakeholder Matrix + Batched Comms", actor: "Evolution Engine", reward: "innovation-credit" },
-  { type: "discovery" as const, title: "New hypothesis detected", detail: "Pattern found: compliance pre-check reduces rework by 30%", actor: "LLM Router", reward: "detection" },
-  { type: "reward" as const, title: "Rewards distributed", detail: "12 contributors received legacy credit from proven strategy", actor: "Reward Engine", reward: "horizontal-distribution" },
-  { type: "assignment" as const, title: "Explore assignment", detail: "experimental strategy assigned via exploration ratio", actor: "Assignment Engine", reward: "discovery-bonus" },
-  { type: "outcome" as const, title: "Trial completed", detail: "travel_time_pct reduced from 45% to 28%", actor: "Field Rep B", reward: "execution-credit" },
-];
-
-const strategyNames = [
-  "Territory Cluster Routing",
-  "Stakeholder Influence Matrix",
-  "Batched Communication Windows",
-  "Data-Driven Account Targeting",
-  "Proactive Compliance Pre-Check",
-  "Cross-Functional Sync Cadence",
-  "Time-Block Discipline",
-  "Dynamic Resource Reallocation",
-];
-
 const llmPresets = [
   { label: "Analyze strategies", prompt: "Analyze the current strategy portfolio. Which strategies are most likely to evolve next, and what components would you recombine? Focus on territory planning and stakeholder engagement domains." },
   { label: "Suggest experiment", prompt: "Suggest a new experimental strategy hypothesis for pharmaceutical field marketing. Describe the components, expected outcomes, and what evidence would be needed to move it from spore to observation stage." },
   { label: "Attribution insight", prompt: "Given that Territory Cluster Routing has 47 trials with 91% success rate and Stakeholder Influence Matrix has 38 trials with 85% success rate, which strategy should receive more exploration budget and why?" },
   { label: "Reward formula", prompt: "Design a horizontal reward distribution formula for a strategy marketplace where contributors include the LLM that detected the pattern, the human who executed it, and the algorithm that assigned it. How should legacy credit compound?" },
 ];
-
-function generateActivityEvent(id: number): ActivityEvent {
-  const template = activityTemplates[id % activityTemplates.length];
-  const strategyName = strategyNames[id % strategyNames.length];
-  const now = new Date();
-  return {
-    id: `evt-${id}-${Date.now()}`,
-    timestamp: now.toISOString(),
-    type: template.type,
-    title: template.title,
-    detail: template.detail,
-    actor: template.actor,
-    strategyName: id % 3 === 0 ? undefined : strategyName,
-    reward: template.reward,
-  };
-}
 
 const activityIcon: Record<string, string> = {
   assignment: "→",
@@ -135,11 +97,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [llmResults, setLLMResults] = useState<LLMResult[]>([]);
   const [llmInput, setLLMInput] = useState("");
-  const [llmSystem, setLLMSystem] = useState("You are the Advantage Foundry intelligence layer. You analyze strategy portfolios, suggest experiments, compute attribution, and design reward distributions. Be concise, specific, and data-driven.");
+  const [llmSystem, setLLMSystem] = useState("You speak with the Advantage Foundry voice — a field-tested pharma intelligence cadence. Lead with the sharpest insight. Use the language of the work: cadence, formulary lock, share of voice, P&T cycle, pull-through, whitespace. When uncertain, say so explicitly. Never use: delve into, navigate the landscape, leverage synergies, drive impactful results. You analyze strategy portfolios, suggest experiments, compute attribution, and design reward distributions. Be concise, specific, and data-anchored.");
   const [inferencing, setInferencing] = useState(false);
   const [llmError, setLLMError] = useState<string | null>(null);
   const [autoSeed, setAutoSeed] = useState(false);
-  const eventCounter = useRef(0);
 
   // ── Auto-seed demo data on first load ──
   useEffect(() => {
@@ -159,17 +120,20 @@ export default function DashboardPage() {
     } catch (e) { console.error("[dashboard] strategies fetch error:", e); }
   }, []);
 
-  // ── Fetch assignments ──
+  // ── Fetch assignments for the current user ──
   const fetchAssignments = useCallback(async () => {
     try {
+      const meRes = await fetch("/api/auth/me");
+      const me = meRes.ok ? await meRes.json() : null;
+      const user = me?.user || { id: "gilead-rep-001", role: "field_representative" };
       const res = await fetch("/api/strategies/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          employeeId: `emp-${Math.floor(Math.random() * 5) + 1}`,
-          role: ["field_representative", "regional_manager", "market_access"][Math.floor(Math.random() * 3)],
+          employeeId: user.id,
+          role: user.role,
           territoryType: "geographic",
-          workloadLevel: ["low", "medium", "high"][Math.floor(Math.random() * 3)],
+          workloadLevel: "medium",
         }),
       });
       const data = await res.json();
@@ -189,44 +153,43 @@ export default function DashboardPage() {
       setLoading(true);
       await fetchStrategies();
       await fetchAssignments();
-      // Seed initial activity
-      const initial: ActivityEvent[] = [];
-      for (let i = 0; i < 6; i++) {
-        eventCounter.current++;
-        initial.push(generateActivityEvent(eventCounter.current));
-      }
-      setActivity(initial);
-      setStats({
-        hypotheses: 8,
-        trials: 187 + Math.floor(Math.random() * 10),
-        proven: 3,
-        contributors: 50,
-        proposals: 12,
-        attribution: 64,
-      });
+      setActivity([]);
       setLoading(false);
     };
     init();
   }, [fetchStrategies, fetchAssignments]);
 
-  // ── Live activity feed: new event every 8 seconds ──
+  // ── Compute stats from real loaded data ──
+  useEffect(() => {
+    const compute = async () => {
+      try {
+        const meRes = await fetch("/api/auth/me");
+        const me = meRes.ok ? await meRes.json() : null;
+        const employeeId = me?.user?.id || "gilead-rep-001";
+        const goldenRes = await fetch(`/api/golden/golden-nodes?employeeId=${encodeURIComponent(employeeId)}`);
+        const golden = goldenRes.ok ? await goldenRes.json() : { goldenNodes: [] };
+        setStats({
+          hypotheses: strategies.length,
+          trials: assignments.length,
+          proven: golden.goldenNodes?.length || 0,
+          contributors: new Set(assignments.map(a => a.employeeId)).size,
+          proposals: strategies.filter(s => s.evidenceLevel === "experimental").length,
+          attribution: assignments.filter(a => a.confidenceAtAssignment > 0).length,
+        });
+      } catch (e) {
+        console.error("[dashboard] stats compute error:", e);
+      }
+    };
+    if (!loading) {
+      compute();
+    }
+  }, [strategies, assignments, loading]);
+
+  // ── Refresh assignments every 30 seconds ──
   useEffect(() => {
     const interval = setInterval(() => {
-      eventCounter.current++;
-      const evt = generateActivityEvent(eventCounter.current);
-      setActivity(prev => [evt, ...prev].slice(0, 30));
-      // Bump stats
-      setStats(prev => ({
-        ...prev,
-        trials: prev.trials + Math.floor(Math.random() * 3),
-        contributors: prev.contributors + (Math.random() > 0.7 ? 1 : 0),
-        proposals: prev.proposals + (Math.random() > 0.8 ? 1 : 0),
-      }));
-      // Occasionally fetch new assignments
-      if (eventCounter.current % 3 === 0) {
-        fetchAssignments();
-      }
-    }, 8000);
+      fetchAssignments();
+    }, 30000);
     return () => clearInterval(interval);
   }, [fetchAssignments]);
 

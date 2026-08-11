@@ -12,6 +12,8 @@ export interface SyncResult {
   skipped: number;
   errors: string[];
   records: ProcessedEmailRecord[];
+  provider?: string;
+  mailbox?: string;
 }
 
 const FETCH_TIMEOUT_MS = 30000;
@@ -31,7 +33,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 
 export async function syncAndProcess(
   config: AppConfig,
-  options?: { processAll?: boolean; maxEmails?: number; userToken?: string }
+  options?: { processAll?: boolean; maxEmails?: number; userToken?: string; mailbox?: string }
 ): Promise<SyncResult> {
   const errors: string[] = [];
   const existingRecords = loadProcessedEmails();
@@ -42,11 +44,28 @@ export async function syncAndProcess(
   status.errors = [];
   saveSyncStatus(status);
 
+  // Allow client-provided mailbox to override config (needed for stateless / Vercel)
+  const effectiveConfig: AppConfig = {
+    ...config,
+    graph: {
+      ...config.graph,
+      mailbox: options?.mailbox || config.graph.mailbox,
+    },
+  };
+
+  if (!effectiveConfig.graph.mailbox && options?.userToken) {
+    errors.push("A mailbox address is required to fetch emails with a user token");
+    status.isSyncing = false;
+    status.errors = errors;
+    saveSyncStatus(status);
+    return { totalFetched: 0, newlyProcessed: 0, skipped: 0, errors, records: [] };
+  }
+
   let emails: EmailMessage[] = [];
   try {
     emails = await withTimeout(
       fetchEmails(
-        config,
+        effectiveConfig,
         options?.maxEmails || config.processing.maxEmailsPerSync,
         "inbox",
         options?.userToken
@@ -77,7 +96,7 @@ export async function syncAndProcess(
 
       if (email.hasAttachments) {
         const attachments = await withTimeout(
-          fetchAttachments(config, email.id, options?.userToken),
+          fetchAttachments(effectiveConfig, email.id, options?.userToken),
           FETCH_TIMEOUT_MS,
           `fetchAttachments(${email.id})`
         );
@@ -92,11 +111,23 @@ export async function syncAndProcess(
         }
       }
 
-      const extractedData = await extractDataFromEmail(
-        email,
-        parsedAttachments,
-        config
-      );
+      let extractedData: any;
+      try {
+        extractedData = await extractDataFromEmail(email, parsedAttachments, effectiveConfig);
+      } catch (e: any) {
+        console.error("[pipeline] extraction failed for", email.subject, e.message);
+        errors.push(`Extraction failed for "${email.subject}": ${e.message}`);
+        extractedData = {
+          emailId: email.id,
+          extractedAt: new Date().toISOString(),
+          fields: [],
+          tables: [],
+          summary: email.bodyPreview || email.body?.slice(0, 200) || "",
+          category: "Other",
+          confidence: 0.5,
+          source: parsedAttachments.length > 0 ? "attachment" : "email_body",
+        };
+      }
 
       // Generate deterministic analysis (wikitree, mindmap, execution plan)
       const analysis = generateAnalysis({
@@ -118,10 +149,10 @@ export async function syncAndProcess(
         senderEmail: email.senderEmail,
         receivedDate: email.receivedDate,
         processedAt: new Date().toISOString(),
-        category: extractedData.category,
-        confidence: extractedData.confidence,
-        fieldCount: extractedData.fields.length,
-        tableCount: extractedData.tables.length,
+        category: extractedData.category || "Other",
+        confidence: extractedData.confidence || 0.5,
+        fieldCount: extractedData.fields?.length || 0,
+        tableCount: extractedData.tables?.length || 0,
         extractedData,
         analysis,
       };
@@ -153,5 +184,7 @@ export async function syncAndProcess(
     skipped,
     errors,
     records: newRecords,
+    provider: options?.userToken ? "graph" : effectiveConfig.graph.clientId ? "graph" : "demo",
+    mailbox: effectiveConfig.graph.mailbox,
   };
 }

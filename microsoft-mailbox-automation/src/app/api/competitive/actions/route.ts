@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   generateCompetitivePlan,
+  getEmployee,
   updateActionStatus,
   recordActionOutcome,
 } from "@/lib/competitive/engine";
 import { ActionStatus, ActionOutcome } from "@/types";
+import { getAuthContext } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const employeeId = req.nextUrl.searchParams.get("employeeId") || "emp-001";
+  const ctx = await getAuthContext();
+  const requestedId = req.nextUrl.searchParams.get("employeeId") || ctx.user.id;
+  const employeeId = getEmployee(requestedId) ? requestedId : "emp-001";
 
   try {
     const plan = generateCompetitivePlan(employeeId);
@@ -31,6 +35,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ctx = await getAuthContext();
     const body = await req.json();
     const { actionId, operation, feedback, outcome, context } = body;
 
@@ -63,7 +68,7 @@ export async function POST(req: NextRequest) {
     if (operation === "complete" && outcome) {
       const outcomeRecord = recordActionOutcome({
         actionId,
-        employeeId: body.employeeId || "emp-001",
+        employeeId: body.employeeId || ctx.user.id,
         experimentId: body.experimentId,
         variant: body.variant,
         actionTaken: body.actionTaken || updated?.title || "Action completed",

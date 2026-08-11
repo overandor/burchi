@@ -303,18 +303,32 @@ export function modifyAssignment(
   return a;
 }
 
-/** Convenience: build an AllocationContext for a seed employee. */
+/** Convenience: build an AllocationContext for any employee.
+ *  Falls back to a default field-rep context for unknown users so real
+ *  authenticated accounts can receive Daily Seed allocations.
+ */
 export function contextForEmployee(employeeId: string): AllocationContext | undefined {
   const emp = SEED_EMPLOYEES.find((e) => e.id === employeeId);
-  if (!emp) return undefined;
+  if (emp) {
+    const reliability = loadResearchReliability().find((r) => r.employeeId === employeeId);
+    const modesPresent = SEED_ACCOUNTS.filter((a) => a.territory === emp.territory).map((a) => a.engagementMode);
+    return {
+      employeeId: emp.id,
+      role: emp.role,
+      territory: emp.territory,
+      reliabilityLevel: reliability?.level || emp.reliabilityLevel,
+      engagementModesPresent: Array.from(new Set(modesPresent)),
+    };
+  }
+
+  // Default context for any authenticated user who is not a seed employee.
   const reliability = loadResearchReliability().find((r) => r.employeeId === employeeId);
-  const modesPresent = SEED_ACCOUNTS.filter((a) => a.territory === emp.territory).map((a) => a.engagementMode);
   return {
-    employeeId: emp.id,
-    role: emp.role,
-    territory: emp.territory,
-    reliabilityLevel: reliability?.level || emp.reliabilityLevel,
-    engagementModesPresent: Array.from(new Set(modesPresent)),
+    employeeId,
+    role: "field_representative",
+    territory: "National",
+    reliabilityLevel: reliability?.level || "replicator",
+    engagementModesPresent: ["human_guided", "hybrid", "system_oriented"],
   };
 }
 

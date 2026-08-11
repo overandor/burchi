@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 import { seedDemoSPINs } from "@/lib/spinor/demo-seed";
 import { getSpinCount } from "@/lib/spinor/spin-engine";
 

@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 import { z } from "zod";
 import { assignStrategies, EmployeeContext } from "@/lib/strategy/assignment";
 import { ensureStrategiesSeeded } from "@/lib/strategy/library";
 
+const roleMap: Record<string, string> = {
+  field_rep: "field_representative",
+  field_representative: "field_representative",
+  regional_manager: "regional_manager",
+  medical_affairs: "medical_affairs",
+  market_access: "market_access",
+  compliance: "compliance",
+};
+
 const AssignSchema = z.object({
   employeeId: z.string().min(1),
-  role: z.enum(["field_representative", "regional_manager", "medical_affairs", "market_access", "compliance"]),
+  role: z.preprocess((v) => roleMap[String(v)] ?? v, z.enum(["field_representative", "regional_manager", "medical_affairs", "market_access", "compliance"])),
   territoryType: z.string().optional(),
   workloadLevel: z.enum(["low", "medium", "high"]).optional(),
   stakeholderSegment: z.string().optional(),

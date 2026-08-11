@@ -5,13 +5,18 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navLinks = [
-  { href: "/", label: "Garden" },
+  { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/territory", label: "Territory" },
   { href: "/commitments", label: "Commitments" },
   { href: "/field", label: "Field" },
+  { href: "/roles", label: "Roles" },
+  { href: "/spinor", label: "SPINOR" },
+  { href: "/ventures", label: "Ventures" },
   { href: "/inbox", label: "Inbox" },
   { href: "/emails", label: "Emails" },
+  { href: "/sheets", label: "Sheets" },
+  { href: "/phones", label: "Phones" },
   { href: "/telemetry", label: "Telemetry" },
   { href: "/settings", label: "Settings" },
 ];

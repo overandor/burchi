@@ -27,6 +27,7 @@
  */
 
 import { InferenceEndpoint, RotationResult } from "@/types";
+import { withFoundryVoice } from "@/lib/foundry-voice";
 
 const DEFAULT_TARGET_TOKENS = 50000;
 const DEFAULT_TOKENS_PER_REQUEST = 1024; // per HTTP request, within 60s timeout
@@ -329,7 +330,7 @@ export class InferenceRotator {
   ): { systemPrompt: string; userPrompt: string }[] {
     const systemMsg = messages.find((m) => m.role === "system");
     const userMsg = messages.find((m) => m.role === "user");
-    const baseSystem = systemMsg?.content || "You are a detailed analysis assistant.";
+    const baseSystem = systemMsg?.content || withFoundryVoice("default", "Generate thorough, comprehensive output.");
     const basePrompt = userMsg?.content || "Write a comprehensive analysis.";
 
     // Extract topic
@@ -392,7 +393,7 @@ export class InferenceRotator {
       const chapterNum = i + 1;
 
       shards.push({
-        systemPrompt: `${baseSystem}\n\nYou are a professional novelist writing CHAPTER ${chapterNum} of a book about: ${topic}.\nThis chapter is titled "${chapter.title}".\nFocus on: ${chapter.focus}\n\nWrite in vivid, immersive prose. Include dialogue, description, and internal monologue. This is a full-length chapter — write at least 3000 words. Do not summarize or abbreviate. Write the actual narrative prose that readers will read.`,
+        systemPrompt: withFoundryVoice("creative", `${baseSystem}\n\nYou are writing CHAPTER ${chapterNum} of a book about: ${topic}.\nThis chapter is titled "${chapter.title}".\nFocus on: ${chapter.focus}\n\nWrite in vivid, immersive prose. Include dialogue, description, and internal monologue. This is a full-length chapter — write at least 3000 words. Do not summarize or abbreviate. Write the actual narrative prose that readers will read.`),
         userPrompt: `Write Chapter ${chapterNum}: "${chapter.title}" of the book about: ${topic}.\n\nChapter focus: ${chapter.focus}\n\nThis is chapter ${chapterNum} of ${numShards}. Other chapters are being written in parallel by other writers. Focus ONLY on this chapter.\n\nWrite full narrative prose — not an outline, not a summary. Include:\n- Vivid scene descriptions\n- Character dialogue with attribution\n- Internal thoughts and emotions\n- Sensory details (sight, sound, smell, touch, taste)\n- Pacing that builds tension\n\nWrite at least 3000 words of actual story content. Do not stop until the chapter is complete.`,
       });
     }
@@ -658,7 +659,7 @@ export class InferenceRotator {
       {
         role: "system",
         content:
-          "You are a detailed analysis assistant. Generate thorough, comprehensive output. When asked to continue, pick up exactly where you left off without repeating.",
+          withFoundryVoice("default", "Generate thorough, comprehensive output. When asked to continue, pick up exactly where you left off without repeating."),
       },
       ...opts.messages.filter((m) => m.role !== "system"),
     ];

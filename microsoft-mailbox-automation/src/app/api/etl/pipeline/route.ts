@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 import { z } from "zod";
 import { generatePipeline, savePipeline, loadPipeline, loadAllPipelines, advanceStep } from "@/lib/etl/pipeline-engine";
 

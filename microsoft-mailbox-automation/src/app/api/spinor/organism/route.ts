@@ -1,3 +1,4 @@
+import { getAuthContext } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
 import { goldenEngine } from "@/lib/golden/engine";
 import { getActiveAssignmentsForEmployee } from "@/lib/golden/allocation";

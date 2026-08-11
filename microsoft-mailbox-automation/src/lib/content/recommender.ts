@@ -16,6 +16,7 @@ import {
   HCPFunnelState,
   BarrierType,
 } from "@/types";
+import { kvLoad, kvSave, DEFAULT_ORG_ID } from "@/lib/db";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -282,38 +283,49 @@ const FUNNEL_INFO_GAP: Record<HCPFunnelState, string> = {
   persistence: "Adherence monitoring and long-term persistence tools",
 };
 
-// ─── Historical Response Tracking (in-memory demo store) ────────────
+// ─── Historical Response Tracking (durable store) ───────────────────
 
-const responseHistory: ContentResponseRecord[] = [
+const CONTENT_RESPONSE_HISTORY_KEY = "content_response_history";
+
+const DEFAULT_RESPONSE_HISTORY: ContentResponseRecord[] = [
   {
     contentId: "GILD-HIV-CLIN-001",
     hcpResponse: "engaged",
-    responseRate: 0.68,
+    responseRate: 0.75,
     engagementImproved: true,
     recordedAt: "2025-01-15T10:00:00Z",
   },
   {
     contentId: "GILD-HIV-CLIN-001",
     hcpResponse: "neutral",
-    responseRate: 0.41,
+    responseRate: 0.4,
     engagementImproved: false,
     recordedAt: "2025-02-20T14:30:00Z",
   },
   {
     contentId: "GILD-HCV-CLIN-003",
     hcpResponse: "engaged",
-    responseRate: 0.72,
+    responseRate: 0.75,
     engagementImproved: true,
     recordedAt: "2025-01-28T09:15:00Z",
   },
   {
     contentId: "GILD-ONC-CLIN-006",
     hcpResponse: "engaged",
-    responseRate: 0.64,
+    responseRate: 0.75,
     engagementImproved: true,
     recordedAt: "2025-03-05T11:45:00Z",
   },
 ];
+
+function getResponseHistory(orgId: string = DEFAULT_ORG_ID): ContentResponseRecord[] {
+  const records = kvLoad<ContentResponseRecord>(orgId, CONTENT_RESPONSE_HISTORY_KEY);
+  if (records.length === 0) {
+    kvSave(orgId, CONTENT_RESPONSE_HISTORY_KEY, DEFAULT_RESPONSE_HISTORY);
+    return [...DEFAULT_RESPONSE_HISTORY];
+  }
+  return records;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -382,8 +394,11 @@ function findSlideForBarrier(
   return null;
 }
 
-function computeHistoricalResponseRate(contentId: string): number | undefined {
-  const records = responseHistory.filter((r) => r.contentId === contentId);
+function computeHistoricalResponseRate(
+  contentId: string,
+  orgId: string = DEFAULT_ORG_ID,
+): number | undefined {
+  const records = getResponseHistory(orgId).filter((r) => r.contentId === contentId);
   if (records.length === 0) {
     return undefined;
   }
@@ -450,7 +465,10 @@ export function getApprovedContentLibrary(): ApprovedContentAsset[] {
  *  - Historical response rate
  *  - Observed downstream outcomes (engagementImproved in response history)
  */
-export function recommendContent(account: TerritoryAccount): ContentRecommendation[] {
+export function recommendContent(
+  account: TerritoryAccount,
+  orgId: string = DEFAULT_ORG_ID,
+): ContentRecommendation[] {
   const library = getApprovedContentLibrary().filter((asset) => !isExpired(asset));
 
   // Score every eligible asset.
@@ -478,16 +496,22 @@ export function recommendContent(account: TerritoryAccount): ContentRecommendati
         score -= 25;
       }
 
+      const history = getResponseHistory(orgId);
+
       // Historical response rate boost.
-      const histRate = computeHistoricalResponseRate(asset.id);
+      const records = history.filter((r) => r.contentId === asset.id);
+      const histRate =
+        records.length === 0
+          ? undefined
+          : Math.round(
+              (records.reduce((sum, r) => sum + r.responseRate, 0) / records.length) * 100,
+            ) / 100;
       if (histRate !== undefined) {
         score += Math.round(histRate * 30);
       }
 
       // Observed downstream outcomes: assets with engagementImproved history.
-      const improvedCount = responseHistory.filter(
-        (r) => r.contentId === asset.id && r.engagementImproved,
-      ).length;
+      const improvedCount = records.filter((r) => r.engagementImproved).length;
       score += improvedCount * 10;
 
       // Operational friction penalty: high-friction accounts favor concise assets.
@@ -538,6 +562,7 @@ export function recommendContent(account: TerritoryAccount): ContentRecommendati
 export function matchContentToBarrier(
   barrier: BarrierType,
   contentLibrary: ApprovedContentAsset[],
+  orgId: string = DEFAULT_ORG_ID,
 ): ContentRecommendation | null {
   if (barrier === "none") {
     return null;
@@ -564,8 +589,14 @@ export function matchContentToBarrier(
     const matchCount = asset.slides.filter((s) =>
       mapping.topicKeywords.some((kw) => s.topic.includes(kw)),
     ).length;
-    const histRate = computeHistoricalResponseRate(asset.id) ?? 0;
-    const score = matchCount * 10 + histRate * 20;
+    const records = getResponseHistory(orgId).filter((r) => r.contentId === asset.id);
+    const histRate =
+      records.length === 0
+        ? undefined
+        : Math.round(
+            (records.reduce((sum, r) => sum + r.responseRate, 0) / records.length) * 100,
+          ) / 100;
+    const score = matchCount * 10 + (histRate ?? 0) * 20;
     if (score > bestScore) {
       bestScore = score;
       bestAsset = asset;
@@ -577,7 +608,7 @@ export function matchContentToBarrier(
     return null;
   }
 
-  const histRate = computeHistoricalResponseRate(bestAsset.id);
+  const histRate = computeHistoricalResponseRate(bestAsset.id, orgId);
   return {
     contentId: bestAsset.id,
     contentName: bestAsset.name,
@@ -592,13 +623,14 @@ export function matchContentToBarrier(
 }
 
 /**
- * Track historical response to a content piece. In a production system this
- * would persist to a durable store and recompute aggregate metrics. For the
- * demo, we record the response and return sample aggregate data.
+ * Track historical response to a content piece. Persists to the durable KV
+ * store and recomputes aggregate metrics. Response rates are derived from the
+ * qualitative response category, not from random sampling.
  */
 export function trackContentResponse(
   contentId: string,
   hcpResponse: string,
+  orgId: string = DEFAULT_ORG_ID,
 ): { responseRate: number; engagementImproved: boolean } {
   if (!contentId || contentId.trim().length === 0) {
     throw new Error("contentId is required");
@@ -612,14 +644,14 @@ export function trackContentResponse(
     (k) => normalized.includes(k),
   );
 
-  // Derive a sample response rate from the qualitative response.
+  // Derive a deterministic response rate from the qualitative response.
   let rate: number;
   if (engaged) {
-    rate = 0.6 + Math.random() * 0.3; // 0.60–0.90
+    rate = 0.75;
   } else if (normalized.includes("neutral") || normalized.includes("no_change")) {
-    rate = 0.3 + Math.random() * 0.2; // 0.30–0.50
+    rate = 0.4;
   } else {
-    rate = 0.1 + Math.random() * 0.2; // 0.10–0.30
+    rate = 0.2;
   }
   rate = Math.round(rate * 100) / 100;
 
@@ -630,10 +662,12 @@ export function trackContentResponse(
     engagementImproved: engaged,
     recordedAt: new Date().toISOString(),
   };
-  responseHistory.push(record);
+  const history = getResponseHistory(orgId);
+  const updated = [...history, record];
+  kvSave(orgId, CONTENT_RESPONSE_HISTORY_KEY, updated);
 
   // Recompute aggregate for this contentId.
-  const records = responseHistory.filter((r) => r.contentId === contentId);
+  const records = updated.filter((r) => r.contentId === contentId);
   const aggregateRate =
     Math.round((records.reduce((s, r) => s + r.responseRate, 0) / records.length) * 100) / 100;
   const engagementImproved = records.some((r) => r.engagementImproved);

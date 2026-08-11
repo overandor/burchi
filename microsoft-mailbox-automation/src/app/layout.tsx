@@ -3,9 +3,13 @@ import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
-  title: "Advantage Foundry — Where hypotheses grow into edge",
+  title: "Advantage Foundry — Field Experimentation OS",
   description:
-    "A perpetual scientific-work game powered by mailbox evidence, where differentiated human–LLM hypotheses are distributed as missions, tested in real work, reverse-attributed through SPINOR-RL, and preserved as evolving Golden Node lineages.",
+    "A distributed organizational experimentation operating system for pharma field execution. Human–LLM hypotheses are distributed as missions, tested in real work, reverse-attributed through SPINOR-RL, and preserved as evolving Golden Node lineages.",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  applicationName: "Advantage Foundry",
 };
 
 export default function RootLayout({

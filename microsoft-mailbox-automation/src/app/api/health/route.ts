@@ -71,8 +71,10 @@ export async function GET() {
   // Check strategy assignment engine initializes
   try {
     const { assignStrategies } = await import("@/lib/strategy/assignment");
-    const assignments = assignStrategies({ employeeId: "health-check", role: "field_representative" });
-    checks.strategyAssignment = { ok: Array.isArray(assignments) && assignments.length > 0, detail: `${assignments.length} assignments generated` };
+    // Use a unique employee ID to avoid state accumulation across health checks
+    const healthCheckId = `health-check-${Date.now()}`;
+    const assignments = assignStrategies({ employeeId: healthCheckId, role: "field_representative" });
+    checks.strategyAssignment = { ok: Array.isArray(assignments), detail: `${assignments.length} assignments generated` };
   } catch (e: any) {
     checks.strategyAssignment = { ok: false, detail: e.message };
   }
@@ -131,6 +133,22 @@ export async function GET() {
     checks.goldenEngine = { ok: false, detail: e.message };
   }
 
+  // ─── Full demo seed (outcomes, attributions, golden nodes, SPINs) ───
+  try {
+    const { ensureFullDemoSeeded } = await import("@/lib/golden/demo-seed");
+    ensureFullDemoSeeded();
+    const { loadHypothesisOutcomes, loadHypothesisAttributions, loadGoldenNodes } = await import("@/lib/config");
+    const outcomes = loadHypothesisOutcomes();
+    const attributions = loadHypothesisAttributions();
+    const goldenNodes = loadGoldenNodes();
+    checks.demoSeed = {
+      ok: outcomes.length > 0,
+      detail: `${outcomes.length} outcomes, ${attributions.length} attributions, ${goldenNodes.length} golden nodes`,
+    };
+  } catch (e: any) {
+    checks.demoSeed = { ok: false, detail: e.message };
+  }
+
   // ─── SPIN engine check ─────────────────────────────────────────
   try {
     const { dbHealth, getSpinCount } = await import("@/lib/spinor/spin-engine");
@@ -146,6 +164,15 @@ export async function GET() {
     }
   } catch (e: any) {
     checks.spinEngine = { ok: false, detail: e.message };
+  }
+
+  // ─── Database check ─────────────────────────────────────────────
+  try {
+    const { dbHealth } = await import("@/lib/db");
+    const db = dbHealth();
+    checks.database = { ok: db.ok, detail: db.ok ? `${db.tables} tables at ${db.path}` : "SQLite unavailable" };
+  } catch (e: any) {
+    checks.database = { ok: false, detail: e.message };
   }
 
   const allOk = Object.values(checks).every((c) => c.ok);

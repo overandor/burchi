@@ -123,7 +123,7 @@ function value(x: any = {}) {
 
 function version(r: RecordItem) { return { at:now(), state:r.state, sha256:hash({state:r.state,evidence:r.evidenceEnvelope.immutableSha256,task:r.taskIR,gate:r.commitGate,outcome:r.outcome??null}) }; }
 
-export async function compilePepi(input: any): Promise<RecordItem> {
+async function compilePepi(input: any): Promise<RecordItem> {
   const email=normalizeEmail(input.email), ev={id:uid("evidence"),sourceType:"email",sourceId:email.id,threadId:email.threadId,receivedAt:email.receivedAt,capturedAt:now(),immutableSha256:hash(email),snapshot:email};
   const auth=authority(email,input.authority), comp=compliance(email,auth), task=taskIR(email,comp);
   const artifacts=comp.state==="blocked"?[]:email.attachments.flatMap(csvArtifacts);
@@ -149,7 +149,7 @@ async function outcome(body:any) { const rows=await load(), r=rows.find(x=>x.id=
   if(r.outcome.revenueObservedUsd!==null)r.valueAttribution={...r.valueAttribution,status:"observed_not_causal",warning:"Caller-supplied observed revenue; causal contribution is not established."};
   r.state="outcome_recorded";r.updatedAt=now();r.versions.push(version(r));await save(rows);return r; }
 
-export async function selfTest() { const old=process.env.SPINOR_AUTHORIZED_DOMAINS; process.env.SPINOR_AUTHORIZED_DOMAINS="example.com"; const tests:any[]=[]; const check=(name:string,ok:boolean)=>tests.push({name,passed:ok});
+async function selfTest() { const old=process.env.SPINOR_AUTHORIZED_DOMAINS; process.env.SPINOR_AUTHORIZED_DOMAINS="example.com"; const tests:any[]=[]; const check=(name:string,ok:boolean)=>tests.push({name,passed:ok});
   try { const r=await compilePepi({email:{from:"manager@example.com",subject:"Normalize CSV and draft reply",body:"Clean and deduplicate. Do not send.",attachments:[{name:"p.csv",contentType:"text/csv",contentText:"Name,City\n Alice ,NYC\nAlice,NYC\nBob,"}]},economicAssumptions:{humanMinutesBaseline:60,humanMinutesWithSystem:15,fullyLoadedHourlyCostUsd:80}});
     check("authority",r.authority.status==="verified");check("csv",r.artifacts.some(x=>x.type==="normalized_csv"));check("no side effect",r.receipt.externalSideEffectsPerformed===false);check("value",r.valueAttribution.totalEstimatedValueUsd===60);const before=r.evidenceEnvelope.immutableSha256;const a=await approve({recordId:r.id,approval:{approvedBy:"reviewer@example.com",scope:["deliver staged artifacts"]}});check("immutable",a.evidenceEnvelope.immutableSha256===before);
     const b=await compilePepi({email:{from:"manager@example.com",subject:"Patient prescribing",body:"Diagnose and increase dose off-label."}});check("clinical block",b.state==="blocked"); }

@@ -533,19 +533,31 @@ export function computeNodeScore(employeeId: string): {
   const contamination = attributions.filter((a) => a.unexplainedVariance > 0.4).length * 0.5;
   const executionCost = outcomes.length * 0.1; // marginal cost per experiment
 
-  const score = causalLift + informationGained + mutationValue + replicationQuality + reusableSystemValue - complianceRisk - contamination - executionCost;
+  // Outreach contribution — probes and samples feed into the leaderboard
+  let outreachCausalLift = 0;
+  let outreachInformation = 0;
+  try {
+    const { computeOutreachMetrics } = require("./outreach");
+    const outreach = computeOutreachMetrics(employeeId);
+    outreachCausalLift = outreach.causalLiftContribution;
+    outreachInformation = outreach.informationGained;
+  } catch { /* outreach module optional */ }
+
+  const score = causalLift + outreachCausalLift + informationGained + outreachInformation + mutationValue + replicationQuality + reusableSystemValue - complianceRisk - contamination - executionCost;
 
   return {
     score: Math.round(score * 100) / 100,
     breakdown: {
-      causalLift: Math.round(causalLift * 100) / 100,
-      informationGained: Math.round(informationGained * 100) / 100,
+      causalLift: Math.round((causalLift + outreachCausalLift) * 100) / 100,
+      informationGained: Math.round((informationGained + outreachInformation) * 100) / 100,
       mutationValue: Math.round(mutationValue * 100) / 100,
       replicationQuality: Math.round(replicationQuality * 100) / 100,
       reusableSystemValue: Math.round(reusableSystemValue * 100) / 100,
       complianceRisk: Math.round(complianceRisk * 100) / 100,
       contamination: Math.round(contamination * 100) / 100,
       executionCost: Math.round(executionCost * 100) / 100,
+      outreachLift: Math.round(outreachCausalLift * 100) / 100,
+      outreachInfo: Math.round(outreachInformation * 100) / 100,
     },
     roles: getContributionRoles(employeeId),
   };

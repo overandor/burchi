@@ -48,6 +48,7 @@ import {
 } from "@/lib/config";
 import { callLLM, extractJSON, ChatMessage } from "@/lib/golden/llm-client";
 import { SEED_EMPLOYEES } from "@/lib/golden/seed";
+import { withFoundryVoice } from "@/lib/foundry-voice";
 
 const now = () => new Date().toISOString();
 
@@ -111,8 +112,7 @@ export async function generateMission(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a mission generation engine for SPINOR-RL, a palindromic research game.
-Generate a mission card for a ${config.label} mission. The mission must be specific, actionable, and grounded in the hypothesis.
+      content: withFoundryVoice("mission", `Generate a mission card for a ${config.label} mission. The mission must be specific, actionable, and grounded in the hypothesis.
 Return ONLY valid JSON with this structure:
 {
   "title": "Short mission title (5-8 words)",
@@ -127,7 +127,7 @@ Return ONLY valid JSON with this structure:
   "riskBoundary": "Compliance and safety boundaries",
   "minimumEvidence": "Minimum evidence needed for a conclusion",
   "strategicValue": "Why this matters strategically"
-}`,
+}`),
     },
     {
       role: "user",
@@ -233,7 +233,7 @@ async function generateScoutMission(employeeId: string): Promise<{ mission: Miss
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a scout mission generator for SPINOR-RL. Generate a research scouting mission that searches for new hypotheses in pharma field execution.
+      content: withFoundryVoice("scout", `Generate a research scouting mission that searches for new hypotheses in pharma field execution.
 Return ONLY valid JSON:
 {
   "title": "Scout mission title",
@@ -248,7 +248,7 @@ Return ONLY valid JSON:
   "riskBoundary": "Compliance boundaries",
   "minimumEvidence": "Minimum evidence needed",
   "strategicValue": "Why this matters"
-}`,
+}`),
     },
     {
       role: "user",
@@ -341,15 +341,14 @@ export async function updatePhysicianModel(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a physician technology-adaptation engine for SPINOR-RL.
-Analyze the physician's interaction patterns and classify their adaptation state.
+      content: withFoundryVoice("adaptation", `Analyze the physician's interaction patterns and classify their adaptation state.
 Return ONLY valid JSON:
 {
   "currentState": "automation_resistant" | "automation_tolerant" | "automation_curious" | "automation_proficient" | "llm_aware" | "system_building" | "human_relationship_dominant" | "administrative_delegation_dominant" | "evidence_intensive" | "time_compressed" | "technically_sophisticated_conservative",
   "recommendedApproach": "How the system should communicate with this physician",
   "nextTestHypothesis": "What the system should test next with this physician",
   "reasoning": "2-3 sentence explanation"
-}`,
+}`),
     },
     {
       role: "user",
@@ -487,8 +486,7 @@ export async function runPalindromeUpdate(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are the palindromic learning engine for SPINOR-RL.
-Run BOTH a forward and reverse learning pass on the experiment outcome.
+      content: withFoundryVoice("default", `Run BOTH a forward and reverse learning pass on the experiment outcome.
 
 FORWARD pass asks: Did the action improve the outcome? For whom? Under what conditions? Can it be repeated? Can it become a system?
 REVERSE pass asks: What assumption generated this hypothesis? Was the evidence interpreted correctly? What alternative mechanism explains the result? Where should the strategy fail? Which earlier decision should be revised? What new research question has been created?
@@ -513,7 +511,7 @@ Return ONLY valid JSON:
     "analysis": "2-3 sentence reverse analysis"
   },
   "nextHypothesis": "The next hypothesis to test based on this learning"
-}`,
+}`),
     },
     {
       role: "user",
@@ -732,8 +730,7 @@ export async function extractEmailSignals(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are the email competitive sensor for SPINOR-RL.
-Extract behavioral evidence from this email. Email is not merely communication — it is a behavioral evidence stream.
+      content: withFoundryVoice("default", `Extract behavioral evidence from this email. Email is not merely communication — it is a behavioral evidence stream.
 Return ONLY valid JSON:
 {
   "commitments": ["commitment1", "commitment2"],
@@ -753,7 +750,7 @@ Return ONLY valid JSON:
   "beliefToChallenge": "What current belief should be challenged",
   "processToAutomate": "Which existing process should become automated",
   "bestEmployeeToInvestigate": "Which employee is best positioned to investigate this uncertainty"
-}`,
+}`),
     },
     {
       role: "user",
@@ -831,8 +828,7 @@ export async function detectStagnation(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are the anti-stagnation engine for SPINOR-RL.
-A task has been repeated ${repetitionCount} times. Determine whether it should be:
+      content: withFoundryVoice("default", `A task has been repeated ${repetitionCount} times. Determine whether it should be:
 - AUTOMATED: sufficiently predictable that machines can inherit it
 - ELIMINATED: no longer necessary
 - EXPERIMENTED ON: uncertainty remains, test variations
@@ -843,7 +839,7 @@ Return ONLY valid JSON:
   "transformation": "automate" | "eliminate" | "experiment" | "promote_to_system",
   "rationale": "Why this transformation",
   "automationPlan": "If automate, how to automate it. If not, what to do instead."
-}`,
+}`),
     },
     {
       role: "user",
@@ -919,12 +915,12 @@ export async function sproutDerivative(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a sprouting engine for SPINOR-RL. Generate a derivative hypothesis by varying exactly one dimension.
+      content: withFoundryVoice("sprouting", `Generate a derivative hypothesis by varying exactly one dimension.
 Return ONLY valid JSON:
 {
   "claim": "The derivative hypothesis statement",
   "rationale": "Why this variation is worth testing"
-}`,
+}`),
     },
     {
       role: "user",
@@ -1082,5 +1078,356 @@ export function getSpinorRLState() {
     sproutTree: loadSproutTree(),
     diffusionStates: loadDiffusionStates(),
     antiGamingChecks: loadAntiGamingChecks(),
+  };
+}
+
+// ─── §8 Hypothesis Evolution (5 Levels) ─────────────────────────────
+
+export type HypothesisEvolutionLevel =
+  | 1 // Observation — a potentially meaningful pattern is detected
+  | 2 // Hypothesis — the pattern becomes a falsifiable proposition
+  | 3 // Validated tactic — repeatable improvement in a defined context
+  | 4 // Owned system — documented, measurable, reusable operating process
+  | 5; // Business channel — distinct durable source of demand/revenue
+
+export interface HypothesisEvolutionState {
+  hypothesisId: string;
+  level: HypothesisEvolutionLevel;
+  levelLabel: string;
+  levelDescription: string;
+  ownerEmployeeId?: string;
+  systemArtifact?: string;
+  channelName?: string;
+  channelRevenue?: number;
+  updatedAt: string;
+}
+
+/** Determine the evolution level of a hypothesis from its evidence. */
+export function getHypothesisEvolution(hypothesisId: string): HypothesisEvolutionState {
+  const outcomes = loadHypothesisOutcomes().filter((o) => o.hypothesisId === hypothesisId);
+  const goldenNodes = loadGoldenNodes().filter((g) => g.hypothesisId === hypothesisId);
+  const derivatives = loadDerivatives().filter((d) => d.parentHypothesisId === hypothesisId);
+  const hypotheses = loadHypotheses();
+  const hypothesis = hypotheses.find((h) => h.id === hypothesisId);
+
+  let level: HypothesisEvolutionLevel = 1;
+  let levelLabel = "Observation";
+  let levelDescription = "A potentially meaningful pattern is detected.";
+  let ownerEmployeeId: string | undefined;
+  let systemArtifact: string | undefined;
+  let channelName: string | undefined;
+  let channelRevenue: number | undefined;
+
+  // Level 2: Hypothesis — has a structured claim with prior art
+  if (hypothesis && hypothesis.priorArtId) {
+    level = 2;
+    levelLabel = "Hypothesis";
+    levelDescription = "The pattern becomes a falsifiable proposition.";
+  }
+
+  // Level 3: Validated tactic — has non-falsified outcomes from multiple employees
+  const uniqueEmployees = new Set(outcomes.filter((o) => !o.falsified).map((o) => o.employeeId));
+  if (uniqueEmployees.size >= 2 && outcomes.filter((o) => !o.falsified).length >= 3) {
+    level = 3;
+    levelLabel = "Validated Tactic";
+    levelDescription = "The proposition produces repeatable improvement in a defined context.";
+  }
+
+  // Level 4: Owned system — has a Golden Node with a process
+  const systemGolden = goldenNodes.find((g) =>
+    g.stage === "rep_owned_process" || g.stage === "replicated_method" || g.stage === "organizational_capability",
+  );
+  if (systemGolden) {
+    level = 4;
+    levelLabel = "Owned System";
+    levelDescription = "An employee converts the tactic into a documented, measurable, reusable operating process.";
+    ownerEmployeeId = systemGolden.originEmployeeId;
+    systemArtifact = systemGolden.primaryMechanism;
+  }
+
+  // Level 5: Business channel — Golden Node at productized or independent channel stage
+  const channelGolden = goldenNodes.find((g) =>
+    g.stage === "productized_service" || g.stage === "independent_channel",
+  );
+  if (channelGolden) {
+    level = 5;
+    levelLabel = "Business Channel";
+    levelDescription = "The system creates a distinct and durable source of demand, access, intelligence, distribution, or revenue.";
+    ownerEmployeeId = channelGolden.originEmployeeId;
+    systemArtifact = channelGolden.primaryMechanism;
+    channelName = channelGolden.candidateChannelName;
+    channelRevenue = channelGolden.economicValue;
+  }
+
+  return {
+    hypothesisId,
+    level,
+    levelLabel,
+    levelDescription,
+    ownerEmployeeId,
+    systemArtifact,
+    channelName,
+    channelRevenue,
+    updatedAt: now(),
+  };
+}
+
+// ─── §6 Opportunity-Normalized Scoring ──────────────────────────────
+
+/**
+ * Compute opportunity-normalized score to prevent opportunity monopolies.
+ * Employees who have already received many high-upside hypotheses get
+ * a normalization penalty so that promising missions get randomized
+ * exposure across the workforce.
+ */
+export function getOpportunityNormalizedScore(employeeId: string): {
+  rawScore: number;
+  opportunityPenalty: number;
+  normalizedScore: number;
+  highUpsideReceived: number;
+  builderMissionsReceived: number;
+  fairnessAdjustment: string;
+} {
+  const outcomes = loadHypothesisOutcomes().filter((o) => o.employeeId === employeeId);
+  const missions = loadMissions().filter((m) => m.employeeId === employeeId);
+  const derivatives = loadDerivatives().filter((d) => d.proposedByEmployeeId === employeeId);
+
+  // Raw score from the node score logic
+  const rawScore =
+    outcomes.filter((o) => !o.falsified).length * 1.0 +
+    outcomes.filter((o) => o.falsified).length * 0.3 +
+    derivatives.length * 0.8;
+
+  // Count high-upside and builder missions received
+  const highUpsideReceived = missions.filter(
+    (m) => m.missionClass === "field" || m.missionClass === "builder" || m.missionClass === "channel",
+  ).length;
+  const builderMissionsReceived = missions.filter((m) => m.missionClass === "builder").length;
+
+  // Opportunity penalty: employees who have received many high-upside missions
+  // get a normalization penalty so new promising hypotheses are exposed to others.
+  const opportunityPenalty = Math.min(0.5, highUpsideReceived * 0.05 + builderMissionsReceived * 0.03);
+  const normalizedScore = rawScore * (1 - opportunityPenalty);
+
+  let fairnessAdjustment: string;
+  if (opportunityPenalty > 0.3) {
+    fairnessAdjustment = "High opportunity exposure — new high-upside hypotheses should be routed to other employees for randomized exposure.";
+  } else if (opportunityPenalty > 0.15) {
+    fairnessAdjustment = "Moderate opportunity exposure — consider alternating with underexposed employees.";
+  } else {
+    fairnessAdjustment = "Low opportunity exposure — eligible for high-upside hypothesis allocation.";
+  }
+
+  return {
+    rawScore: Math.round(rawScore * 100) / 100,
+    opportunityPenalty: Math.round(opportunityPenalty * 100) / 100,
+    normalizedScore: Math.round(normalizedScore * 100) / 100,
+    highUpsideReceived,
+    builderMissionsReceived,
+    fairnessAdjustment,
+  };
+}
+
+// ─── §12 Competition Engine — Personal Trajectory ───────────────────
+
+export interface PersonalTrajectory {
+  employeeId: string;
+  currentHypothesis: string;
+  evidenceQuality: number;
+  experimentDifficulty: number;
+  learningVelocity: number;
+  discoveryContribution: number;
+  replicationPerformance: number;
+  systemOwnership: number;
+  unresolvedOpportunities: string[];
+  careerStage: string;
+  careerProgression: string[];
+}
+
+/**
+ * Build a personal trajectory view for the competition engine.
+ * The employee sees their own progress, not just a leaderboard.
+ */
+export function getPersonalTrajectory(employeeId: string): PersonalTrajectory {
+  const outcomes = loadHypothesisOutcomes().filter((o) => o.employeeId === employeeId);
+  const derivatives = loadDerivatives().filter((d) => d.proposedByEmployeeId === employeeId);
+  const goldenNodes = loadGoldenNodes().filter((g) => g.originEmployeeId === employeeId);
+  const missions = loadMissions().filter((m) => m.employeeId === employeeId);
+  const activeMissions = missions.filter((m) => m.state === "assigned" || m.state === "accepted" || m.state === "executing");
+
+  const evidenceQuality = outcomes.length > 0
+    ? outcomes.reduce((s, o) => s + (o.metrics.length > 0 ? 0.7 : 0.3), 0) / outcomes.length
+    : 0;
+  const experimentDifficulty = Math.min(1, missions.filter((m) =>
+    m.missionClass === "saboteur" || m.missionClass === "palindrome" || m.missionClass === "channel",
+  ).length * 0.2);
+  const learningVelocity = Math.min(1, outcomes.length * 0.08 + derivatives.length * 0.1);
+  const discoveryContribution = Math.min(1, outcomes.filter((o) => !o.falsified).length * 0.1 + derivatives.length * 0.15);
+  const replicationPerformance = Math.min(1, missions.filter((m) => m.missionClass === "replication").length * 0.2);
+  const systemOwnership = Math.min(1, goldenNodes.length * 0.2);
+
+  // Career stage from §18
+  const careerStage = getCareerStage(outcomes.length, derivatives.length, goldenNodes.length, systemOwnership);
+  const careerProgression = [
+    "Experimenter", "Discoverer", "Method Owner", "System Architect",
+    "Channel Founder", "Mentor", "Adversarial Reviewer", "Researcher Again",
+  ];
+
+  return {
+    employeeId,
+    currentHypothesis: activeMissions[0]?.claim || "No active hypothesis",
+    evidenceQuality: Math.round(evidenceQuality * 100) / 100,
+    experimentDifficulty: Math.round(experimentDifficulty * 100) / 100,
+    learningVelocity: Math.round(learningVelocity * 100) / 100,
+    discoveryContribution: Math.round(discoveryContribution * 100) / 100,
+    replicationPerformance: Math.round(replicationPerformance * 100) / 100,
+    systemOwnership: Math.round(systemOwnership * 100) / 100,
+    unresolvedOpportunities: activeMissions.map((m) => m.title).slice(0, 5),
+    careerStage,
+    careerProgression,
+  };
+}
+
+function getCareerStage(outcomeCount: number, derivativeCount: number, goldenNodeCount: number, systemOwnership: number): string {
+  if (goldenNodeCount > 0 && systemOwnership > 0.6) return "Channel Founder";
+  if (goldenNodeCount > 0) return "System Architect";
+  if (derivativeCount > 3) return "Method Owner";
+  if (outcomeCount > 5) return "Discoverer";
+  if (outcomeCount > 0) return "Experimenter";
+  return "New Participant";
+}
+
+// ─── §16 Enhanced Anti-Gaming Controls ──────────────────────────────
+
+/**
+ * Run a comprehensive anti-gaming audit on an experiment.
+ * Separates activity from effort, effort from evidence, evidence from causality.
+ */
+export function runComprehensiveAntiGamingCheck(
+  experimentId: string,
+  employeeId: string,
+  outcome: HypothesisOutcome,
+  options?: {
+    preRegisteredConditions?: boolean;
+    holdoutTestingUsed?: boolean;
+    randomizedAssignment?: boolean;
+    outcomeDelayWindowDays?: number;
+  },
+): AntiGamingCheck {
+  const outcomes = loadHypothesisOutcomes();
+  const employeeOutcomes = outcomes.filter((o) => o.employeeId === employeeId);
+
+  // Detect duplicate experiments (same hypothesis, same employee, same metrics)
+  const duplicates = outcomes.filter((o) =>
+    o.hypothesisId === outcome.hypothesisId &&
+    o.employeeId === employeeId &&
+    o.id !== outcome.id &&
+    o.metrics.length === outcome.metrics.length,
+  );
+
+  // Detect selective reporting (only positive results, no falsifications)
+  const positiveCount = employeeOutcomes.filter((o) => !o.falsified).length;
+  const negativeCount = employeeOutcomes.filter((o) => o.falsified).length;
+  const selectiveReportingPenalty = negativeCount === 0 && positiveCount > 3 ? 0.3 : 0;
+
+  // Detect anomalies (unusually high effect sizes)
+  const maxMetricValue = Math.max(...outcome.metrics.map((m) => Math.abs(m.value - m.baseline)), 0);
+  const anomalyDetected = maxMetricValue > 3 * Math.max(1, employeeOutcomes.length);
+
+  const check: AntiGamingCheck = {
+    id: `agc_${nanoid(8)}`,
+    experimentId,
+    employeeId,
+    preRegisteredConditions: options?.preRegisteredConditions ?? true,
+    controlPopulationUsed: outcome.metrics.some((m) => m.baseline > 0),
+    holdoutTestingUsed: options?.holdoutTestingUsed ?? false,
+    randomizedAssignment: options?.randomizedAssignment ?? false,
+    outcomeDelayWindow: options?.outcomeDelayWindowDays ?? 7,
+    evidenceProvenance: outcome.outcomeDescription.slice(0, 200),
+    anomalyDetected,
+    duplicateExperiment: duplicates.length > 0,
+    selectiveReportingPenalty,
+    negativeFindingReported: outcome.falsified,
+    passed: !anomalyDetected && duplicates.length === 0 && selectiveReportingPenalty < 0.3,
+    checkedAt: now(),
+  };
+
+  const checks = loadAntiGamingChecks();
+  checks.push(check);
+  saveAntiGamingChecks(checks);
+
+  return check;
+}
+
+// ─── §5 Effort Without Outcome — High-Upside Allocation ─────────────
+
+/**
+ * Identify employees who demonstrate strong effort but low outcomes.
+ * These employees should receive high-upside hypotheses — this is
+ * exploration, not charity.
+ */
+export function identifyExplorationCandidates(): {
+  employeeId: string;
+  effort: number;
+  outcomes: number;
+  researchQuality: number;
+  recommendation: string;
+}[] {
+  const results: { employeeId: string; effort: number; outcomes: number; researchQuality: number; recommendation: string }[] = [];
+
+  for (const emp of SEED_EMPLOYEES) {
+    const state = buildRLAgentState(emp.id);
+    const opp = getOpportunityNormalizedScore(emp.id);
+
+    // High effort, low outcomes, low opportunity exposure → exploration candidate
+    if (state.recentEffort > 2 && state.historicalPerformance < 2 && opp.opportunityPenalty < 0.2) {
+      results.push({
+        employeeId: emp.id,
+        effort: state.recentEffort,
+        outcomes: state.historicalPerformance,
+        researchQuality: state.researchQuality,
+        recommendation: `High effort (${state.recentEffort} missions) with low outcomes (${state.historicalPerformance}) and low opportunity exposure — assign a high-upside hypothesis to test capability match. This is exploration, not charity.`,
+      });
+    }
+  }
+
+  return results;
+}
+
+// ─── §6 Randomized Exposure for High-Upside Hypotheses ──────────────
+
+/**
+ * Select an employee for a high-upside hypothesis using randomized exposure.
+ * Prevents permanent opportunity monopolies by giving promising hypotheses
+ * to employees who haven't received many high-upside missions.
+ */
+export function selectEmployeeForHighUpsideHypothesis(): {
+  employeeId: string;
+  rationale: string;
+  alternatives: string[];
+} {
+  const candidates = SEED_EMPLOYEES.map((emp) => {
+    const opp = getOpportunityNormalizedScore(emp.id);
+    const state = buildRLAgentState(emp.id);
+    return {
+      employeeId: emp.id,
+      normalizedScore: opp.normalizedScore,
+      opportunityPenalty: opp.opportunityPenalty,
+      effort: state.recentEffort,
+      fairnessAdjustment: opp.fairnessAdjustment,
+    };
+  });
+
+  // Sort by lowest opportunity penalty (most underexposed first)
+  candidates.sort((a, b) => a.opportunityPenalty - b.opportunityPenalty);
+
+  // Take the top 3 underexposed employees and pick randomly
+  const topCandidates = candidates.slice(0, 3);
+  const selected = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+
+  return {
+    employeeId: selected.employeeId,
+    rationale: `Selected ${selected.employeeId} for high-upside hypothesis: ${selected.fairnessAdjustment} Normalized score: ${selected.normalizedScore}, effort: ${selected.effort} recent missions.`,
+    alternatives: topCandidates.map((c) => c.employeeId).filter((id) => id !== selected.employeeId),
   };
 }

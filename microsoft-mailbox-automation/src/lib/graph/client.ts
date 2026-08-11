@@ -53,6 +53,11 @@ export async function getAccessToken(config: AppConfig, userToken?: string): Pro
   return data.access_token;
 }
 
+function userPrefix(userToken: string | undefined, mailbox: string): string {
+  if (userToken) return "/me";
+  return `/users/${mailbox}`;
+}
+
 async function graphRequest(
   token: string,
   endpoint: string,
@@ -105,8 +110,9 @@ export async function fetchEmails(
 ): Promise<EmailMessage[]> {
   const token = await getAccessToken(config, userToken);
   const mailbox = config.graph.mailbox;
+  const prefix = userPrefix(userToken, mailbox);
 
-  const endpoint = `/users/${mailbox}/mailFolders/${folderId}/messages?$top=${maxEmails}&$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments,isRead,importance,categories,body&$orderby=receivedDateTime desc`;
+  const endpoint = `${prefix}/mailFolders/${folderId}/messages?$top=${maxEmails}&$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments,isRead,importance,categories,body&$orderby=receivedDateTime desc`;
 
   const data = await graphRequest(token, endpoint);
 
@@ -138,8 +144,9 @@ export async function fetchAttachments(
 ): Promise<EmailAttachment[]> {
   const token = await getAccessToken(config, userToken);
   const mailbox = config.graph.mailbox;
+  const prefix = userPrefix(userToken, mailbox);
 
-  const endpoint = `/users/${mailbox}/messages/${emailId}/attachments`;
+  const endpoint = `${prefix}/messages/${emailId}/attachments`;
   const data = await graphRequest(token, endpoint);
 
   if (!data.value || data.value.length === 0) {
@@ -161,6 +168,50 @@ export async function fetchAttachments(
   }));
 }
 
+export async function sendEmailGraph(
+  token: string,
+  mailbox: string,
+  params: {
+    to: string | string[];
+    subject: string;
+    body: string;
+    isHtml?: boolean;
+    inReplyTo?: string;
+    replyTo?: string;
+  },
+): Promise<{ id: string }> {
+  const toRecipients = (Array.isArray(params.to) ? params.to : [params.to]).map((addr) => ({
+    emailAddress: { address: addr },
+  }));
+
+  const body: any = {
+    message: {
+      subject: params.subject,
+      body: {
+        contentType: params.isHtml ? "HTML" : "Text",
+        content: params.body,
+      },
+      toRecipients,
+    },
+    saveToSentItems: true,
+  };
+
+  if (params.inReplyTo) {
+    body.message.internetMessageHeaders = [
+      { name: "In-Reply-To", value: params.inReplyTo },
+      { name: "References", value: params.inReplyTo },
+    ];
+  }
+  if (params.replyTo) {
+    body.message.replyTo = [{ emailAddress: { address: params.replyTo } }];
+  }
+
+  const from = token ? "/me" : `/users/${mailbox}`;
+  const result = await graphRequest(token, `${from}/sendMail`, "POST", body);
+  // Graph sendMail returns 202 Accepted with empty body on success
+  return { id: result?.id || "sent" };
+}
+
 export async function markEmailAsRead(
   config: AppConfig,
   emailId: string,
@@ -168,8 +219,9 @@ export async function markEmailAsRead(
 ): Promise<void> {
   const token = await getAccessToken(config, userToken);
   const mailbox = config.graph.mailbox;
+  const prefix = userPrefix(userToken, mailbox);
 
-  await graphRequest(token, `/users/${mailbox}/messages/${emailId}`, "PATCH", {
+  await graphRequest(token, `${prefix}/messages/${emailId}`, "PATCH", {
     isRead: true,
   });
 }
@@ -181,8 +233,9 @@ export async function getEmail(
 ): Promise<EmailMessage> {
   const token = await getAccessToken(config, userToken);
   const mailbox = config.graph.mailbox;
+  const prefix = userPrefix(userToken, mailbox);
 
-  const endpoint = `/users/${mailbox}/messages/${emailId}?$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments,isRead,importance,categories,body`;
+  const endpoint = `${prefix}/messages/${emailId}?$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments,isRead,importance,categories,body`;
 
   const msg = await graphRequest(token, endpoint);
 
@@ -209,10 +262,11 @@ export async function listFolders(
 ): Promise<{ id: string; name: string }[]> {
   const token = await getAccessToken(config, userToken);
   const mailbox = config.graph.mailbox;
+  const prefix = userPrefix(userToken, mailbox);
 
   const data = await graphRequest(
     token,
-    `/users/${mailbox}/mailFolders?$select=id,displayName`
+    `${prefix}/mailFolders?$select=id,displayName`
   );
 
   return (data.value || []).map((f: any) => ({

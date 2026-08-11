@@ -10,6 +10,11 @@ primary_region = "iad"
   auto_start_machines = true
   min_machines_running = 0
 
+# Persistent volume for SQLite database
+[mount]
+  source = "foundry_data"
+  destination = "/app/data"
+
 [[vm]]
   memory = "2048mb"
   cpu_kind = "shared"

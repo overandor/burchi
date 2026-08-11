@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { normalizeOrigin, safeJson } from "@/lib/utils";
+import { safeJson } from "@/lib/utils";
 
 export default function LoginPage() {
   const { login, loading, error } = useAuth();
@@ -10,6 +10,17 @@ export default function LoginPage() {
   const [clientId, setClientId] = useState("");
   const [tenantId, setTenantId] = useState("common");
   const [checking, setChecking] = useState(true);
+
+  // Local Foundry password auth
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [orgSlug, setOrgSlug] = useState("");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [setupToken, setSetupToken] = useState("");
+  const [localLoading, setLocalLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const [localSuccess, setLocalSuccess] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -48,36 +59,87 @@ export default function LoginPage() {
   const isValidTenantId = tenantId && (tenantId === "common" || UUID_REGEX.test(tenantId));
   const hasConfig = serverConfigured && !!isValidClientId && !!isValidTenantId;
 
+  async function submitLocal(e: React.FormEvent) {
+    e.preventDefault();
+    setLocalError("");
+    setLocalSuccess("");
+
+    if (!orgSlug || !email || !password || (mode === "register" && !name)) {
+      setLocalError("Please fill in all required fields");
+      return;
+    }
+
+    setLocalLoading(true);
+    try {
+      if (mode === "login") {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orgSlug, email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setLocalError(data.error || "Login failed");
+          return;
+        }
+        window.location.href = data.redirect || "/today";
+        return;
+      }
+
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgSlug,
+          email,
+          password,
+          name,
+          setupToken,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLocalError(data.error || "Registration failed");
+        return;
+      }
+      setLocalSuccess("Account created. Sign in below.");
+      setMode("login");
+      setPassword("");
+    } finally {
+      setLocalLoading(false);
+    }
+  }
+
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-500"></div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 px-4 py-8">
-      <div className="pointer-events-none absolute top-0 left-1/2 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-[120px]"></div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8">
+      <div className="pointer-events-none absolute top-0 left-1/2 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]"></div>
+      <div className="pointer-events-none absolute bottom-0 right-1/4 h-[300px] w-[400px] rounded-full bg-accent/8 blur-[100px]"></div>
       <div className="relative w-full max-w-md">
         <div className="mb-6 flex flex-col items-center">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 text-2xl font-bold text-white shadow-lg shadow-indigo-500/25">M</div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Sign in to Microsoft</h1>
-          <p className="mt-1 text-center text-sm text-slate-500">Mailbox & OneDrive access for scientific data extraction</p>
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-2xl font-bold text-white shadow-lg shadow-primary/25">F</div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Sign in to Foundry</h1>
+          <p className="mt-1 text-center text-sm text-muted-foreground">Voice-first mission execution with real authentication</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/[0.06] bg-card/80 p-6 shadow-xl backdrop-blur-xl">
           {error && (
-            <div className="mb-4 animate-fade-in rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 break-words">
+            <div className="mb-4 animate-fade-in rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive break-words">
               {error}
             </div>
           )}
 
-          {hasConfig ? (
-            <div>
-              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
-                <p className="font-semibold text-emerald-900">✓ Microsoft 365 is configured</p>
-                <p className="mt-1">Click below to sign in with your Microsoft account. No setup required.</p>
+          {hasConfig && (
+            <div className="mb-5">
+              <div className="mb-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-400">
+                <p className="font-semibold text-emerald-300">Microsoft 365 is configured</p>
               </div>
               <button onClick={login} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#0078d4] to-[#00a4ef] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100">
                 {loading ? (
@@ -92,30 +154,126 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
-              <div className="mt-3 flex items-center justify-center rounded-lg bg-slate-50 px-3 py-2">
-                <span className="text-xs text-slate-400"><code>{clientId.substring(0, 8)}...{clientId.slice(-4)}</code></span>
+              <div className="relative my-5 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/[0.06]"></div></div>
+                <span className="relative bg-card px-2 text-xs text-muted-foreground">or</span>
               </div>
-            </div>
-          ) : (
-            <div className="text-center">
-              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
-                <p className="font-semibold text-amber-900">Microsoft 365 is not configured</p>
-                <p className="mt-1">Ask your administrator to set <code className="rounded bg-amber-100 px-1">AZURE_CLIENT_ID</code>, <code className="rounded bg-amber-100 px-1">AZURE_TENANT_ID</code>, and <code className="rounded bg-amber-100 px-1">AZURE_CLIENT_SECRET</code> environment variables on the server.</p>
-              </div>
-              <button onClick={() => { window.location.href = "/dashboard"; }} className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                Back to Dashboard
-              </button>
             </div>
           )}
 
-          <div className="mt-5 flex flex-wrap justify-center gap-1.5">
-            {["Mail.Read", "Mail.ReadWrite", "Files.Read", "Files.ReadWrite", "User.Read"].map((s) => (
-              <span key={s} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">{s}</span>
-            ))}
-          </div>
+          <form onSubmit={submitLocal} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Organization slug</label>
+              <input
+                type="text"
+                value={orgSlug}
+                onChange={(e) => setOrgSlug(e.target.value.toLowerCase().trim())}
+                placeholder="foundry"
+                className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                required
+              />
+            </div>
+            {mode === "register" && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Full name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jordan Rivera"
+                  className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                  required
+                />
+              </div>
+            )}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@org.com"
+                className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                required
+                minLength={8}
+              />
+            </div>
+            {mode === "register" && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Setup token (optional for first user)</label>
+                <input
+                  type="text"
+                  value={setupToken}
+                  onChange={(e) => setSetupToken(e.target.value)}
+                  placeholder="From FOUNDRY_SETUP_TOKEN"
+                  className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                />
+              </div>
+            )}
+
+            {localError && (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                {localError}
+              </div>
+            )}
+            {localSuccess && (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-emerald-400">
+                {localSuccess}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={localLoading}
+              className="w-full rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {localLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
+                </span>
+              ) : mode === "login" ? (
+                "Sign in with Foundry"
+              ) : (
+                "Create account"
+              )}
+            </button>
+
+            <div className="text-center text-xs text-muted-foreground">
+              {mode === "login" ? (
+                <>
+                  Need an account?{" "}
+                  <button type="button" onClick={() => setMode("register")} className="font-semibold text-primary hover:underline">
+                    Register
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button type="button" onClick={() => setMode("login")} className="font-semibold text-primary hover:underline">
+                    Sign in
+                  </button>
+                </>
+              )}
+            </div>
+          </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">You will be redirected to Microsoft to sign in securely.</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          {hasConfig
+            ? "Sign in with Microsoft or your Foundry password."
+            : "Sign in with your Foundry password. Ask an admin to configure Microsoft 365 for SSO."}
+        </p>
       </div>
     </div>
   );

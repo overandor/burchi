@@ -42,10 +42,9 @@ export function truncate(text: string, max: number): string {
  * on a different port than what's registered in the Google/Azure console.
  */
 export function normalizeOrigin(origin: string): string {
-  // Always use the actual request origin so OAuth redirect URIs match
-  // the domain the user is browsing. This works correctly across
-  // Netlify, Fly.io, localhost, and any other deployment target.
-  return origin.replace(/127\.0\.0\.1/, "localhost");
+  const envBase = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_BASE;
+  const base = typeof envBase === "string" && envBase.trim() ? envBase : origin;
+  return base.replace(/127\.0\.0\.1/, "localhost").replace(/\/$/, "");
 }
 
 /**
@@ -56,7 +55,7 @@ export function getRequestOrigin(request: { headers: Headers; nextUrl: URL }): s
   const xfHost = request.headers.get("x-forwarded-host");
   const xfProto = request.headers.get("x-forwarded-proto") || "https";
   const host = xfHost || request.headers.get("host") || request.nextUrl.host;
-  return `${xfProto}://${host}`;
+  return normalizeOrigin(`${xfProto}://${host}`);
 }
 
 /**

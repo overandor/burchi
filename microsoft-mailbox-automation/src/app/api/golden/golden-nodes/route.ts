@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { goldenEngine } from "@/lib/golden/engine";
 import { listGoldenNodes, getGoldenNodesForEmployee, getGoldenNodeById, listAttributionLedger, getAttributionLedgerForNode } from "@/lib/golden/golden-node";
+import { ensureFullDemoSeeded } from "@/lib/golden/demo-seed";
 
 export const dynamic = "force-dynamic";
 
 /** GET /api/golden/golden-nodes?employeeId=...&id=...&ledger=true */
 export async function GET(req: NextRequest) {
   try {
+    // Ensure demo data is seeded (idempotent)
+    ensureFullDemoSeeded();
+
     const { searchParams } = new URL(req.url);
     const employeeId = searchParams.get("employeeId");
     const id = searchParams.get("id");

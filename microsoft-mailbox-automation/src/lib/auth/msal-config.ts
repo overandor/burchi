@@ -1,19 +1,27 @@
 import { Configuration } from "@azure/msal-browser";
 import { normalizeOrigin } from "@/lib/utils";
+import {
+  resolveMicrosoftClientId,
+  resolveMicrosoftTenantId,
+  BUILTIN_MICROSOFT_CLIENT_ID,
+  BUILTIN_MICROSOFT_TENANT_ID,
+} from "@/lib/auth/microsoft-public-client";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 export function getMsalConfig(clientId: string, tenantId: string): Configuration {
-  const effectiveClientId = clientId || "00000000-0000-0000-0000-000000000000"; // placeholder — set AZURE_AD_CLIENT_ID env var or configure in Settings
+  // Use the built-in Microsoft Graph Command Line Tools public client as default
+  const effectiveClientId = resolveMicrosoftClientId(clientId);
+  const effectiveTenantId = resolveMicrosoftTenantId(tenantId);
 
-  if (!clientId || !UUID_REGEX.test(clientId)) {
-    console.warn("[msal-config] Warning: client ID is missing or not a valid UUID format. Authentication will not work until a valid client ID is configured.");
+  if (!UUID_REGEX.test(effectiveClientId)) {
+    console.warn("[msal-config] Warning: client ID is not a valid UUID format. Authentication may not work.");
   }
 
   return {
     auth: {
       clientId: effectiveClientId,
-      authority: `https://login.microsoftonline.com/${tenantId || "common"}`,
+      authority: `https://login.microsoftonline.com/${effectiveTenantId}`,
       redirectUri: typeof window !== "undefined" ? normalizeOrigin(window.location.origin) : "",
     },
     cache: {
@@ -35,8 +43,8 @@ export const GRAPH_SCOPES = [
   "Mail.Read",
   "Mail.ReadWrite",
   "Files.Read",
-  "Files.ReadWrite",
   "Files.Read.All",
-  "Files.ReadWrite.All",
   "offline_access",
 ];
+
+export { BUILTIN_MICROSOFT_CLIENT_ID, BUILTIN_MICROSOFT_TENANT_ID };

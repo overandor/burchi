@@ -165,6 +165,7 @@ export interface ExecutionStep {
 }
 
 export interface GmailConfig {
+  provider?: "gmail";
   clientId: string;
   clientSecret: string;
   redirectUri: string;
@@ -1177,6 +1178,8 @@ export interface PriorArtRecord {
   genuinelyUnknown: string[];
   researchConfidence: number; // 0..1
   researchedAt: string;
+  noveltyDelta?: string;
+  categoryOverlap?: string[];
 }
 
 /** The structured anatomy of a single hypothesis. */
@@ -1898,3 +1901,919 @@ export interface SpinorRLState {
   diffusionStates: DiffusionState[];
   antiGamingChecks: AntiGamingCheck[];
 }
+
+// ─── ADMISSIBILITY ENGINE ──────────────────────────────────────────────
+
+/** The five admissibility tiers. Lowest to highest evidentiary strength. */
+export type AdmissibilityLevel =
+  | "observation"
+  | "internal_signal"
+  | "controlled_experiment"
+  | "valid_replication"
+  | "golden_node_eligible";
+
+/** A single failed or satisfied admissibility requirement. */
+export interface AdmissibilityCheck {
+  requirement: string;
+  satisfied: boolean;
+  detail: string;
+}
+
+/** The full admissibility decision for one experiment/SPIN record. */
+export interface AdmissibilityDecision {
+  recordId: string;
+  level: AdmissibilityLevel;
+  checks: AdmissibilityCheck[];
+  admissible: boolean;
+  /** Human-readable explanation of why the record landed at this level. */
+  rationale: string;
+  /** Confounders that remain unresolved and cap the attainable level. */
+  blockingConfounders: string[];
+  decidedAt: string;
+  /** Configuration version used, for auditability. */
+  configVersion: string;
+}
+
+/** Configurable thresholds for the admissibility engine. */
+export interface AdmissibilityConfig {
+  configVersion: string;
+  minObservationsInternalSignal: number;
+  executionFidelityThreshold: number; // 0..1
+  minReplicationsGoldenNode: number;
+  minExperimentsGoldenNode: number;
+  attributionConfidenceThreshold: number; // 0..1
+  requireFailureBoundaryForGoldenNode: boolean;
+  requireTransferabilityForGoldenNode: boolean;
+  requireComplianceClear: boolean;
+}
+
+// ─── ACTIVITY GENOME ───────────────────────────────────────────────────
+
+/** The genome dimensions that describe a mission's conceptual fingerprint. */
+export interface ActivityGenome {
+  missionId: string;
+  customerType: string;
+  stakeholder: string;
+  channel: string;
+  taskStructure: string;
+  location: string;
+  cognitiveMode: string;
+  researchQuestion: string;
+  skillRequired: string;
+  automationLevel: number; // 0..1
+  socialInteraction: number; // 0..1
+  timeHorizon: "immediate" | "short" | "medium" | "long";
+  collaborationLevel: number; // 0..1
+  uncertaintyLevel: number; // 0..1
+}
+
+/** Supported rotation modes to prevent fatigue. */
+export type ActivityMode =
+  | "execution"
+  | "observation"
+  | "experiment_design"
+  | "customer_research"
+  | "workflow_creation"
+  | "automation"
+  | "replication"
+  | "adversarial_review"
+  | "process_teaching"
+  | "failure_analysis"
+  | "cross_functional"
+  | "business_model_exploration";
+
+/** Result of comparing a candidate mission against recent history. */
+export interface GenomeSimilarityResult {
+  candidateId: string;
+  mostSimilarMissionId: string | null;
+  similarity: number; // 0..1
+  exceedsFatigueThreshold: boolean;
+  recommendedMode: ActivityMode;
+  rationale: string;
+}
+
+// ─── RESEARCH GAUNTLET ─────────────────────────────────────────────────
+
+/** The nine mandatory gauntlet stages. */
+export type GauntletStage =
+  | "claim_dissection"
+  | "prior_art_sweep"
+  | "evidence_integrity"
+  | "novelty_extraction"
+  | "confounder_attack"
+  | "experimental_design"
+  | "field_execution"
+  | "causal_reveal"
+  | "derivative_generation";
+
+export type GauntletStageStatus = "pending" | "in_progress" | "passed" | "revision_required" | "rejected";
+
+/** A structured testable claim from Stage 1. */
+export interface DissectedClaim {
+  population: string;
+  intervention: string;
+  comparison: string;
+  outcome: string;
+  timePeriod: string;
+  mechanism: string;
+  risk: string;
+  falsificationCondition: string;
+}
+
+/** Evidence integrity summary from Stage 3. */
+export interface EvidenceIntegrityReport {
+  baseline: number | null;
+  observed: number | null;
+  absoluteChange: number | null;
+  relativeChange: number | null; // fraction, e.g. 0.3 for 30%
+  sampleSize: number | null;
+  confidenceInterval: [number, number] | null;
+  controlMethod: string | null;
+  population: string | null;
+  timeWindow: string | null;
+  replications: number;
+  interventionCost: string | null;
+  negativeOutcomes: string[];
+  missingData: string[];
+  knownLimitations: string[];
+  complete: boolean;
+}
+
+/** A single confounder from Stage 5. */
+export interface GauntletConfounder {
+  description: string;
+  status: "unresolved" | "controlled" | "measured" | "unlikely" | "confirmed";
+  linkedExperiment: boolean;
+}
+
+/** Experimental design from Stage 6. */
+export interface ExperimentalDesign {
+  eligiblePopulation: string;
+  exclusionCriteria: string[];
+  treatmentCondition: string;
+  comparisonCondition: string;
+  assignmentMethod: string;
+  sampleTarget: number;
+  primaryMetric: string;
+  secondaryMetrics: string[];
+  stoppingConditions: string[];
+  observationWindow: string;
+  allowedDeviations: string[];
+  complianceRestrictions: string[];
+  attributionPlan: string;
+  minimumInstrumentation: string[];
+  failureEscalationRules: string[];
+}
+
+/** Causal reveal result from Stage 8. */
+export type CausalClassification =
+  | "rejected"
+  | "inconclusive"
+  | "promising"
+  | "replicated"
+  | "golden_node_candidate"
+  | "golden_node"
+  | "compliance_blocked";
+
+export interface CausalReveal {
+  classification: CausalClassification;
+  observedResult: string;
+  absoluteEffect: number | null;
+  relativeEffect: number | null;
+  likelyContributors: string[];
+  counterfactualEstimate: number | null;
+  confidence: number;
+  confounders: GauntletConfounder[];
+  portability: "low" | "medium" | "high";
+  failureBoundaries: string[];
+  cost: string;
+  burden: string;
+  customerValue: string;
+  nextResearchQuestion: string;
+}
+
+/** A single stage's record within the gauntlet. */
+export interface GauntletStageRecord {
+  stage: GauntletStage;
+  status: GauntletStageStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  reviewer: string | null;
+  notes: string;
+  rejectionReason: string | null;
+}
+
+/** The full gauntlet run for one hypothesis. */
+export interface GauntletRun {
+  runId: string;
+  hypothesisId: string;
+  spinId: string | null;
+  stages: GauntletStageRecord[];
+  dissectedClaim: DissectedClaim | null;
+  evidenceIntegrity: EvidenceIntegrityReport | null;
+  confounders: GauntletConfounder[];
+  design: ExperimentalDesign | null;
+  causalReveal: CausalReveal | null;
+  currentStage: GauntletStage;
+  complete: boolean;
+  /** Linked outcome once the gauntlet reaches field execution. */
+  outcomeId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Voice-First Mission Execution ───────────────────────────────────
+
+/** State machine for a voice session. */
+export type VoiceSessionState =
+  | "idle"
+  | "capability_check"
+  | "permission_request"
+  | "ready"
+  | "briefing"
+  | "listening"
+  | "processing"
+  | "review"
+  | "confirmed"
+  | "persisted"
+  | "completed"
+  | "paused"
+  | "permission_denied"
+  | "unsupported"
+  | "transcription_failed"
+  | "validation_failed"
+  | "compliance_hold"
+  | "network_interrupted"
+  | "expired_mission"
+  | "cancelled";
+
+/** Browser capability detection status. */
+export type CapabilityStatus =
+  | "checking"
+  | "supported"
+  | "permission_required"
+  | "permission_denied"
+  | "unsupported"
+  | "temporarily_unavailable"
+  | "recognition_failed"
+  | "audio_device_missing";
+
+/** How a transcript segment was captured. */
+export type CaptureMode =
+  | "browser_recognition"
+  | "server_transcription"
+  | "audio_recording_deferred"
+  | "text_entry";
+
+/** Confirmation state of a transcript segment. */
+export type ConfirmationState = "unconfirmed" | "confirmed" | "corrected" | "discarded";
+
+/** Classification of a spoken statement. */
+export type StatementClassification =
+  | "directly_observed_fact"
+  | "customer_reported_statement"
+  | "employee_interpretation"
+  | "estimate"
+  | "prediction"
+  | "causal_claim"
+  | "preference_inference"
+  | "unresolved_uncertainty";
+
+/** Type of evidence artifact extracted from speech. */
+export type EvidenceArtifactType =
+  | "observation"
+  | "outcome"
+  | "protocol_deviation"
+  | "confounder"
+  | "customer_preference_signal"
+  | "execution_fidelity_event"
+  | "negative_outcome"
+  | "complaint"
+  | "opt_out"
+  | "adverse_event_indicator"
+  | "follow_up_requirement"
+  | "derivative_idea"
+  | "unresolved_question"
+  | "external_factor_report";
+
+/** A single segment of transcript with provenance. */
+export interface TranscriptSegment {
+  segmentId: string;
+  sessionId: string;
+  experimentId?: string;
+  speaker: string;
+  startTime: number;
+  endTime: number;
+  transcriptText: string;
+  confidence: number;
+  recognitionProvider: string;
+  language: string;
+  correctionHistory: TranscriptCorrection[];
+  confirmationState: ConfirmationState;
+  sourceAudioRef?: string;
+  redacted: boolean;
+  createdAt: string;
+}
+
+/** A correction to a transcript segment. Original is never overwritten. */
+export interface TranscriptCorrection {
+  correctedText: string;
+  correctedBy: string;
+  correctedAt: string;
+  reason?: string;
+}
+
+/** A source span within a transcript segment. */
+export interface SourceSpan {
+  segmentId: string;
+  startChar: number;
+  endChar: number;
+  excerpt: string;
+}
+
+/** An extracted evidence artifact grounded in transcript spans. */
+export interface EvidenceArtifact {
+  artifactId: string;
+  sessionId: string;
+  artifactType: EvidenceArtifactType;
+  sourceSpans: SourceSpan[];
+  normalizedStatement: string;
+  accountRef?: string;
+  experimentRef?: string;
+  eventTime?: string;
+  confidence: number;
+  uncertainty: string;
+  evidenceStatus: "proposed" | "confirmed" | "rejected";
+  requiredReview: boolean;
+  complianceFlags: string[];
+  /** Full compliance flag results, including escalation receipts. */
+  complianceFlagResults?: ComplianceFlagResult[];
+  humanConfirmationState: ConfirmationState;
+  classification: StatementClassification;
+  createdAt: string;
+}
+
+/** Browser voice capability detection result. */
+export interface VoiceCapabilities {
+  speechRecognition: CapabilityStatus;
+  speechSynthesis: CapabilityStatus;
+  microphonePermission: CapabilityStatus;
+  availableVoices: number;
+  selectedLanguage: string;
+  secureContext: boolean;
+  browser: string;
+  isMobile: boolean;
+  audioDeviceAvailable: boolean;
+  detectedAt: string;
+}
+
+/** Immutable escalation receipt for a compliance-flagged voice artifact. */
+export interface VoiceEscalationRecord {
+  escalationId: string;
+  sessionId: string;
+  artifactId: string;
+  artifactType: EvidenceArtifactType;
+  flagType: "adverse_event" | "product_complaint" | "promotional_content" | "off_label";
+  sourceSpans: SourceSpan[];
+  transcriptExcerpt: string;
+  normalizedStatement: string;
+  escalatedAt: string;
+  escalatedBy: string;
+  status: "open" | "reviewed" | "closed";
+  voiceSessionAuditEventId?: string;
+}
+
+/** A voice session connecting a mission to evidence capture. */
+export interface VoiceSession {
+  sessionId: string;
+  organizationId: string;
+  userId: string;
+  dailySeedId?: string;
+  experimentId?: string;
+  missionId?: string;
+  hypothesisId?: string;
+  assignmentId?: string;
+  state: VoiceSessionState;
+  language: string;
+  captureMode: CaptureMode;
+  audioRetention: "none" | "session_only" | "persisted";
+  capabilities?: VoiceCapabilities;
+  complianceRequirements: string[];
+  transcriptSegments: TranscriptSegment[];
+  extractedArtifacts: EvidenceArtifact[];
+  auditEvents: VoiceAuditEvent[];
+  confirmationIdentity?: string;
+  confirmedAt?: string;
+  /** IDs of immutable escalation receipts generated for this session. */
+  escalationReceiptIds?: string[];
+  /** Outcome recorded from confirmed voice evidence. */
+  outcomeId?: string;
+  /** Causal attribution computed for the recorded outcome. */
+  attributionId?: string;
+  /** Admissibility decision for the voice evidence bundle. */
+  admissibilityDecision?: AdmissibilityDecision;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Immutable audit event for a voice session. */
+export interface VoiceAuditEvent {
+  eventId: string;
+  sessionId: string;
+  eventType:
+    | "voice.session_created"
+    | "voice.permission_requested"
+    | "voice.recording_started"
+    | "voice.recording_paused"
+    | "voice.recording_stopped"
+    | "voice.transcript_received"
+    | "voice.transcript_corrected"
+    | "voice.artifacts_extracted"
+    | "voice.artifacts_confirmed"
+    | "voice.compliance_flagged"
+    | "voice.session_completed"
+    | "voice.session_cancelled";
+  actor: string;
+  experimentRef?: string;
+  missionVersion?: string;
+  provider?: string;
+  language?: string;
+  artifactHashes?: string[];
+  timestamp: string;
+  correctionHistory?: TranscriptCorrection[];
+  confirmationState?: ConfirmationState;
+  complianceResult?: string;
+}
+
+/** Input for creating a voice session. */
+export interface CreateVoiceSessionInput {
+  dailySeedId?: string;
+  experimentId?: string;
+  missionId?: string;
+  hypothesisId?: string;
+  assignmentId?: string;
+  language?: string;
+  captureMode?: CaptureMode;
+  audioRetention?: "none" | "session_only" | "persisted";
+}
+
+/** A guided interview question. */
+export interface InterviewQuestion {
+  questionId: string;
+  prompt: string;
+  category: "what_happened" | "what_observed" | "protocol_change" | "who_acted" |
+            "when_occurred" | "outcome_recorded" | "evidence_supports" |
+            "alternative_explanations" | "safety_events" | "confidence" |
+            "artifact_classification";
+  required: boolean;
+  asked: boolean;
+  answered: boolean;
+  answerSegmentId?: string;
+}
+
+/** Result of compliance checking on extracted artifacts. */
+export interface ComplianceFlagResult {
+  artifactId: string;
+  flagged: boolean;
+  flagType?: "adverse_event" | "product_complaint" | "promotional_content" | "off_label";
+  escalationRequired: boolean;
+  escalationReceiptId?: string;
+  message: string;
+}
+
+// ─── SPINOR GODMODE ────────────────────────────────────────────────
+
+export type ProofState =
+  | 0 // Speculation
+  | 1 // Eligible Seed
+  | 2 // Local Signal
+  | 3 // Replicated Effect
+  | 4 // Mechanism Supported
+  | 5 // Portable Strategy
+  | 6 // Golden Node
+  | 7 // Infrastructure
+  | 8 // Autonomous System
+  | 9; // Spinout Candidate
+
+export interface SpinorOpportunity {
+  id: string;
+  question: string;
+  description: string;
+  expectedBusinessImpact: number;
+  uncertaintyReduction: number;
+  portability: number;
+  strategicImportance: number;
+  timeSensitivity: number;
+  executionCost: number;
+  complianceRisk: number;
+  customerBurden: number;
+  valueScore: number;
+  status: "open" | "allocated" | "resolved" | "killed";
+  createdAt: string;
+}
+
+export interface SpinorHypothesis {
+  id: string;
+  opportunityId: string;
+  statement: string;
+  rationale: string;
+  competingHypothesisIds: string[];
+  assignedTo?: string;
+  status: "untested" | "testing" | "supported" | "refuted" | "inconclusive";
+  proofState: ProofState;
+  evidence: HypothesisEvidence[];
+  createdAt: string;
+}
+
+export interface HypothesisEvidence {
+  id: string;
+  type: "experiment" | "observation" | "literature" | "expert" | "counterfactual";
+  source: string;
+  finding: string;
+  supports: boolean;
+  strength: number;
+  date: string;
+}
+
+export interface MissionContract {
+  id: string;
+  opportunityId: string;
+  hypothesisId: string;
+  owner: string;
+  objective: string;
+  population: string;
+  intervention: string;
+  comparison: string;
+  primaryOutcome: string;
+  secondaryOutcomes: string[];
+  permittedVariables: string[];
+  lockedVariables: string[];
+  stopConditions: string[];
+  evidenceThreshold: string;
+  replicationObligation: string;
+  status: "draft" | "approved" | "executing" | "completed" | "failed" | "stopped";
+  startDate: string;
+  endDate?: string;
+  results?: MissionResult;
+}
+
+export interface MissionResult {
+  observedOutcome: number;
+  expectedOutcome: number;
+  absoluteLift: number;
+  relativeLift: number;
+  sampleSize: number;
+  uncertaintyInterval: { lower: number; upper: number };
+  confidence: "low" | "moderate" | "high";
+  executionCost: number;
+  confounders: string[];
+  unexplainedVariance: number;
+  replicationCount: number;
+  limitations: string[];
+}
+
+export interface SPINGenome {
+  id: string;
+  opportunity: string;
+  hypothesisVersion: string;
+  humanContributor: string;
+  modelContribution: string;
+  customerContext: string;
+  territoryState: string;
+  eligibilityRule: string;
+  assignmentMethod: string;
+  channel: string;
+  timing: string;
+  workflow: string;
+  approvedContent: string;
+  executionFidelity: number;
+  organizationalSupport: number;
+  externalConditions: string;
+  chanceFactor: number;
+  result?: MissionResult;
+  createdAt: string;
+}
+
+export interface ShadowWorld {
+  missionId: string;
+  method: "randomized" | "matched_control" | "staggered_rollout" | "historical_baseline" | "synthetic_control" | "interrupted_time_series";
+  observedOutcome: number;
+  expectedOutcomeWithoutIntervention: number;
+  absoluteLift: number;
+  relativeLift: number;
+  sampleSize: number;
+  uncertaintyInterval: { lower: number; upper: number };
+  confidence: "low" | "moderate" | "high";
+  executionCost: number;
+  customerBurden: number;
+  confounders: string[];
+  unexplainedVariance: number;
+  replicationCount: number;
+  limitations: string[];
+}
+
+export interface SpinorGoldenNode {
+  id: string;
+  number: number;
+  opportunity: string;
+  validatedStrategy: string;
+  applicableContexts: string[];
+  failureBoundary: string;
+  adjustedEffect: string;
+  executionCost: string;
+  complianceState: string;
+  humanContributors: string[];
+  automationState: string;
+  humanControl: string;
+  rollbackTrigger: string;
+  reverseTestSchedule: string;
+  proofState: ProofState;
+  executableWorkflow: string;
+  eligibilityRules: string[];
+  evidencePackage: string[];
+  knownFailureConditions: string[];
+  contributionLedger: { contributor: string; contribution: string; date: string }[];
+  monitoringThresholds: { metric: string; threshold: number; action: string }[];
+  rollbackPolicy: string;
+  falsificationSchedule: string;
+  status: "confirmed" | "narrowed" | "mutated" | "merged" | "downgraded" | "suspended" | "destroyed";
+  createdAt: string;
+}
+
+export interface DestructionMission {
+  id: string;
+  goldenNodeId: string;
+  attackType: "remove_component" | "reverse_sequence" | "resistant_segment" | "different_employee" | "different_territory" | "human_vs_model" | "decay_test" | "hidden_burden" | "compliance_leakage" | "external_explanation" | "cheaper_alternative";
+  description: string;
+  status: "proposed" | "executing" | "completed";
+  result?: "confirmed" | "narrowed" | "mutated" | "merged" | "downgraded" | "suspended" | "destroyed";
+  evidence: string;
+  executedAt?: string;
+}
+
+export type CapabilityType =
+  | "reliable_execution"
+  | "confounder_detection"
+  | "workflow_construction"
+  | "replication_leadership"
+  | "model_correction"
+  | "causal_interpretation"
+  | "compliance_reliability"
+  | "automation_design"
+  | "adversarial_testing"
+  | "cross_context_translation";
+
+export interface Capability {
+  type: CapabilityType;
+  level: number;
+  verifiedInstances: number;
+  unlockedMissions: string[];
+}
+
+export type CareerStage =
+  | "operator"
+  | "investigator"
+  | "replicator"
+  | "modifier"
+  | "builder"
+  | "strategy_architect"
+  | "system_governor"
+  | "venture_founder"
+  | "adversarial_reviewer";
+
+export interface SpinorEmployee {
+  id: string;
+  name: string;
+  role: RoleType;
+  careerStage: CareerStage;
+  capabilities: Capability[];
+  opportunityBalanceSheet: {
+    expectedValue: number;
+    riskLevel: number;
+    complexity: number;
+    highUpsideSeeds: number;
+    replicationBurden: number;
+    builderMissions: number;
+    territoryDifficulty: number;
+    orgSupport: number;
+    successProbability: number;
+  };
+  experimentsRun: number;
+  honestNegatives: number;
+  goldenNodesContributed: string[];
+}
+
+export interface EvidenceEconomyEntry {
+  id: string;
+  experimentId: string;
+  outcomeValue: number;
+  knowledgeValue: number;
+  riskReductionValue: number;
+  automationValue: number;
+  transferValue: number;
+  customerExperienceValue: number;
+  strategicOptionValue: number;
+  avoidedCost: number;
+  executionCost: number;
+  customerBurden: number;
+  complianceExposure: number;
+  analyticalCost: number;
+  experimentROI: number;
+  isUsefulFailure: boolean;
+  createdAt: string;
+}
+
+// ─── WORKTELEPORT ──────────────────────────────────────────────────
+
+export interface EvidenceCapsule {
+  id: string;
+  sourceType: "email" | "attachment" | "csv" | "spreadsheet" | "pdf" | "image" | "receipt" | "voice" | "calendar" | "crm" | "browser" | "database" | "erp" | "card_transaction" | "bank_transaction" | "expense_policy" | "field_observation" | "location" | "human_correction";
+  sourceId: string;
+  preservedOriginal: string;
+  extractedClaims: { claim: string; source: string; confidence: number }[];
+  sender: string;
+  recipients: string[];
+  timestamp: string;
+  threadHistory?: string[];
+  attachments?: string[];
+  explicitRequests: string[];
+  impliedCommitments: string[];
+  deadlines: string[];
+  entities: string[];
+  amounts: number[];
+  locations: string[];
+  requiredFormats: string[];
+  relevantPolicies: string[];
+  uncertainty: string[];
+  createdAt: string;
+}
+
+export interface AuthorityEnvelope {
+  requester: string;
+  requesterAuthority: "employee" | "manager" | "director" | "vp" | "executive" | "external";
+  recipientRole: string;
+  permitted: string[];
+  approvalRequired: string[];
+  prohibited: string[];
+  monetaryLimit?: number;
+  dataSensitivity: "public" | "internal" | "confidential" | "restricted";
+  createdAt: string;
+}
+
+export interface TaskIR {
+  id: string;
+  evidenceCapsuleId: string;
+  authorityEnvelopeId: string;
+  objective: string;
+  inputs: string[];
+  deliverables: string[];
+  constraints: string[];
+  uncertainty: string[];
+  createdAt: string;
+}
+
+export interface DeliverableNode {
+  id: string;
+  name: string;
+  inputs: string[];
+  outputs: string[];
+  completionConditions: string[];
+  permittedTools: string[];
+  retryPolicy: string;
+  evidenceRequirements: string[];
+  failureBehavior: string;
+  reversibility: "reversible" | "irreversible";
+  dependencies: string[];
+  status: "pending" | "executing" | "completed" | "failed";
+}
+
+export interface DeliverableGraph {
+  taskId: string;
+  nodes: DeliverableNode[];
+  edges: { from: string; to: string }[];
+}
+
+export interface CapabilityManifest {
+  tools: {
+    name: string;
+    type: "gmail" | "calendar" | "browser" | "search" | "document_parser" | "ocr" | "spreadsheet" | "python" | "crm_api" | "accounting_api" | "card_api" | "bank_api" | "expense_platform" | "mapping" | "route_optimizer" | "erp" | "database" | "llm" | "human_approval";
+    authorized: boolean;
+    reliability: number;
+    cost: number;
+    latency: number;
+    reversibility: number;
+    dataSensitivity: number;
+    verificationStrength: number;
+  }[];
+  selectionScore: number;
+}
+
+export interface ExecutionDAG {
+  id: string;
+  deliverableGraphId: string;
+  nodes: {
+    id: string;
+    type: "deterministic_code" | "api_call" | "browser_interaction" | "database_query" | "llm_reasoning" | "human_review" | "financial_approval" | "validation";
+    label: string;
+    status: "pending" | "running" | "completed" | "failed" | "awaiting_approval";
+    inputs: string[];
+    outputs: string[];
+    startedAt?: string;
+    completedAt?: string;
+    result?: string;
+  }[];
+  edges: { from: string; to: string }[];
+  parallelPaths: string[][];
+  status: "pending" | "executing" | "completed" | "failed" | "awaiting_approval";
+}
+
+export interface VerificationContract {
+  id: string;
+  executionDagId: string;
+  tests: {
+    name: string;
+    type: "schema" | "completeness" | "accuracy" | "compliance" | "reconciliation" | "format" | "policy";
+    assertion: string;
+    passed: boolean;
+    result?: string;
+  }[];
+  allPassed: boolean;
+  verifiedAt?: string;
+}
+
+export interface SkillGenome {
+  id: string;
+  trigger: string;
+  inputs: string[];
+  authorityRequirements: string[];
+  taskIR: string;
+  executionDAG: string;
+  tools: string[];
+  transformations: string[];
+  validationRules: string[];
+  humanInterventions: string[];
+  timeMs: number;
+  cost: number;
+  errors: string[];
+  corrections: string[];
+  outcome: string;
+  reuseConditions: string[];
+  replicationCount: number;
+  venturePotential: number;
+  createdAt: string;
+}
+
+// ─── VENTUREFORGE ──────────────────────────────────────────────────
+
+export interface VentureGenome {
+  id: string;
+  skillGenomeId: string;
+  customer: string;
+  pain: string;
+  inputContract: string;
+  executionSystem: string;
+  verification: string;
+  economicValue: number;
+  transferability: number;
+  defensibility: string;
+  compliance: string;
+  autonomy: number;
+  demandFrequency: number;
+  exceptionRate: number;
+  identifiableBuyers: string[];
+  differentiation: string;
+  ventureScore: number;
+  status: "candidate" | "validated" | "incubating" | "launched" | "killed";
+  createdAt: string;
+}
+
+export interface VentureCandidate {
+  id: string;
+  ventureGenomeId: string;
+  name: string;
+  description: string;
+  originWorkflow: string;
+  progressionStage: "one_task" | "reusable_workflow" | "skill_genome" | "validated_experiment" | "internal_system" | "cross_team_service" | "externalizable_product" | "independent_business";
+  evidence: string[];
+  estimatedMarketSize: number;
+  estimatedTimeToMarket: number;
+  riskLevel: "low" | "moderate" | "high";
+  recommendation: string;
+  createdAt: string;
+}
+
+// ─── Execution Classes (WORKTELEPORT) ──────────────────────────────
+
+export type ExecutionClass = "A" | "B" | "C" | "D";
+
+export interface ExecutionClassDefinition {
+  class: ExecutionClass;
+  name: string;
+  description: string;
+  examples: string[];
+  systemBehavior: string;
+}
+
+export * from "./city";
+export * from "./membra";

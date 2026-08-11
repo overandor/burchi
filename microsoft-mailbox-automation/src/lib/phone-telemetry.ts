@@ -5,6 +5,7 @@
  */
 
 import { nanoid } from "nanoid";
+import { withFoundryVoice } from "@/lib/foundry-voice";
 import {
   PhoneRecord,
   PhoneTelemetryEvent,
@@ -219,9 +220,7 @@ function computeRiskScore(record: PhoneRecord): number {
 export function buildLLMPrompt(record: PhoneRecord): { system: string; user: string } {
   const summary = generatePhoneSummary(record);
 
-  const system = `You are a phone telemetry governance AI. You analyze per-phone-number telemetry data — including call/SMS/MMS events, uploaded images, and metadata — to produce insights, risk assessments, and recommendations.
-
-Your output must be valid JSON with this structure:
+  const system = withFoundryVoice("phone-governance", `Your output must be valid JSON with this structure:
 {
   "summary": "string — 2-3 sentence overview of this phone number's activity",
   "insights": [
@@ -236,7 +235,7 @@ Focus on:
 - Risk indicators (spam, fraud, unusual hours, high volume)
 - Efficiency opportunities (automated triage, routing)
 - Image content relevance to phone activity
-- Actionable recommendations for the operator`;
+- Actionable recommendations for the operator`);
 
   const eventLines = record.events.slice(-50).map((e) =>
     `  [${e.timestamp}] ${e.direction} ${e.type}${e.durationSec ? ` (${e.durationSec}s)` : ""} — ${JSON.stringify(e.metadata)}${e.notes ? ` | ${e.notes}` : ""}`

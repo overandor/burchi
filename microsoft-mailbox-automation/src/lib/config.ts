@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { kvLoad, kvSave, ensureDefaultOrg, migrateFromJsonFiles, DEFAULT_ORG_ID } from "@/lib/db";
 import {
   AppConfig,
   CommitmentContract,
@@ -35,6 +36,24 @@ import {
   SproutNode,
   DiffusionState,
   AntiGamingCheck,
+  AppIdentity,
+  MaterialEvent,
+  CapabilityGrant,
+  DifferentiationResult,
+  LineageRecord,
+  PriorArtSearch,
+  IPEvidencePackage,
+  MarketTestResult,
+  AppEvaluationResult,
+  MerkleRoot,
+  GGFUManifest,
+  RegistryEntry,
+  ContinuityEvent,
+  ContinuityMerkleRoot,
+  ExecutionReceipt,
+  EvidencePacket,
+  AppraisalReport,
+  CASEntry,
 } from "@/types";
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -45,12 +64,11 @@ const DEFAULT_CONFIG: AppConfig = {
     mailbox: "",
   },
   llm: {
-    provider: (process.env.LLM_PROVIDER as "openai" | "anthropic" | "azure" | "ollama") || "openai",
+    provider: (process.env.LLM_PROVIDER as "openai" | "anthropic" | "azure" | "ollama") || "ollama",
     apiKey: process.env.OPENAI_API_KEY || "",
-    model: process.env.LLM_MODEL || "gpt-oss:20b",
-    // gpt-oss:20b is a reasoning model — needs higher max_tokens so content
-    // isn't consumed entirely by the reasoning trace.
-    endpoint: process.env.LLM_ENDPOINT || "https://api.llm7.io/v1/chat/completions",
+    model: process.env.LLM_MODEL || "llama3.2:1b",
+    // Defaults to Prism Ollama on Fly.dev. Override with LLM_ENDPOINT/LLM_MODEL env vars.
+    endpoint: process.env.LLM_ENDPOINT || "https://prism-ollama.fly.dev/api/generate",
     endpoints: process.env.LLM_ENDPOINTS
       ? JSON.parse(process.env.LLM_ENDPOINTS)
       : [],
@@ -121,9 +139,21 @@ export function loadConfig(): AppConfig {
   // Start with env var defaults (works on Netlify/serverless)
   const envConfig: Partial<AppConfig> = {
     graph: {
-      clientId: process.env.AZURE_AD_CLIENT_ID || "",
-      clientSecret: process.env.AZURE_AD_CLIENT_SECRET || "",
-      tenantId: process.env.AZURE_AD_TENANT_ID || "common",
+      clientId:
+        process.env.AZURE_AD_CLIENT_ID ||
+        process.env.AZURE_CLIENT_ID ||
+        process.env.MICROSOFT_CLIENT_ID ||
+        "",
+      clientSecret:
+        process.env.AZURE_AD_CLIENT_SECRET ||
+        process.env.AZURE_CLIENT_SECRET ||
+        process.env.MICROSOFT_CLIENT_SECRET ||
+        "",
+      tenantId:
+        process.env.AZURE_AD_TENANT_ID ||
+        process.env.AZURE_TENANT_ID ||
+        process.env.MICROSOFT_TENANT_ID ||
+        "common",
       mailbox: process.env.MAILBOX_EMAIL || "",
     },
   };
@@ -153,6 +183,13 @@ export function loadConfig(): AppConfig {
           ...envConfig.graph,
           ...saved.graph,
         },
+        llm: {
+          ...DEFAULT_CONFIG.llm,
+          ...saved.llm,
+          endpoint: process.env.LLM_ENDPOINT || saved.llm?.endpoint || DEFAULT_CONFIG.llm.endpoint,
+          model: process.env.LLM_MODEL || saved.llm?.model || DEFAULT_CONFIG.llm.model,
+          provider: process.env.LLM_PROVIDER || saved.llm?.provider || DEFAULT_CONFIG.llm.provider,
+        },
       };
     }
   } catch (e) {
@@ -170,37 +207,16 @@ export function saveConfig(config: AppConfig): void {
 }
 
 export function loadProcessedEmails(): ProcessedEmailRecord[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(PROCESSED_FILE)) {
-      const raw = fs.readFileSync(PROCESSED_FILE, "utf-8");
-      return JSON.parse(raw);
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<ProcessedEmailRecord>("processedEmails");
 }
 
 export function saveProcessedEmails(records: ProcessedEmailRecord[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(PROCESSED_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("processedEmails", records);
 }
 
 export function loadSyncStatus(): SyncStatus {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(STATUS_FILE)) {
-      const raw = fs.readFileSync(STATUS_FILE, "utf-8");
-      return JSON.parse(raw);
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  const arr = loadGoldenArray<SyncStatus>("syncStatus");
+  if (arr.length > 0) return arr[0];
   return {
     lastSync: null,
     totalEmails: 0,
@@ -212,53 +228,20 @@ export function loadSyncStatus(): SyncStatus {
 }
 
 export function saveSyncStatus(status: SyncStatus): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("syncStatus", [status]);
 }
 
 export function loadCommitments(): CommitmentContract[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(COMMITMENTS_FILE)) {
-      const raw = fs.readFileSync(COMMITMENTS_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<CommitmentContract>("commitments");
 }
 
 export function saveCommitments(records: CommitmentContract[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(COMMITMENTS_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("commitments", records);
 }
 
 export function loadCommitmentMetrics(): CommitmentMetrics {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(COMMITMENT_METRICS_FILE)) {
-      const raw = fs.readFileSync(COMMITMENT_METRICS_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed as CommitmentMetrics;
-      }
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-
+  const arr = loadGoldenArray<CommitmentMetrics>("commitmentMetrics");
+  if (arr.length > 0) return arr[0];
   return {
     capability: { success: 0, total: 0 },
     inputsAvailable: { success: 0, total: 0 },
@@ -272,203 +255,149 @@ export function loadCommitmentMetrics(): CommitmentMetrics {
 }
 
 export function saveCommitmentMetrics(metrics: CommitmentMetrics): void {
-  ensureDataDir();
-  try {
-    const toSave: CommitmentMetrics = {
-      ...metrics,
-      lastUpdatedAt: new Date().toISOString(),
-    };
-    fs.writeFileSync(COMMITMENT_METRICS_FILE, JSON.stringify(toSave, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  const toSave: CommitmentMetrics = {
+    ...metrics,
+    lastUpdatedAt: new Date().toISOString(),
+  };
+  saveGoldenArray("commitmentMetrics", [toSave]);
 }
 
-// ─── Strategy persistence ──────────────────────────────────────────
+// ─── Strategy persistence (SQLite-backed) ───────────────────────────
 
 export function loadStrategies(): StrategyGenome[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(STRATEGIES_FILE)) {
-      const raw = fs.readFileSync(STRATEGIES_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<StrategyGenome>("strategies");
 }
 
 export function saveStrategies(records: StrategyGenome[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STRATEGIES_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("strategies", records);
 }
 
 export function loadStrategyAssignments(): StrategyAssignment[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(STRATEGY_ASSIGNMENTS_FILE)) {
-      const raw = fs.readFileSync(STRATEGY_ASSIGNMENTS_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<StrategyAssignment>("strategyAssignments");
 }
 
 export function saveStrategyAssignments(records: StrategyAssignment[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STRATEGY_ASSIGNMENTS_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("strategyAssignments", records);
 }
 
 export function loadStrategyOutcomes(): StrategyOutcomeEvent[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(STRATEGY_OUTCOMES_FILE)) {
-      const raw = fs.readFileSync(STRATEGY_OUTCOMES_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<StrategyOutcomeEvent>("strategyOutcomes");
 }
 
 export function saveStrategyOutcomes(records: StrategyOutcomeEvent[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STRATEGY_OUTCOMES_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("strategyOutcomes", records);
 }
 
 export function loadStrategyAttributions(): AttributionResult[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(STRATEGY_ATTRIBUTIONS_FILE)) {
-      const raw = fs.readFileSync(STRATEGY_ATTRIBUTIONS_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<AttributionResult>("strategyAttributions");
 }
 
 export function saveStrategyAttributions(records: AttributionResult[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STRATEGY_ATTRIBUTIONS_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("strategyAttributions", records);
 }
 
 export function loadStrategyEvolution(): StrategyEvolutionProposal[] {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(STRATEGY_EVOLUTION_FILE)) {
-      const raw = fs.readFileSync(STRATEGY_EVOLUTION_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
-  return [];
+  return loadGoldenArray<StrategyEvolutionProposal>("strategyEvolution");
 }
 
 export function saveStrategyEvolution(records: StrategyEvolutionProposal[]): void {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STRATEGY_EVOLUTION_FILE, JSON.stringify(records, null, 2));
-  } catch (e) {
-    console.error("[config] error:", e);
-  }
+  saveGoldenArray("strategyEvolution", records);
 }
 
 // ─── GOLDEN NODE persistence ───────────────────────────────────────
-// Generic load/save helpers for the hypothesis-to-business engine.
-// Each collection is stored as a JSON array under data/golden-*.json.
+// SQLite-backed key-value store. Each collection is stored as a JSON
+// array in the kv_store table, scoped to an organization.
+// Falls back to the default org for backwards compatibility.
 
-const GOLDEN_FILES = {
-  hypotheses: `${DATA_DIR}/golden-hypotheses.json`,
-  priorArt: `${DATA_DIR}/golden-prior-art.json`,
-  assignments: `${DATA_DIR}/golden-assignments.json`,
-  outcomes: `${DATA_DIR}/golden-outcomes.json`,
-  attributions: `${DATA_DIR}/golden-attributions.json`,
-  derivatives: `${DATA_DIR}/golden-derivatives.json`,
-  goldenNodes: `${DATA_DIR}/golden-nodes.json`,
-  attributionLedger: `${DATA_DIR}/golden-attribution-ledger.json`,
-  discoveryLedger: `${DATA_DIR}/golden-discovery-ledger.json`,
-  researchReliability: `${DATA_DIR}/golden-research-reliability.json`,
-  processes: `${DATA_DIR}/golden-processes.json`,
-  competitions: `${DATA_DIR}/golden-competitions.json`,
-  spinorProfiles: `${DATA_DIR}/spinor-profiles.json`,
-  spinorOrganisms: `${DATA_DIR}/spinor-organisms.json`,
+const GOLDEN_KEYS = {
+  hypotheses: "hypotheses",
+  priorArt: "priorArt",
+  assignments: "assignments",
+  outcomes: "outcomes",
+  attributions: "attributions",
+  derivatives: "derivatives",
+  goldenNodes: "goldenNodes",
+  attributionLedger: "attributionLedger",
+  discoveryLedger: "discoveryLedger",
+  researchReliability: "researchReliability",
+  processes: "processes",
+  competitions: "competitions",
+  spinorProfiles: "spinorProfiles",
+  spinorOrganisms: "spinorOrganisms",
   // SPINOR-RL
-  missions: `${DATA_DIR}/spinor-rl-missions.json`,
-  physicians: `${DATA_DIR}/spinor-rl-physicians.json`,
-  palindromeUpdates: `${DATA_DIR}/spinor-rl-palindrome.json`,
-  rlAgentStates: `${DATA_DIR}/spinor-rl-agent-states.json`,
-  rlRewards: `${DATA_DIR}/spinor-rl-rewards.json`,
-  emailSignals: `${DATA_DIR}/spinor-rl-email-signals.json`,
-  stagnationFlags: `${DATA_DIR}/spinor-rl-stagnation.json`,
-  sproutTree: `${DATA_DIR}/spinor-rl-sprouts.json`,
-  diffusionStates: `${DATA_DIR}/spinor-rl-diffusion.json`,
-  antiGamingChecks: `${DATA_DIR}/spinor-rl-anti-gaming.json`,
+  missions: "missions",
+  physicians: "physicians",
+  palindromeUpdates: "palindromeUpdates",
+  rlAgentStates: "rlAgentStates",
+  rlRewards: "rlRewards",
+  emailSignals: "emailSignals",
+  stagnationFlags: "stagnationFlags",
+  sproutTree: "sproutTree",
+  diffusionStates: "diffusionStates",
+  antiGamingChecks: "antiGamingChecks",
 } as const;
 
+// Backwards-compatible alias for code that references GOLDEN_FILES
+const GOLDEN_FILES = GOLDEN_KEYS;
+
 /**
- * In-memory cache for golden arrays. On serverless platforms (Vercel),
- * the filesystem is read-only, so writes to data/*.json fail silently.
- * This cache ensures that writes within the same process are visible to
- * subsequent reads, keeping the API consistent within a request lifecycle.
- * The cache is seeded from the deployed data files on first access.
+ * In-memory cache for golden arrays. Provides a fast read path without
+ * hitting SQLite on every call, and ensures writes within the same
+ * process are visible to subsequent reads immediately.
  */
 const goldenCache = new Map<string, unknown[]>();
 
-function loadGoldenArray<T>(file: string): T[] {
-  if (goldenCache.has(file)) {
-    return goldenCache.get(file) as T[];
+/**
+ * Ensure the default org exists and migrate any existing JSON files.
+ * Called once on first database access.
+ */
+let _initialized = false;
+function ensureDbInitialized(): void {
+  if (_initialized) return;
+  try {
+    ensureDefaultOrg();
+    migrateFromJsonFiles(DEFAULT_ORG_ID);
+    _initialized = true;
+    // Auto-seed demo data after DB is initialized
+    try {
+      const { ensureDemoDataSeeded } = require("@/lib/auto-seed");
+      ensureDemoDataSeeded();
+    } catch (e) {
+      console.error("[config] auto-seed error:", e);
+    }
+  } catch (e) {
+    console.error("[config] db init error:", e);
+    _initialized = true; // Don't retry on every call
   }
-  ensureDataDir();
+}
+
+export function loadGoldenArray<T>(key: string): T[] {
+  ensureDbInitialized();
+  if (goldenCache.has(key)) {
+    // Return a deep copy to prevent callers from mutating the cache.
+    // This matches the old JSON-file behavior where each read created
+    // new object instances via JSON.parse.
+    return JSON.parse(JSON.stringify(goldenCache.get(key))) as T[];
+  }
   let result: T[] = [];
   try {
-    if (fs.existsSync(file)) {
-      const raw = fs.readFileSync(file, "utf-8");
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) result = parsed as T[];
-    }
+    result = kvLoad<T>(DEFAULT_ORG_ID, key);
   } catch (e) {
     console.error("[config] golden load error:", e);
   }
-  goldenCache.set(file, result);
-  return result;
+  goldenCache.set(key, result);
+  return JSON.parse(JSON.stringify(result)) as T[];
 }
 
-function saveGoldenArray<T>(file: string, records: T[]): void {
+export function saveGoldenArray<T>(key: string, records: T[]): void {
+  ensureDbInitialized();
   // Always update the in-memory cache so subsequent reads see the write.
-  goldenCache.set(file, records);
-  ensureDataDir();
+  goldenCache.set(key, records);
   try {
-    fs.writeFileSync(file, JSON.stringify(records, null, 2));
+    kvSave(DEFAULT_ORG_ID, key, records);
   } catch (e) {
-    // Expected on read-only serverless filesystems — cache has the data.
+    // SQLite write failed — cache still has the data for this process
+    console.error("[config] golden save error:", e);
   }
 }
 
@@ -522,5 +451,63 @@ export const loadSproutTree = (): SproutNode[] => loadGoldenArray<SproutNode>(GO
 export const saveSproutTree = (r: SproutNode[]) => saveGoldenArray(GOLDEN_FILES.sproutTree, r);
 export const loadDiffusionStates = (): DiffusionState[] => loadGoldenArray<DiffusionState>(GOLDEN_FILES.diffusionStates);
 export const saveDiffusionStates = (r: DiffusionState[]) => saveGoldenArray(GOLDEN_FILES.diffusionStates, r);
-export const loadAntiGamingChecks = (): AntiGamingCheck[] => loadGoldenArray<AntiGamingCheck>(GOLDEN_FILES.antiGamingChecks);
-export const saveAntiGamingChecks = (r: AntiGamingCheck[]) => saveGoldenArray(GOLDEN_FILES.antiGamingChecks, r);
+export const loadAntiGamingChecks = (): AntiGamingCheck[] => loadGoldenArray<AntiGamingCheck>(GOLDEN_KEYS.antiGamingChecks);
+export const saveAntiGamingChecks = (r: AntiGamingCheck[]) => saveGoldenArray(GOLDEN_KEYS.antiGamingChecks, r);
+
+// ─── CITY OF APPLICATIONS persistence ──────────────────────────────
+
+export const loadCityApps = (): AppIdentity[] => loadGoldenArray<AppIdentity>("cityApps");
+export const saveCityApps = (r: AppIdentity[]) => saveGoldenArray("cityApps", r);
+
+export const loadCityEvents = (): MaterialEvent[] => loadGoldenArray<MaterialEvent>("cityEvents");
+export const saveCityEvents = (r: MaterialEvent[]) => saveGoldenArray("cityEvents", r);
+
+export const loadCityCapabilityGrants = (): CapabilityGrant[] => loadGoldenArray<CapabilityGrant>("cityCapabilityGrants");
+export const saveCityCapabilityGrants = (r: CapabilityGrant[]) => saveGoldenArray("cityCapabilityGrants", r);
+
+export const loadCityDifferentiationResults = (): DifferentiationResult[] => loadGoldenArray<DifferentiationResult>("cityDifferentiationResults");
+export const saveCityDifferentiationResults = (r: DifferentiationResult[]) => saveGoldenArray("cityDifferentiationResults", r);
+
+export const loadCityLineageRecords = (): LineageRecord[] => loadGoldenArray<LineageRecord>("cityLineageRecords");
+export const saveCityLineageRecords = (r: LineageRecord[]) => saveGoldenArray("cityLineageRecords", r);
+
+export const loadCityPriorArtSearches = (): PriorArtSearch[] => loadGoldenArray<PriorArtSearch>("cityPriorArtSearches");
+export const saveCityPriorArtSearches = (r: PriorArtSearch[]) => saveGoldenArray("cityPriorArtSearches", r);
+
+export const loadCityIPEvidencePackages = (): IPEvidencePackage[] => loadGoldenArray<IPEvidencePackage>("cityIPEvidencePackages");
+export const saveCityIPEvidencePackages = (r: IPEvidencePackage[]) => saveGoldenArray("cityIPEvidencePackages", r);
+
+export const loadCityMarketTestResults = (): MarketTestResult[] => loadGoldenArray<MarketTestResult>("cityMarketTestResults");
+export const saveCityMarketTestResults = (r: MarketTestResult[]) => saveGoldenArray("cityMarketTestResults", r);
+
+export const loadCityEvaluationResults = (): AppEvaluationResult[] => loadGoldenArray<AppEvaluationResult>("cityEvaluationResults");
+export const saveCityEvaluationResults = (r: AppEvaluationResult[]) => saveGoldenArray("cityEvaluationResults", r);
+
+export const loadCityMerkleRoots = (): MerkleRoot[] => loadGoldenArray<MerkleRoot>("cityMerkleRoots");
+export const saveCityMerkleRoot = (r: MerkleRoot[]) => saveGoldenArray("cityMerkleRoots", r);
+
+// ─── MEMBRA RUNTIME persistence ────────────────────────────────────
+
+export const loadMembraManifests = (): GGFUManifest[] => loadGoldenArray<GGFUManifest>("membraManifests");
+export const saveMembraManifests = (r: GGFUManifest[]) => saveGoldenArray("membraManifests", r);
+
+export const loadMembraRegistry = (): RegistryEntry[] => loadGoldenArray<RegistryEntry>("membraRegistry");
+export const saveMembraRegistry = (r: RegistryEntry[]) => saveGoldenArray("membraRegistry", r);
+
+export const loadMembraEvents = (): ContinuityEvent[] => loadGoldenArray<ContinuityEvent>("membraEvents");
+export const saveMembraEvents = (r: ContinuityEvent[]) => saveGoldenArray("membraEvents", r);
+
+export const loadMembraMerkleRoots = (): ContinuityMerkleRoot[] => loadGoldenArray<ContinuityMerkleRoot>("membraMerkleRoots");
+export const saveMembraMerkleRoots = (r: ContinuityMerkleRoot[]) => saveGoldenArray("membraMerkleRoots", r);
+
+export const loadMembraReceipts = (): ExecutionReceipt[] => loadGoldenArray<ExecutionReceipt>("membraReceipts");
+export const saveMembraReceipts = (r: ExecutionReceipt[]) => saveGoldenArray("membraReceipts", r);
+
+export const loadMembraEvidencePackets = (): EvidencePacket[] => loadGoldenArray<EvidencePacket>("membraEvidencePackets");
+export const saveMembraEvidencePackets = (r: EvidencePacket[]) => saveGoldenArray("membraEvidencePackets", r);
+
+export const loadMembraAppraisals = (): AppraisalReport[] => loadGoldenArray<AppraisalReport>("membraAppraisals");
+export const saveMembraAppraisals = (r: AppraisalReport[]) => saveGoldenArray("membraAppraisals", r);
+
+export const loadMembraCASEntries = (): CASEntry[] => loadGoldenArray<CASEntry>("membraCASEntries");
+export const saveMembraCASEntries = (r: CASEntry[]) => saveGoldenArray("membraCASEntries", r);

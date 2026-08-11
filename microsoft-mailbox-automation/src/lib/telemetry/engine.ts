@@ -197,6 +197,7 @@ function buildUserTelemetry(
   // Top senders by value
   const senderMap = new Map<string, { count: number; estimatedValue: number }>();
   for (const r of records) {
+    if (!r) continue;
     const existing = senderMap.get(r.sender) || { count: 0, estimatedValue: 0 };
     const value = (VALUATION.categoryRevenue[r.category] || 150) * (r.confidence || 0.85);
     existing.count++;
@@ -211,6 +212,7 @@ function buildUserTelemetry(
   // Revenue timeline (by date)
   const timelineMap = new Map<string, { revenue: number; emails: number }>();
   for (const r of records) {
+    if (!r) continue;
     const date = r.receivedDate?.split("T")[0] || r.processedAt?.split("T")[0] || "unknown";
     const existing = timelineMap.get(date) || { revenue: 0, emails: 0 };
     const value = (VALUATION.categoryRevenue[r.category] || 150) * (r.confidence || 0.85);
@@ -303,6 +305,7 @@ function buildUserTelemetry(
 function buildCategoryBreakdown(records: ProcessedEmailRecord[]) {
   const catMap = new Map<string, { count: number; revenue: number }>();
   for (const r of records) {
+    if (!r) continue;
     const existing = catMap.get(r.category) || { count: 0, revenue: 0 };
     existing.count++;
     existing.revenue += (VALUATION.categoryRevenue[r.category] || 150) * (r.confidence || 0.85);
@@ -364,10 +367,12 @@ function buildAggregateMetrics(users: UserTelemetry[]): TelemetryMetric[] {
 function buildRevenueByCategory(records: ProcessedEmailRecord[]) {
   const catMap = new Map<string, { revenue: number; count: number }>();
   for (const r of records) {
-    const existing = catMap.get(r.category) || { revenue: 0, count: 0 };
-    existing.revenue += (VALUATION.categoryRevenue[r.category] || 150) * (r.confidence || 0.85);
+    if (!r) continue;
+    const category = r.category ?? "unknown";
+    const existing = catMap.get(category) || { revenue: 0, count: 0 };
+    existing.revenue += (VALUATION.categoryRevenue[category] || 150) * (r.confidence || 0.85);
     existing.count++;
-    catMap.set(r.category, existing);
+    catMap.set(category, existing);
   }
   return Array.from(catMap.entries())
     .map(([category, data]) => ({
@@ -381,7 +386,7 @@ function buildRevenueByCategory(records: ProcessedEmailRecord[]) {
 function buildEfficiencyGains(records: ProcessedEmailRecord[], users: UserTelemetry[]) {
   const totalEmails = records.length;
   const avgFieldsPerEmail = totalEmails > 0
-    ? records.reduce((s, r) => s + (r.fieldCount || 0), 0) / totalEmails
+    ? records.reduce((s, r) => s + (r?.fieldCount || 0), 0) / totalEmails
     : 0;
   const avgTimeSaved = users.length > 0
     ? users.reduce((s, u) => s + u.totalTimeSavedHours, 0) / users.length
@@ -427,6 +432,7 @@ function buildInsights(
   // High-value sender detection
   const senderValue = new Map<string, number>();
   for (const r of records) {
+    if (!r) continue;
     const v = (VALUATION.categoryRevenue[r.category] || 150) * (r.confidence || 0.85);
     senderValue.set(r.sender, (senderValue.get(r.sender) || 0) + v);
   }

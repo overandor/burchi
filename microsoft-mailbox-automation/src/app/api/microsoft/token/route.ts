@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { loadConfig } from "@/lib/config";
+import {
+  resolveMicrosoftClientId,
+  resolveMicrosoftTenantId,
+  MICROSOFT_GRAPH_SCOPES,
+} from "@/lib/auth/microsoft-public-client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -7,7 +13,7 @@ export const maxDuration = 10;
  * POST /api/microsoft/token
  *
  * Polls for the token after the user completes the device code flow.
- * Body: { device_code: string, client_id?: string, scopes?: string[] }
+ * Body: { device_code: string, client_id?: string, tenant_id?: string, scopes?: string[] }
  *
  * Returns:
  *   access_token, refresh_token, id_token — on success
@@ -16,18 +22,36 @@ export const maxDuration = 10;
  *   { error: "expired_token" } — code expired
  */
 export async function POST(request: NextRequest) {
+  let config;
+  try {
+    config = loadConfig();
+  } catch (e) {
+    console.error("[microsoft/token] loadConfig error:", e);
+    config = { graph: {} };
+  }
+
+  const configuredClientId =
+    process.env.AZURE_AD_CLIENT_ID ||
+    process.env.AZURE_CLIENT_ID ||
+    process.env.MICROSOFT_CLIENT_ID ||
+    config.graph?.clientId ||
+    "";
+
+  const configuredTenant =
+    process.env.AZURE_AD_TENANT_ID ||
+    process.env.AZURE_TENANT_ID ||
+    process.env.MICROSOFT_TENANT_ID ||
+    config.graph?.tenantId ||
+    "";
+
+  const defaultClientId = resolveMicrosoftClientId(configuredClientId);
+  const defaultTenantId = resolveMicrosoftTenantId(configuredTenant);
+
   const body = await request.json().catch(() => ({}));
   const deviceCode = body.device_code;
-  const clientId = body.client_id || "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
-  const scopes = body.scopes || [
-    "https://graph.microsoft.com/Mail.Read",
-    "https://graph.microsoft.com/Mail.ReadWrite",
-    "https://graph.microsoft.com/Files.Read",
-    "https://graph.microsoft.com/Files.Read.All",
-    "offline_access",
-    "openid",
-    "profile",
-  ];
+  const clientId = body.client_id || defaultClientId;
+  const tenantId = body.tenant_id || defaultTenantId;
+  const scopes = body.scopes || MICROSOFT_GRAPH_SCOPES;
 
   if (!deviceCode) {
     return NextResponse.json({ error: "device_code is required" }, { status: 400 });
@@ -38,7 +62,7 @@ export async function POST(request: NextRequest) {
     const timeout = setTimeout(() => controller.abort(), 9000);
     try {
       const res = await fetch(
-        "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },

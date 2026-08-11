@@ -21,6 +21,8 @@ export interface PriorArtInput {
   requiredConditions: string[];
   risksAndConfounders: string[];
   genuinelyUnknown: string[];
+  noveltyDelta?: string;
+  categoryOverlap?: string[];
 }
 
 /**
@@ -133,6 +135,8 @@ export async function researchHypothesisWithLLM(claim: string): Promise<{
       requiredConditions: Array.isArray(r.requiredConditions) ? r.requiredConditions : [],
       risksAndConfounders: Array.isArray(r.risksAndConfounders) ? r.risksAndConfounders : [],
       genuinelyUnknown: Array.isArray(r.genuinelyUnknown) ? r.genuinelyUnknown : [],
+      noveltyDelta: r.noveltyDelta || undefined,
+      categoryOverlap: Array.isArray(r.categoryOverlap) ? r.categoryOverlap : undefined,
     };
   } else {
     // Deterministic fallback: classify as untested.
@@ -170,6 +174,8 @@ export function researchHypothesis(input: PriorArtInput): PriorArtRecord {
     genuinelyUnknown: input.genuinelyUnknown,
     researchConfidence,
     researchedAt: now(),
+    noveltyDelta: input.noveltyDelta,
+    categoryOverlap: input.categoryOverlap,
   };
   const all = loadPriorArt();
   all.push(record);

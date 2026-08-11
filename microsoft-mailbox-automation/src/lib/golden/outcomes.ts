@@ -44,12 +44,45 @@ export interface OutcomeInput {
   falsified: boolean;
   falsificationEvidence?: string;
   contextAtObservation?: { externalFactors?: string[]; concurrentHypotheses?: string[] };
+  /** Skip the gauntlet (for demo seeding only). Production calls must pass the gauntlet. */
+  skipGauntlet?: boolean;
 }
 
-/** Record a measured outcome. Honest falsification is a valuable result, not a failure. */
+/** Record a measured outcome. Honest falsification is a valuable result, not a failure.
+ *
+ * Every outcome passes through the 9-stage Research Gauntlet before recording.
+ * Stages 1-6 run pre-outcome (claim dissection → experimental design).
+ * Stages 7-9 run post-outcome (field execution → derivative generation).
+ * If any pre-outcome stage fails, the outcome is NOT recorded. */
 export function recordOutcome(input: OutcomeInput): HypothesisOutcome {
   const assignment = loadHypothesisAssignments().find((a) => a.id === input.assignmentId);
   if (!assignment) throw new Error(`Assignment ${input.assignmentId} not found`);
+
+  // ─── Gauntlet pre-outcome check (stages 1-6) ───────────────────
+  let gauntletRunId: string | null = null;
+  if (!input.skipGauntlet) {
+    try {
+      const { runPreOutcomeGauntlet } = require("@/lib/spinor/gauntlet-pipeline");
+      const gauntletResult = runPreOutcomeGauntlet(
+        assignment.hypothesisId,
+        input.outcomeDescription,
+        input.metrics,
+        input.falsified,
+      );
+      if (!gauntletResult.passed) {
+        throw new Error(
+          `Gauntlet failed at stage "${gauntletResult.failedStage}": ${gauntletResult.failureReason}. ` +
+          `Outcome not recorded. Resolve the gauntlet failure before recording this outcome.`,
+        );
+      }
+      gauntletRunId = gauntletResult.run.runId;
+    } catch (e: any) {
+      // If the gauntlet itself throws (not a stage failure), re-throw
+      if (e.message?.includes("Gauntlet failed")) throw e;
+      // Other errors (module load, etc.) — log but don't block
+      console.error("[outcomes] gauntlet pre-check error (non-blocking):", e.message);
+    }
+  }
 
   const outcome: HypothesisOutcome = {
     id: `out_${nanoid(10)}`,
@@ -68,6 +101,16 @@ export function recordOutcome(input: OutcomeInput): HypothesisOutcome {
   const all = loadHypothesisOutcomes();
   all.push(outcome);
   saveHypothesisOutcomes(all);
+
+  // ─── Gauntlet post-outcome completion (stages 7-9) ─────────────
+  if (gauntletRunId) {
+    try {
+      const { runPostOutcomeGauntlet } = require("@/lib/spinor/gauntlet-pipeline");
+      runPostOutcomeGauntlet(gauntletRunId, outcome);
+    } catch (e: any) {
+      console.error("[outcomes] gauntlet post-completion error (non-blocking):", e.message);
+    }
+  }
 
   // Advance assignment state.
   assignment.state = input.falsified ? "falsified" : "observed";
@@ -160,8 +203,6 @@ export function attributeOutcome(outcomeId: string): HypothesisAttribution | und
   }
 
   // Generate derivatives from unexplained variance.
-  const parentHypothesis = loadHypothesisAssignments(); // placeholder to satisfy linter
-  void parentHypothesis;
   const hypothesis = getHypothesisForOutcome(outcome);
   if (hypothesis) {
     generateDerivativesFromAttribution(attribution, hypothesis);

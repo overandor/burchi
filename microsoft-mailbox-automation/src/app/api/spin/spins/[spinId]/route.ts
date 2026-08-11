@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 import { loadSpin, loadClaims, getSPINWithClaims, spinSummary } from "@/lib/spinor/spin-engine";
 
 export async function GET(

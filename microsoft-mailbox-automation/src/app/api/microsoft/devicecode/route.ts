@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import { loadConfig } from "@/lib/config";
+import {
+  resolveMicrosoftClientId,
+  resolveMicrosoftTenantId,
+  MICROSOFT_GRAPH_SCOPES,
+} from "@/lib/auth/microsoft-public-client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -7,7 +13,10 @@ export const maxDuration = 10;
  * POST /api/microsoft/devicecode
  *
  * Initiates the OAuth device code flow for Microsoft 365 / Outlook.
- * Uses the Azure CLI's public client ID — no app registration needed.
+ * Uses a built-in Microsoft Graph Command Line Tools public client ID
+ * by default, so users can sign in without registering their own Azure AD
+ * application. If AZURE_AD_CLIENT_ID is set in the environment, that value
+ * takes precedence.
  *
  * Returns:
  *   device_code: string — internal code for polling
@@ -18,18 +27,31 @@ export const maxDuration = 10;
  *   message: string — human-readable instructions
  */
 export async function POST() {
-  // Azure CLI public client ID — works for any Microsoft account (personal + work)
-  const CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
-  const TENANT = "common";
-  const SCOPES = [
-    "https://graph.microsoft.com/Mail.Read",
-    "https://graph.microsoft.com/Mail.ReadWrite",
-    "https://graph.microsoft.com/Files.Read",
-    "https://graph.microsoft.com/Files.Read.All",
-    "offline_access",
-    "openid",
-    "profile",
-  ];
+  let config;
+  try {
+    config = loadConfig();
+  } catch (e) {
+    console.error("[microsoft/devicecode] loadConfig error:", e);
+    config = { graph: {} };
+  }
+
+  const configuredClientId =
+    process.env.AZURE_AD_CLIENT_ID ||
+    process.env.AZURE_CLIENT_ID ||
+    process.env.MICROSOFT_CLIENT_ID ||
+    config.graph?.clientId ||
+    "";
+
+  const configuredTenant =
+    process.env.AZURE_AD_TENANT_ID ||
+    process.env.AZURE_TENANT_ID ||
+    process.env.MICROSOFT_TENANT_ID ||
+    config.graph?.tenantId ||
+    "";
+
+  const CLIENT_ID = resolveMicrosoftClientId(configuredClientId);
+  const TENANT = resolveMicrosoftTenantId(configuredTenant);
+  const SCOPES = MICROSOFT_GRAPH_SCOPES;
 
   try {
     const controller = new AbortController();
@@ -66,6 +88,7 @@ export async function POST() {
         interval: data.interval || 5,
         message: data.message || `Go to ${data.verification_uri} and enter code ${data.user_code}`,
         client_id: CLIENT_ID,
+        tenant_id: TENANT,
         scopes: SCOPES,
       });
     } finally {

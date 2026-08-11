@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { AppConfig, EmailMessage, ExtractedData, ExtractedField, ExtractedTable, ParsedAttachmentData } from "@/types";
+import { withFoundryVoice } from "@/lib/foundry-voice";
 
 interface LLMExtractionResult {
   fields: ExtractedField[];
@@ -37,8 +38,7 @@ export async function extractDataFromEmail(
   const prompt = config.processing.extractionPrompt
     .replace("{categories}", categories);
 
-  const systemMessage = `You are a scientific data extraction assistant. You extract structured scientific data from emails and their attachments.
-Available categories: ${categories}
+  const systemMessage = withFoundryVoice("extraction", `Available categories: ${categories}
 
 Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
 {
@@ -47,7 +47,7 @@ Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
   "summary": "brief summary of scientific content",
   "category": "one of the available categories",
   "confidence": 0.0-1.0
-}`;
+}`);
 
   const userMessage = `Email Subject: ${email.subject}
 From: ${email.sender} (${email.senderEmail})

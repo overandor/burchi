@@ -87,7 +87,7 @@ export async function fetchEmailsREST(
     }
     pages++;
     const batchSize = Math.min(maxResults - fetched, 500);
-    let path = `messages?maxResults=${batchSize}&q=has:attachment`;
+    let path = `messages?maxResults=${batchSize}`;
     if (pageToken) path += `&pageToken=${pageToken}`;
 
     const listData = await gmailFetch(accessToken, path);

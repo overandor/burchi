@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 import { z } from "zod";
 import { getPortfolio, listAssignments, acceptAssignment, modifyAssignment, rejectAssignment } from "@/lib/strategy/assignment";
+import { getAuthContext } from "@/lib/auth/session";
 
 const PortfolioSchema = z.object({
   employeeId: z.string().min(1),
@@ -9,15 +12,16 @@ const PortfolioSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    const ctx = await getAuthContext();
     const { searchParams } = new URL(req.url);
-    const employeeId = searchParams.get("employeeId");
-    const role = searchParams.get("role") as "field_representative" | "regional_manager" | "medical_affairs" | "market_access" | "compliance" | null;
+    const employeeId = searchParams.get("employeeId") || ctx.user.id;
+    const role = searchParams.get("role") || ctx.user.role || "field_representative";
 
-    if (!employeeId || !role) {
-      return NextResponse.json({ error: "employeeId and role are required" }, { status: 400 });
-    }
+    // Validate role
+    const validRoles = ["field_representative", "regional_manager", "medical_affairs", "market_access", "compliance"];
+    const validatedRole = validRoles.includes(role) ? role : "field_representative";
 
-    const portfolio = getPortfolio(employeeId, role);
+    const portfolio = getPortfolio(employeeId, validatedRole as any);
     return NextResponse.json(portfolio);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

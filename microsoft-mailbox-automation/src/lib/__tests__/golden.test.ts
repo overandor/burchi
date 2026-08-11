@@ -70,6 +70,20 @@ before(() => {
 });
 
 after(() => {
+  // Clean up any test-generated state from the live kv store.
+  saveHypotheses([]);
+  savePriorArt([]);
+  saveHypothesisAssignments([]);
+  saveHypothesisOutcomes([]);
+  saveHypothesisAttributions([]);
+  saveDerivatives([]);
+  saveGoldenNodes([]);
+  saveAttributionLedger([]);
+  saveDiscoveryLedger([]);
+  saveResearchReliability([]);
+  saveProcesses([]);
+  saveCompetitions([]);
+
   for (const b of backups) {
     try {
       if (b.existed) {

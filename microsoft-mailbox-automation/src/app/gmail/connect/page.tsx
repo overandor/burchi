@@ -53,6 +53,26 @@ function ConnectContent() {
           };
           localStorage.setItem("gmail-config", JSON.stringify(gmailConfig));
 
+          // Also persist to the server-side credential store so the server
+          // can send experiment emails without the browser passing tokens.
+          try {
+            const expiresAt = new Date(Date.now() + (serverData.expiresIn || 3600) * 1000).toISOString();
+            await fetch("/api/email-credentials", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                provider: "gmail",
+                email: serverData.email || "me@gmail.com",
+                refreshToken: serverData.refreshToken,
+                accessToken: serverData.accessToken || "",
+                accessTokenExpiresAt: expiresAt,
+                metadata: { clientId },
+              }),
+            });
+          } catch (e) {
+            console.error("[gmail-connect] server credential save error:", e);
+          }
+
           setStatus("success");
           setTimeout(() => router.push("/?gmail_connected=true"), 1500);
           return;

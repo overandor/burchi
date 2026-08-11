@@ -1,10 +1,11 @@
+import { nanoid } from "nanoid";
 import { StrategyGenome, StrategyDomain, RoleType } from "@/types";
 import { loadStrategies, saveStrategies } from "@/lib/config";
 
 const now = () => new Date().toISOString();
 
 function makeId(prefix: string): string {
-  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+  return `${prefix}_${nanoid(8)}`;
 }
 
 // ─── Seed Strategy Genomes ─────────────────────────────────────────

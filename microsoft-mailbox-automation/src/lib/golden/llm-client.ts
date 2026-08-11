@@ -10,6 +10,7 @@
  */
 
 import { loadConfig } from "@/lib/config";
+import { withFoundryVoice } from "@/lib/foundry-voice";
 
 const LLM_TIMEOUT_MS = 55000;
 
@@ -23,6 +24,18 @@ export interface LLMResult {
   used: boolean;
   provider: string;
   error?: string;
+}
+
+function deterministicSeed(messages: ChatMessage[]): number {
+  let hash = 0;
+  for (const m of messages) {
+    for (let i = 0; i < (m.content?.length || 0); i++) {
+      const chr = m.content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0;
+    }
+  }
+  return Math.abs(hash) % 100000;
 }
 
 /** Call the LLM endpoint directly (OpenAI-compatible format). */
@@ -162,7 +175,7 @@ async function tryPollinationsFallback(messages: ChatMessage[]): Promise<string 
         model: "openai",
         messages,
         max_tokens: 512,
-        seed: Math.floor(Math.random() * 99999),
+        seed: deterministicSeed(messages),
         referrer,
       }),
     });
@@ -217,23 +230,15 @@ export async function llmResearchPriorArt(claim: string): Promise<{
   used: boolean;
   error?: string;
 }> {
+  // Use the cross-category prior-art prompt from the SPINOR research taxonomy.
+  // This evaluates the claim against 13 software categories, not just "LLM software."
+  const { buildPriorArtPrompt } = await import("@/lib/spinor/prior-art");
+  const systemPrompt = buildPriorArtPrompt(claim);
+
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a prior-art research engine for a pharma field execution innovation system.
-Investigate the given hypothesis claim and return ONLY valid JSON with this exact structure:
-{
-  "testedInMarket": boolean,
-  "testedInAdjacentIndustries": boolean,
-  "adjacentSupportSummary": "1-2 sentence summary of evidence in adjacent industries",
-  "sourceDomains": ["domain1", "domain2"],
-  "responsibleComponent": "the component that appears responsible for the effect, or null",
-  "requiredConditions": ["condition1", "condition2"],
-  "risksAndConfounders": ["risk1", "risk2"],
-  "genuinelyUnknown": ["unknown1"]
-}
-Be conservative. Distinguish "nobody has tested this" from "somebody tested this and it failed" from "evidence is too poor to know".
-Do NOT fabricate specific study citations. If uncertain, put it in genuinelyUnknown.`,
+      content: systemPrompt,
     },
     {
       role: "user",
@@ -266,8 +271,7 @@ export async function llmProposeDerivatives(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are an innovation derivative generator for a hypothesis-to-business engine.
-Given a parent hypothesis and its modifiable dimensions, propose 2-4 intelligent derivatives.
+      content: withFoundryVoice("derivatives", `Given a parent hypothesis and its modifiable dimensions, propose 2-4 intelligent derivatives.
 Each derivative varies exactly ONE dimension while keeping the rest fixed.
 Return ONLY valid JSON with this structure:
 {
@@ -278,7 +282,7 @@ Return ONLY valid JSON with this structure:
       "rationale": "Why this variation is worth testing"
     }
   ]
-}`,
+}`),
     },
     {
       role: "user",
@@ -316,8 +320,7 @@ export async function llmAttributeOutcome(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a causal attribution engine for a hypothesis testing system.
-Given a hypothesis, an observed outcome, and context, determine which factor is most likely responsible.
+      content: withFoundryVoice("attribution", `Given a hypothesis, an observed outcome, and context, determine which factor is most likely responsible.
 Return ONLY valid JSON with this structure:
 {
   "responsibleFactor": "parent_hypothesis" | "employee_modification" | "territory" | "execution_quality" | "external_change" | "unresolved",
@@ -326,7 +329,7 @@ Return ONLY valid JSON with this structure:
   "unexplainedVariance": 0.0-1.0,
   "confidence": 0.0-1.0
 }
-Be conservative. If the evidence is ambiguous, say "unresolved" with high unexplainedVariance.`,
+Be conservative. If the evidence is ambiguous, say "unresolved" with high unexplainedVariance.`),
     },
     {
       role: "user",
@@ -360,8 +363,7 @@ export async function llmGenerateHypothesis(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a hypothesis generation engine for a pharma field execution innovation system.
-Generate a single testable hypothesis based on the given domain and prior-art evidence.
+      content: withFoundryVoice("hypothesis", `Generate a single testable hypothesis based on the given domain and prior-art evidence.
 The hypothesis must respect pharma boundaries: no unapproved claims, no safety information changes, no prescribing pressure, no patient-level targeting. Only workflow, timing, channel, stakeholder order, and automation experiments.
 Return ONLY valid JSON with this structure:
 {
@@ -375,7 +377,7 @@ Return ONLY valid JSON with this structure:
   "primaryUncertainty": "The main thing we don't know",
   "novelComponent": "What's new about this, or null",
   "complianceBoundary": "Approved information and workflows only"
-}`,
+}`),
     },
     {
       role: "user",
@@ -408,7 +410,7 @@ export async function llmAssessGoldenNode(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: `You are a Golden Node assessment engine. A Golden Node is a hypothesis that evolved beyond a tactic into a defensible capability.
+      content: withFoundryVoice("assessment", `A Golden Node is a hypothesis that evolved beyond a tactic into a defensible capability.
 Evaluate whether the given evidence meets the six criteria:
 1. Measurable effect
 2. Repeatability
@@ -426,7 +428,7 @@ Return ONLY valid JSON:
   "economicValueAssessment": "low" | "moderate" | "high",
   "recommendedStage": "local_success" | "rep_owned_process" | "replicated_method" | "organizational_capability" | "productized_service" | "independent_channel",
   "reasoning": "2-3 sentence explanation"
-}`,
+}`),
     },
     {
       role: "user",

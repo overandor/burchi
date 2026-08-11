@@ -5,13 +5,17 @@ import { listAssignments, getAssignmentsForEmployee, getActiveAssignmentsForEmpl
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/golden/assignments?employeeId=...&active=true */
+/** GET /api/golden/assignments?employeeId=...&active=true
+ *
+ * Returns real persisted assignments. No auto-seed or auto-allocation.
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const employeeId = searchParams.get("employeeId");
     const active = searchParams.get("active") === "true";
-    let assignments = employeeId
+
+    const assignments = employeeId
       ? active
         ? getActiveAssignmentsForEmployee(employeeId)
         : getAssignmentsForEmployee(employeeId)

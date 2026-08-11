@@ -1,5 +1,6 @@
 "use client";
 
+import { nanoid } from "nanoid";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   PhoneRecord,
@@ -97,7 +98,7 @@ export default function PhonesPage() {
     }
     setError(null);
     const event: PhoneTelemetryEvent = {
-      id: Math.random().toString(36).slice(2),
+      id: nanoid(8),
       timestamp: new Date().toISOString(),
       type: newEvent.type,
       direction: newEvent.direction,
@@ -129,7 +130,7 @@ export default function PhonesPage() {
         }
         const dataUrl = await fileToDataUrl(file);
         const image: PhoneImage = {
-          id: Math.random().toString(36).slice(2),
+          id: nanoid(8),
           timestamp: new Date().toISOString(),
           filename: file.name,
           contentType: file.type,

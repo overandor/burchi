@@ -1,3 +1,4 @@
+import { getAuthContext } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
 import { buildRLAgentState, computeRLReward, selectRLAction } from "@/lib/spinor-rl/engine";
 import { loadRLAgentStates, loadRLRewards, saveRLAgentStates, saveRLRewards } from "@/lib/config";
@@ -19,7 +20,8 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get("action") || "state";
-    const employeeId = searchParams.get("employeeId") || "emp-001";
+    const ctx = await getAuthContext();
+    const employeeId = searchParams.get("employeeId") || ctx.user.id;
 
     switch (action) {
       case "state": {
@@ -55,7 +57,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ reward });
     }
     if (body.action === "update_state") {
-      const employeeId = body.employeeId || "emp-001";
+      const ctx2 = await getAuthContext();
+      const employeeId = body.employeeId || ctx2.user.id;
       const state = buildRLAgentState(employeeId);
       const states = loadRLAgentStates();
       const idx = states.findIndex((s) => s.employeeId === employeeId);

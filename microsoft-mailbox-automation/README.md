@@ -50,9 +50,8 @@ LLM_MODEL=gpt-4o-mini
 LLM_ENDPOINT=https://api.openai.com/v1
 
 # For live Microsoft 365 sync
-AZURE_CLIENT_ID=
-AZURE_TENANT_ID=common
-AZURE_CLIENT_SECRET=
+AZURE_AD_CLIENT_ID=
+AZURE_AD_TENANT_ID=common
 MAILBOX_EMAIL=
 
 # For live Gmail sync
@@ -65,6 +64,28 @@ GMAIL_CLIENT_SECRET=
 # Vercel:     https://your-project.vercel.app
 NEXT_PUBLIC_OAUTH_REDIRECT_BASE=https://luguog-mailbox-automation.hf.space
 ```
+
+## Microsoft 365 / Outlook setup
+
+Microsoft no longer allows user consent for the Azure CLI client ID (`04b07795-8ddb-461a-bbee-02f9e1bf7b46`) because it is a first-party application. You must register your own Azure AD application:
+
+1. Go to [Azure portal → App registrations](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) → **New registration**.
+2. **Name**: e.g. `Mailbox Automation`.
+3. **Supported account types**: choose **Accounts in any organizational directory and personal Microsoft accounts** (or the appropriate option for your users).
+4. **Redirect URI** (only needed if using the browser redirect flow on `/login`):
+   - Platform: **Single-page application (SPA)**
+   - URI: `https://<your-domain>/auth/callback`
+   - For device-code flow no redirect URI is required.
+5. Go to **Authentication** → **Advanced settings** → set **Allow public client flows** to **Yes** (required for device-code flow).
+6. Go to **API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated permissions**. Add:
+   - `Mail.Read`
+   - `Mail.ReadWrite` (optional, if the app needs to send/draft mail)
+   - `Files.Read`
+   - `Files.Read.All`
+   - `User.Read`
+   - `offline_access`
+7. If your tenant requires admin consent for any of these permissions, an administrator must select **Grant admin consent for <tenant>**.
+8. Copy the **Application (client) ID** and set it as `AZURE_AD_CLIENT_ID` (or `AZURE_CLIENT_ID` / `MICROSOFT_CLIENT_ID`). Set `AZURE_AD_TENANT_ID` to your tenant ID or `common`.
 
 ## What works without any credentials
 

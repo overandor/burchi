@@ -5,9 +5,15 @@
 [build.environment]
   NEXT_PUBLIC_DEMO = "true"
   NODE_VERSION = "20"
+  NETLIFY = "true"
+  NEXT_PUBLIC_OAUTH_REDIRECT_BASE = "https://advantage-foundry.netlify.app"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 [functions]
   node_bundler = "esbuild"
+  # better-sqlite3 is a native addon (.node binary) — esbuild cannot bundle it.
+  # Listing it here tells esbuild to keep it as a require()d external dependency
+  # and ship the .node file alongside the function instead of inlining it.
+  external_node_modules = ["better-sqlite3"]
