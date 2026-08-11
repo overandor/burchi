@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Terminal, X, Send, Trash2, Loader2, Zap } from "lucide-react";
+import { Terminal, X, Send, Trash2, Loader2, Zap, Wrench } from "lucide-react";
 
 interface TerminalMessage {
   id: string;
@@ -13,19 +13,125 @@ interface TerminalMessage {
   llmUsed?: boolean;
   navigateTo?: string;
   error?: string;
+  pageAction?: { type: string; selector?: string; result?: string };
+}
+
+const STORAGE_KEY = "assistant-terminal-state";
+
+interface PersistedState {
+  open: boolean;
+  history: TerminalMessage[];
+  cmdHistory: string[];
+  conversationId: string | null;
+}
+
+function loadPersistedState(): Partial<PersistedState> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function savePersistedState(state: PersistedState) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, history: state.history.slice(-20) }));
+    } catch {}
+  }
+}
+
+function extractPageContext(): {
+  pathname: string; title: string; headings: string[]; buttons: string[];
+  errors: string[]; forms: Array<{ action: string; fields: string[] }>; textSummary: string;
+} {
+  if (typeof document === "undefined")
+    return { pathname: "", title: "", headings: [], buttons: [], errors: [], forms: [], textSummary: "" };
+  const headings = Array.from(document.querySelectorAll("h1, h2, h3"))
+    .map((el) => el.textContent?.trim() || "").filter(Boolean).slice(0, 10);
+  const buttons = Array.from(document.querySelectorAll("button, a[role='button']"))
+    .map((el) => el.textContent?.trim() || "").filter(Boolean).slice(0, 20);
+  const errors = Array.from(document.querySelectorAll("[class*='error'], [class*='destructive'], [role='alert']"))
+    .map((el) => el.textContent?.trim() || "").filter(Boolean).slice(0, 10);
+  const forms = Array.from(document.querySelectorAll("form"))
+    .map((form) => ({
+      action: form.action || form.getAttribute("action") || "",
+      fields: Array.from(form.querySelectorAll("input, select, textarea"))
+        .map((f) => f.getAttribute("name") || f.getAttribute("placeholder") || f.getAttribute("id") || "unknown")
+        .filter(Boolean),
+    })).slice(0, 5);
+  const bodyText = document.body?.innerText || "";
+  return { pathname: window.location.pathname, title: document.title, headings, buttons, errors, forms, textSummary: bodyText.slice(0, 3000) };
+}
+
+function clickElement(selector: string): { success: boolean; message: string } {
+  try {
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return { success: false, message: `Element not found: ${selector}` };
+    el.click();
+    return { success: true, message: `Clicked: ${selector}` };
+  } catch (e: any) {
+    return { success: false, message: `Click failed: ${e.message}` };
+  }
+}
+
+function clickButtonByText(text: string): { success: boolean; message: string } {
+  try {
+    const buttons = Array.from(document.querySelectorAll("button, a[role='button'], a"));
+    const match = buttons.find((b) => (b.textContent?.trim().toLowerCase() || "").includes(text.toLowerCase()));
+    if (!match) return { success: false, message: `No button found with text: "${text}"` };
+    (match as HTMLElement).click();
+    return { success: true, message: `Clicked button: "${text}"` };
+  } catch (e: any) {
+    return { success: false, message: `Button click failed: ${e.message}` };
+  }
+}
+
+function fillFormField(selector: string, value: string): { success: boolean; message: string } {
+  try {
+    const el = document.querySelector(selector) as HTMLInputElement | HTMLTextAreaElement | null;
+    if (!el) return { success: false, message: `Field not found: ${selector}` };
+    const setter = Object.getOwnPropertyDescriptor(
+      el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, "value",
+    )?.set;
+    setter?.call(el, value);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    return { success: true, message: `Filled ${selector} with "${value.slice(0, 50)}"` };
+  } catch (e: any) {
+    return { success: false, message: `Fill failed: ${e.message}` };
+  }
+}
+
+function detectPageErrors(): { errors: string[]; hasErrors: boolean } {
+  const errorEls = Array.from(document.querySelectorAll("[class*='error'], [class*='destructive'], [role='alert']"));
+  const errors = errorEls.map((el) => el.textContent?.trim() || "")
+    .filter((t) => t.length > 5 && !t.includes("✓")).slice(0, 10);
+  return { errors, hasErrors: errors.length > 0 };
 }
 
 export function AssistantTerminal() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const persisted = useRef<Partial<PersistedState>>(loadPersistedState());
+  const [open, setOpen] = useState(persisted.current.open ?? false);
   const [input, setInput] = useState("");
-  const [history, setHistory] = useState<TerminalMessage[]>([]);
-  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<TerminalMessage[]>(persisted.current.history ?? []);
+  const [cmdHistory, setCmdHistory] = useState<string[]>(persisted.current.cmdHistory ?? []);
   const [cmdIndex, setCmdIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(persisted.current.conversationId ?? null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    savePersistedState({ open, history, cmdHistory, conversationId });
+  }, [open, history, cmdHistory, conversationId]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -34,6 +140,27 @@ export function AssistantTerminal() {
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
+
+  const executePageAction = useCallback((action: string, args: Record<string, string>): { success: boolean; message: string } => {
+    switch (action) {
+      case "click": return clickElement(args.selector || "");
+      case "clickButton": return clickButtonByText(args.text || args.selector || "");
+      case "fill": return fillFormField(args.selector || "", args.value || "");
+      case "inspect": {
+        const ctx = extractPageContext();
+        return { success: true, message: `Page: ${ctx.title}\nPath: ${ctx.pathname}\nHeadings: ${ctx.headings.join(", ")}\nButtons: ${ctx.buttons.slice(0, 10).join(", ")}\nErrors: ${ctx.errors.length ? ctx.errors.join(" | ") : "none"}\nForms: ${ctx.forms.length}` };
+      }
+      case "detectErrors": {
+        const { errors, hasErrors } = detectPageErrors();
+        return { success: !hasErrors, message: hasErrors ? `Errors found: ${errors.join(" | ")}` : "No errors detected on page." };
+      }
+      case "readPage": {
+        const ctx = extractPageContext();
+        return { success: true, message: ctx.textSummary.slice(0, 1500) };
+      }
+      default: return { success: false, message: `Unknown page action: ${action}` };
+    }
+  }, []);
 
   const sendCommand = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
@@ -45,6 +172,43 @@ export function AssistantTerminal() {
     setCmdIndex(-1);
     setInput("");
     setLoading(true);
+
+    // Local page actions (executed client-side, no server round-trip)
+    const lowerText = text.toLowerCase().trim();
+    const pageActionMatch = lowerText.match(/^(inspect|read page|detect errors|click button|click|fill)\s*(.*)/);
+    if (pageActionMatch) {
+      const action = pageActionMatch[1];
+      const rest = pageActionMatch[2].trim();
+      let result: { success: boolean; message: string };
+      if (action === "inspect") {
+        result = executePageAction("inspect", {});
+      } else if (action === "read page") {
+        result = executePageAction("readPage", {});
+      } else if (action === "detect errors") {
+        result = executePageAction("detectErrors", {});
+      } else if (action === "click button") {
+        result = executePageAction("clickButton", { text: rest });
+      } else if (action === "click") {
+        result = executePageAction("click", { selector: rest });
+      } else if (action === "fill") {
+        const fillMatch = rest.match(/([\w\-\.#]+)\s+(.*)/);
+        result = executePageAction("fill", { selector: fillMatch?.[1] || "", value: fillMatch?.[2] || "" });
+      } else {
+        result = { success: false, message: "Unknown page action" };
+      }
+      setHistory((p) => [...p, {
+        id: `pa_${Date.now()}`, role: "assistant",
+        content: result.message, timestamp: Date.now(),
+        pageAction: { type: action, selector: rest, result: result.message },
+      }]);
+      setLoading(false);
+      return;
+    }
+
+    // Extract page context to send with the command
+    const pageCtx = extractPageContext();
+    const pageContextSummary = `Page: ${pageCtx.title} | Path: ${pageCtx.pathname}\nHeadings: ${pageCtx.headings.join(", ")}\nButtons: ${pageCtx.buttons.slice(0, 15).join(", ")}\nErrors: ${pageCtx.errors.length ? pageCtx.errors.join(" | ") : "none"}\nForms: ${pageCtx.forms.map((f) => f.fields.join(",")).join("; ")}\nContent preview: ${pageCtx.textSummary.slice(0, 800)}`;
+
     try {
       const res = await fetch("/api/llm/command", {
         method: "POST",
@@ -52,12 +216,21 @@ export function AssistantTerminal() {
         body: JSON.stringify({
           text,
           context: typeof window !== "undefined" ? window.location.pathname : "/",
+          pageContent: pageContextSummary,
           conversationId,
           history: history.filter((m) => m.role === "user" || m.role === "assistant").slice(-8).map((m) => ({ role: m.role, content: m.content })),
         }),
       });
       const data = await res.json();
       if (data.conversationId) setConversationId(data.conversationId);
+
+      // Execute page action if the agent requested one
+      let pageActionResult: string | undefined;
+      if (data.pageAction) {
+        const paResult = executePageAction(data.pageAction.type, data.pageAction.args || {});
+        pageActionResult = paResult.message;
+      }
+
       setHistory((p) => [...p, {
         id: `a_${Date.now()}`, role: "assistant",
         content: data.speech || data.error || "No response.",
@@ -66,6 +239,7 @@ export function AssistantTerminal() {
         llmUsed: data.llmUsed,
         navigateTo: data.navigateTo,
         error: data.error,
+        pageAction: pageActionResult ? { type: data.pageAction?.type, result: pageActionResult } : undefined,
       }]);
       if (data.navigateTo) setTimeout(() => router.push(data.navigateTo), 500);
     } catch (e: any) {
@@ -76,7 +250,7 @@ export function AssistantTerminal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, conversationId, history, router]);
+  }, [loading, conversationId, history, router, executePageAction]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") { e.preventDefault(); sendCommand(input); }
@@ -110,12 +284,14 @@ export function AssistantTerminal() {
   }
 
   const quickCmds = [
-    { l: "Sync mailbox", c: "Sync my mailbox and show new emails" },
+    { l: "Inspect", c: "inspect" },
+    { l: "Errors", c: "detect errors" },
+    { l: "Read page", c: "read page" },
+    { l: "Sync", c: "Sync my mailbox and show new emails" },
     { l: "Analyze", c: "Analyze my inbox for research signals" },
-    { l: "KOLs", c: "Show me the top KOL leaders" },
-    { l: "Redeploy", c: "Redeploy this application" },
     { l: "Health", c: "Run a system health check" },
     { l: "Experiments", c: "List my active experiments" },
+    { l: "Redeploy", c: "Redeploy this application" },
   ];
 
   return (
@@ -146,7 +322,7 @@ export function AssistantTerminal() {
           {history.length === 0 && (
             <div className="text-center py-8">
               <Terminal className="mx-auto h-8 w-8 text-muted-foreground/40" />
-              <p className="mt-3 text-sm text-muted-foreground">Assistant Terminal ready. Type a command or use quick actions below.</p>
+              <p className="mt-3 text-sm text-muted-foreground">Assistant Terminal ready. Persists across navigation. Type a command or use quick actions below.</p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {quickCmds.map((q) => (
                   <button key={q.l} onClick={() => sendCommand(q.c)}
@@ -212,6 +388,11 @@ function MessageRow({ msg }: { msg: TerminalMessage }) {
         )}
         {msg.navigateTo && (
           <div className="mt-1 text-xs text-primary">→ navigating to {msg.navigateTo}</div>
+        )}
+        {msg.pageAction && (
+          <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+            <Wrench className="h-3 w-3" /> {msg.pageAction.type}: {msg.pageAction.result?.slice(0, 120)}
+          </div>
         )}
       </div>
     </div>

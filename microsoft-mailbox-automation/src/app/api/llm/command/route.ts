@@ -57,10 +57,12 @@ export async function POST(request: NextRequest) {
     const conversationId = body.conversationId;
     const employeeId = body.employeeId || "gilead-rep-001";
     const history = body.history || [];
+    const pageContent = body.pageContent;
 
     const result = await runAgent({
       text,
       context,
+      pageContent,
       conversationId,
       employeeId,
       history,

@@ -156,6 +156,8 @@ async function agentLLMCall(messages: { role: string; content: string }[], opts:
 export interface AgentRequest {
   text: string;
   context?: string;
+  /** Page content extracted by the client (headings, buttons, errors, text) */
+  pageContent?: string;
   conversationId?: string;
   employeeId?: string;
   /** Prior conversation turns for continuity */
@@ -184,6 +186,8 @@ export interface AgentResponse {
   conversationId: string;
   /** Navigation action if the agent wants to change the page */
   navigateTo?: string;
+  /** Client-side page action for the terminal to execute */
+  pageAction?: { type: string; args?: Record<string, string> };
 }
 
 const MAX_TOOL_CALLS = 8;
@@ -206,18 +210,23 @@ export async function runAgent(req: AgentRequest): Promise<AgentResponse> {
 
 Employee: ${employeeId}
 Page: ${context}
-
+${req.pageContent ? `\nCurrent page content:\n${req.pageContent}\n` : ""}
 Tools: list_assignments, list_hypotheses, record_outcome, accept_assignment, reject_assignment, list_golden_nodes, assess_admissibility, golden_overview, gmail_search, gmail_sync, gmail_triage, microsoft_sync, mailbox_status, email_credentials, email_engine_status, run_email_experiment, competitive_actions, competitive_plan, competitive_score, frontrunner_opportunities, spin_dashboard, spin_list, spin_advance, spinor_rl_state, list_strategies, phone_records, territory_accounts, territory_routes, crm_status, list_commitments, detect_commitments, voice_diary, voice_sessions, telemetry, system_audit, health, llm_fallback_status, workteleport_skills, sheets_export, navigate
+
+You can also request client-side page actions by returning: {"pageAction":{"type":"clickButton","args":{"text":"Analyze inbox"}}}
+Page action types: clickButton (args: text), click (args: selector), fill (args: selector, value), inspect, detectErrors, readPage
 
 Respond with ONLY JSON:
 - To call a tool: {"tool_call":{"tool":"list_assignments","args":{"employeeId":"${employeeId}"}}}
 - To respond: {"final":{"speech":"what to say","navigate":"/optional/route"}}
+- To act on the page: {"pageAction":{"type":"clickButton","args":{"text":"Button Text"}}}
 
 Examples:
 User: "what are my assignments" → {"tool_call":{"tool":"list_assignments","args":{"employeeId":"${employeeId}"}}}
 User: "go to foundry" → {"final":{"speech":"Going to Foundry.","navigate":"/foundry"}}
 User: "sync gmail" → {"tool_call":{"tool":"gmail_sync","args":{"maxResults":50}}}
-User: "competitive score" → {"tool_call":{"tool":"competitive_score","args":{}}}`;
+User: "click the analyze button" → {"pageAction":{"type":"clickButton","args":{"text":"Analyze"}}}
+User: "what's on this page" → {"pageAction":{"type":"inspect","args":{}}}`;
 
   const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: systemPrompt },
@@ -314,6 +323,20 @@ User: "competitive score" → {"tool_call":{"tool":"competitive_score","args":{}
         llmProvider,
         conversationId,
         navigateTo: parsed.final.navigate,
+      };
+    }
+
+    if (parsed.pageAction) {
+      // Agent wants to execute a client-side page action
+      const speech = `Executing page action: ${parsed.pageAction.type}`;
+      logVoiceTurn(conversationId, "assistant", speech, context, actionsTaken);
+      return {
+        speech,
+        actionsTaken,
+        llmUsed,
+        llmProvider,
+        conversationId,
+        pageAction: parsed.pageAction,
       };
     }
 
@@ -500,6 +523,7 @@ function parseAgentResponse(content: string): {
   tool_call?: { tool: string; args: Record<string, unknown> };
   tool_calls?: { tool: string; args: Record<string, unknown> }[];
   final?: { speech: string; navigate?: string };
+  pageAction?: { type: string; args?: Record<string, string> };
 } | null {
   // Try to extract JSON from the response
   const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -515,6 +539,9 @@ function parseAgentResponse(content: string): {
     }
     if (parsed.tool_calls && Array.isArray(parsed.tool_calls)) {
       return { tool_calls: parsed.tool_calls };
+    }
+    if (parsed.pageAction) {
+      return { pageAction: parsed.pageAction };
     }
     if (parsed.final) {
       return { final: parsed.final };
