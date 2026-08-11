@@ -325,10 +325,9 @@ export function AssistantTerminal() {
     setLoading(true);
 
     // Local page actions (executed client-side, no server round-trip)
-    const lowerText = text.toLowerCase().trim();
-    const pageActionMatch = lowerText.match(/^(inspect|read page|detect errors|click button|click|fill|eval|scroll|select|submit|set attr|set attribute|fetch|highlight|inject script|inject style|screenshot)\s*(.*)/);
+    const pageActionMatch = text.trim().match(/^(inspect|read page|detect errors|click button|click|fill|eval|scroll|select|submit|set attr|set attribute|fetch|highlight|inject script|inject style|screenshot)\s*(.*)/i);
     if (pageActionMatch) {
-      const action = pageActionMatch[1];
+      const action = pageActionMatch[1].toLowerCase();
       const rest = pageActionMatch[2].trim();
       let result: { success: boolean; message: string };
       if (action === "inspect") {
