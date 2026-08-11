@@ -183,13 +183,22 @@ export function loadConfig(): AppConfig {
           ...envConfig.graph,
           ...saved.graph,
         },
-        llm: {
-          ...DEFAULT_CONFIG.llm,
-          ...saved.llm,
-          endpoint: process.env.LLM_ENDPOINT || saved.llm?.endpoint || DEFAULT_CONFIG.llm.endpoint,
-          model: process.env.LLM_MODEL || saved.llm?.model || DEFAULT_CONFIG.llm.model,
-          provider: process.env.LLM_PROVIDER || saved.llm?.provider || DEFAULT_CONFIG.llm.provider,
-        },
+        llm: (() => {
+          const oldDefaults = [
+            "https://api.openai.com/v1",
+            "https://prism-ollama.fly.dev/api/chat",
+          ];
+          const savedEndpoint = saved.llm?.endpoint || "";
+          const isOldDefault = oldDefaults.includes(savedEndpoint);
+          return {
+            ...DEFAULT_CONFIG.llm,
+            ...saved.llm,
+            // Env vars > new default > saved config (unless saved is a custom endpoint)
+            endpoint: process.env.LLM_ENDPOINT || (isOldDefault ? DEFAULT_CONFIG.llm.endpoint : savedEndpoint) || DEFAULT_CONFIG.llm.endpoint,
+            model: process.env.LLM_MODEL || (saved.llm?.model && !saved.llm.model.includes("gpt-4o") ? saved.llm.model : DEFAULT_CONFIG.llm.model),
+            provider: (process.env.LLM_PROVIDER as any) || DEFAULT_CONFIG.llm.provider,
+          };
+        })(),
       };
     }
   } catch (e) {
