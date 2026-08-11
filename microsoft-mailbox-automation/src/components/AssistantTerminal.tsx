@@ -116,6 +116,137 @@ function detectPageErrors(): { errors: string[]; hasErrors: boolean } {
   return { errors, hasErrors: errors.length > 0 };
 }
 
+function evalJS(code: string): { success: boolean; message: string } {
+  try {
+    const result = eval(code);
+    const formatted = result === undefined ? "undefined" : typeof result === "object" ? JSON.stringify(result, null, 2).slice(0, 2000) : String(result).slice(0, 2000);
+    return { success: true, message: formatted };
+  } catch (e: any) {
+    return { success: false, message: `Eval error: ${e.message}` };
+  }
+}
+
+function scrollToElement(selector: string): { success: boolean; message: string } {
+  try {
+    if (selector.startsWith("#") || selector.startsWith(".") || selector.startsWith("[")) {
+      const el = document.querySelector(selector);
+      if (!el) return { success: false, message: `Element not found: ${selector}` };
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      return { success: true, message: `Scrolled to: ${selector}` };
+    }
+    const n = parseInt(selector, 10);
+    if (!isNaN(n)) { window.scrollTo({ top: n, behavior: "smooth" }); return { success: true, message: `Scrolled to Y=${n}` }; }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return { success: true, message: "Scrolled to top" };
+  } catch (e: any) {
+    return { success: false, message: `Scroll failed: ${e.message}` };
+  }
+}
+
+function selectOption(selector: string, value: string): { success: boolean; message: string } {
+  try {
+    const el = document.querySelector(selector) as HTMLSelectElement | null;
+    if (!el) return { success: false, message: `Select not found: ${selector}` };
+    el.value = value;
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    return { success: true, message: `Selected "${value}" in ${selector}` };
+  } catch (e: any) {
+    return { success: false, message: `Select failed: ${e.message}` };
+  }
+}
+
+function submitForm(selector: string): { success: boolean; message: string } {
+  try {
+    const form = selector ? document.querySelector(selector) as HTMLFormElement | null : document.querySelector("form") as HTMLFormElement | null;
+    if (!form) return { success: false, message: `Form not found: ${selector || "any"}` };
+    form.requestSubmit ? form.requestSubmit() : form.submit();
+    return { success: true, message: `Submitted form: ${selector || "first form"}` };
+  } catch (e: any) {
+    return { success: false, message: `Submit failed: ${e.message}` };
+  }
+}
+
+function setAttr(selector: string, attr: string, value: string): { success: boolean; message: string } {
+  try {
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return { success: false, message: `Element not found: ${selector}` };
+    if (attr === "style" && typeof value === "string") { el.setAttribute("style", value); }
+    else if (attr === "class" || attr === "className") { el.className = value; }
+    else if (attr === "text" || attr === "textContent") { el.textContent = value; }
+    else if (attr === "html" || attr === "innerHTML") { el.innerHTML = value; }
+    else { el.setAttribute(attr, value); }
+    return { success: true, message: `Set ${attr}="${value.slice(0, 80)}" on ${selector}` };
+  } catch (e: any) {
+    return { success: false, message: `Set attribute failed: ${e.message}` };
+  }
+}
+
+async function fetchUrl(url: string, options?: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const opts = options ? JSON.parse(options) : {};
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    const preview = text.slice(0, 1500);
+    return { success: res.ok, message: `HTTP ${res.status} (${text.length} bytes): ${preview}` };
+  } catch (e: any) {
+    return { success: false, message: `Fetch failed: ${e.message}` };
+  }
+}
+
+function highlightEl(selector: string): { success: boolean; message: string } {
+  try {
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return { success: false, message: `Element not found: ${selector}` };
+    const prev = el.style.outline;
+    el.style.outline = "3px solid #f59e0b";
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => { el.style.outline = prev; }, 3000);
+    return { success: true, message: `Highlighted: ${selector} (${el.tagName.toLowerCase()})` };
+  } catch (e: any) {
+    return { success: false, message: `Highlight failed: ${e.message}` };
+  }
+}
+
+function injectScriptTag(code: string): { success: boolean; message: string } {
+  try {
+    const script = document.createElement("script");
+    script.textContent = code;
+    document.head.appendChild(script);
+    return { success: true, message: `Injected script (${code.length} chars)` };
+  } catch (e: any) {
+    return { success: false, message: `Inject script failed: ${e.message}` };
+  }
+}
+
+function injectStyleTag(css: string): { success: boolean; message: string } {
+  try {
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.appendChild(style);
+    return { success: true, message: `Injected style (${css.length} chars)` };
+  } catch (e: any) {
+    return { success: false, message: `Inject style failed: ${e.message}` };
+  }
+}
+
+function screenshotPage(): { success: boolean; message: string } {
+  try {
+    const canvas = document.createElement("canvas");
+    const w = window.innerWidth, h = window.innerHeight;
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return { success: false, message: "Canvas not supported" };
+    ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#666"; ctx.font = "14px sans-serif";
+    ctx.fillText(`Screenshot placeholder — ${w}x${h} — ${document.title}`, 20, 30);
+    ctx.fillText(`URL: ${window.location.href}`, 20, 50);
+    const dataUrl = canvas.toDataURL("image/png").slice(0, 200);
+    return { success: true, message: `Screenshot captured (${w}x${h}). Data URL prefix: ${dataUrl}...` };
+  } catch (e: any) {
+    return { success: false, message: `Screenshot failed: ${e.message}` };
+  }
+}
+
 export function AssistantTerminal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -151,7 +282,7 @@ export function AssistantTerminal() {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
 
-  const executePageAction = useCallback((action: string, args: Record<string, string>): { success: boolean; message: string } => {
+  const executePageAction = useCallback((action: string, args: Record<string, string>): { success: boolean; message: string } | Promise<{ success: boolean; message: string }> => {
     switch (action) {
       case "click": return clickElement(args.selector || "");
       case "clickButton": return clickButtonByText(args.text || args.selector || "");
@@ -168,6 +299,16 @@ export function AssistantTerminal() {
         const ctx = extractPageContext();
         return { success: true, message: ctx.textSummary.slice(0, 1500) };
       }
+      case "eval": return evalJS(args.code || args.value || "");
+      case "scroll": return scrollToElement(args.selector || args.value || "");
+      case "selectOption": return selectOption(args.selector || "", args.value || "");
+      case "submitForm": return submitForm(args.selector || "");
+      case "setAttribute": return setAttr(args.selector || "", args.attr || args.name || "", args.value || "");
+      case "fetch": return fetchUrl(args.url || args.selector || "", args.options || "");
+      case "highlight": return highlightEl(args.selector || "");
+      case "injectScript": return injectScriptTag(args.code || args.value || "");
+      case "injectStyle": return injectStyleTag(args.css || args.code || args.value || "");
+      case "screenshot": return screenshotPage();
       default: return { success: false, message: `Unknown page action: ${action}` };
     }
   }, []);
@@ -185,24 +326,47 @@ export function AssistantTerminal() {
 
     // Local page actions (executed client-side, no server round-trip)
     const lowerText = text.toLowerCase().trim();
-    const pageActionMatch = lowerText.match(/^(inspect|read page|detect errors|click button|click|fill)\s*(.*)/);
+    const pageActionMatch = lowerText.match(/^(inspect|read page|detect errors|click button|click|fill|eval|scroll|select|submit|set attr|set attribute|fetch|highlight|inject script|inject style|screenshot)\s*(.*)/);
     if (pageActionMatch) {
       const action = pageActionMatch[1];
       const rest = pageActionMatch[2].trim();
       let result: { success: boolean; message: string };
       if (action === "inspect") {
-        result = executePageAction("inspect", {});
+        result = await executePageAction("inspect", {});
       } else if (action === "read page") {
-        result = executePageAction("readPage", {});
+        result = await executePageAction("readPage", {});
       } else if (action === "detect errors") {
-        result = executePageAction("detectErrors", {});
+        result = await executePageAction("detectErrors", {});
       } else if (action === "click button") {
-        result = executePageAction("clickButton", { text: rest });
+        result = await executePageAction("clickButton", { text: rest });
       } else if (action === "click") {
-        result = executePageAction("click", { selector: rest });
+        result = await executePageAction("click", { selector: rest });
       } else if (action === "fill") {
         const fillMatch = rest.match(/([\w\-\.#]+)\s+(.*)/);
-        result = executePageAction("fill", { selector: fillMatch?.[1] || "", value: fillMatch?.[2] || "" });
+        result = await executePageAction("fill", { selector: fillMatch?.[1] || "", value: fillMatch?.[2] || "" });
+      } else if (action === "eval") {
+        result = await executePageAction("eval", { code: rest });
+      } else if (action === "scroll") {
+        result = await executePageAction("scroll", { selector: rest });
+      } else if (action === "select") {
+        const selMatch = rest.match(/([\w\-\.#\[\]="]+)\s+(.*)/);
+        result = await executePageAction("selectOption", { selector: selMatch?.[1] || "", value: selMatch?.[2] || "" });
+      } else if (action === "submit") {
+        result = await executePageAction("submitForm", { selector: rest });
+      } else if (action === "set attr" || action === "set attribute") {
+        const attrMatch = rest.match(/([\w\-\.#]+)\s+(\w+)\s+(.*)/);
+        result = await executePageAction("setAttribute", { selector: attrMatch?.[1] || "", attr: attrMatch?.[2] || "", value: attrMatch?.[3] || "" });
+      } else if (action === "fetch") {
+        const fetchMatch = rest.match(/(\S+)\s*(.*)/);
+        result = await executePageAction("fetch", { url: fetchMatch?.[1] || "", options: fetchMatch?.[2] || "" });
+      } else if (action === "highlight") {
+        result = await executePageAction("highlight", { selector: rest });
+      } else if (action === "inject script") {
+        result = await executePageAction("injectScript", { code: rest });
+      } else if (action === "inject style") {
+        result = await executePageAction("injectStyle", { css: rest });
+      } else if (action === "screenshot") {
+        result = await executePageAction("screenshot", {});
       } else {
         result = { success: false, message: "Unknown page action" };
       }
@@ -237,7 +401,7 @@ export function AssistantTerminal() {
       // Execute page action if the agent requested one
       let pageActionResult: string | undefined;
       if (data.pageAction) {
-        const paResult = executePageAction(data.pageAction.type, data.pageAction.args || {});
+        const paResult = await executePageAction(data.pageAction.type, data.pageAction.args || {});
         pageActionResult = paResult.message;
       }
 
@@ -297,6 +461,9 @@ export function AssistantTerminal() {
     { l: "Inspect", c: "inspect" },
     { l: "Errors", c: "detect errors" },
     { l: "Read page", c: "read page" },
+    { l: "Eval", c: "eval document.querySelectorAll('button').length" },
+    { l: "Highlight", c: "highlight h1" },
+    { l: "Screenshot", c: "screenshot" },
     { l: "Sync", c: "Sync my mailbox and show new emails" },
     { l: "Analyze", c: "Analyze my inbox for research signals" },
     { l: "Health", c: "Run a system health check" },

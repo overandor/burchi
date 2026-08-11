@@ -214,7 +214,25 @@ ${req.pageContent ? `\nCurrent page content:\n${req.pageContent}\n` : ""}
 Tools: list_assignments, list_hypotheses, record_outcome, accept_assignment, reject_assignment, list_golden_nodes, assess_admissibility, golden_overview, gmail_search, gmail_sync, gmail_triage, microsoft_sync, mailbox_status, email_credentials, email_engine_status, run_email_experiment, competitive_actions, competitive_plan, competitive_score, frontrunner_opportunities, spin_dashboard, spin_list, spin_advance, spinor_rl_state, list_strategies, phone_records, territory_accounts, territory_routes, crm_status, list_commitments, detect_commitments, voice_diary, voice_sessions, telemetry, system_audit, health, llm_fallback_status, workteleport_skills, sheets_export, navigate
 
 You can also request client-side page actions by returning: {"pageAction":{"type":"clickButton","args":{"text":"Analyze inbox"}}}
-Page action types: clickButton (args: text), click (args: selector), fill (args: selector, value), inspect, detectErrors, readPage
+Page action types (you are OMNIPOTENT on the page):
+- clickButton (args: text) — click a button/link by text match
+- click (args: selector) — click any element by CSS selector
+- fill (args: selector, value) — fill a form field by CSS selector
+- inspect (args: {}) — get page structure: headings, buttons, errors, forms
+- detectErrors (args: {}) — scan page for error elements
+- readPage (args: {}) — get full page text content (first 1500 chars)
+- eval (args: code) — execute arbitrary JavaScript on the page (FULL POWER)
+- scroll (args: selector) — scroll to element by CSS selector or pixel position
+- selectOption (args: selector, value) — select a dropdown option
+- submitForm (args: selector) — submit a form by CSS selector (empty = first form)
+- setAttribute (args: selector, attr, value) — set any attribute/style/class/text/html on any element
+- fetch (args: url, options) — make an HTTP request from the browser
+- highlight (args: selector) — visually highlight an element with orange outline
+- injectScript (args: code) — inject a <script> tag into the page
+- injectStyle (args: css) — inject a <style> tag into the page
+- screenshot (args: {}) — capture page screenshot info
+
+You can chain multiple page actions across turns. Use eval for anything not covered above.
 
 Respond with ONLY JSON:
 - To call a tool: {"tool_call":{"tool":"list_assignments","args":{"employeeId":"${employeeId}"}}}
@@ -226,7 +244,10 @@ User: "what are my assignments" → {"tool_call":{"tool":"list_assignments","arg
 User: "go to foundry" → {"final":{"speech":"Going to Foundry.","navigate":"/foundry"}}
 User: "sync gmail" → {"tool_call":{"tool":"gmail_sync","args":{"maxResults":50}}}
 User: "click the analyze button" → {"pageAction":{"type":"clickButton","args":{"text":"Analyze"}}}
-User: "what's on this page" → {"pageAction":{"type":"inspect","args":{}}}`;
+User: "what's on this page" → {"pageAction":{"type":"inspect","args":{}}}
+User: "change the title to Hello" → {"pageAction":{"type":"setAttribute","args":{"selector":"h1","attr":"text","value":"Hello"}}}
+User: "run fetch /api/health" → {"pageAction":{"type":"fetch","args":{"url":"/api/health"}}}
+User: "execute document.title" → {"pageAction":{"type":"eval","args":{"code":"document.title"}}}`;
 
   const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: systemPrompt },
