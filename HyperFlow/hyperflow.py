@@ -21,7 +21,6 @@ import json
 import os
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -34,6 +33,11 @@ HYDRA_STATE_FILE = BASE_DIR / "HYDRA_STATE.json"
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _hash_record(record: Dict) -> str:
+    canonical = json.dumps({k: v for k, v in record.items() if k != "hash"}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _load_jsonl(path: Path) -> List[Dict]:
@@ -58,6 +62,31 @@ def _write_jsonl(path: Path, rows: List[Dict]):
     with open(path, "w") as f:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def _chain_hash(path: Path) -> str:
+    rows = _load_jsonl(path)
+    if not rows:
+        return ""
+    return rows[-1].get("hash", "")
+
+
+def _verify_chain(path: Path) -> Dict[str, Any]:
+    rows = _load_jsonl(path)
+    broken = []
+    legacy = 0
+    for i, row in enumerate(rows):
+        if "hash" not in row:
+            legacy += 1
+            continue
+        recompute = _hash_record(row)
+        if recompute != row.get("hash"):
+            broken.append({"index": i, "receipt_id": row.get("receipt_id"), "error": "hash_mismatch"})
+        if i > 0:
+            expected_prev = rows[i - 1].get("hash", "")
+            if row.get("prev_hash") != expected_prev:
+                broken.append({"index": i, "receipt_id": row.get("receipt_id"), "error": "chain_break"})
+    return {"total": len(rows), "legacy": legacy, "verified": len(rows) - legacy - len(broken), "broken": broken}
 
 
 def _next_id(rows: List[Dict], prefix: str) -> str:
@@ -162,7 +191,9 @@ def cmd_receipt_add(args):
         "artifacts": args.artifacts or [],
         "commit_hash": _git_hash(),
         "timestamp": _now(),
+        "prev_hash": _chain_hash(RECEIPTS_FILE),
     }
+    receipt["hash"] = _hash_record(receipt)
     _append_jsonl(RECEIPTS_FILE, receipt)
     print(json.dumps(receipt, indent=2))
 
@@ -214,6 +245,15 @@ def cmd_verify(args):
         path = BASE_DIR / f
         exists = path.exists()
         print(f"  {f}: {'OK' if exists else 'MISSING'}")
+
+    # Receipt chain integrity
+    chain = _verify_chain(RECEIPTS_FILE)
+    print(f"\nReceipt chain: {chain['verified']} hashed, {chain['legacy']} legacy, {chain['total']} total")
+    if chain["broken"]:
+        print("BROKEN ENTRIES:")
+        for b in chain["broken"]:
+            print(f"  {b}")
+
 
 
 # ─── Status command ───
@@ -282,6 +322,9 @@ def main():
 
     p_rlist = receipt_sub.add_parser("list", help="List receipts")
     p_rlist.set_defaults(func=cmd_receipt_list)
+
+    p_rverify = receipt_sub.add_parser("verify", help="Verify receipt chain integrity")
+    p_rverify.set_defaults(func=lambda args: print(json.dumps(_verify_chain(RECEIPTS_FILE), indent=2)))
 
     # Diff
     sub.add_parser("diff", help="Show git diff").set_defaults(func=cmd_diff)

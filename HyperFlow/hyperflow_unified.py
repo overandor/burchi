@@ -90,6 +90,9 @@ def _run_ytl_lab(script: str) -> Dict[str, Any]:
         return {"success": False, "error": f"YTL-MCP venv not found at {YTL_VENV}. Run: cd {YTL_ROOT} && python3 -m venv .venv && pip install -e '.[dev]'"}
     env = os.environ.copy()
     env["PYTHONPATH"] = str(YTL_ROOT / "src")
+    # Ensure json is always available for tool output.
+    if "import json" not in script:
+        script = "import json\n" + script
     cmd = [str(python_bin), "-c", script]
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=YTL_ROOT, env=env, timeout=60)
     return {
@@ -183,7 +186,7 @@ def cmd_assign(args: argparse.Namespace) -> int:
 def cmd_receipt(args: argparse.Namespace) -> int:
     receipts = _load_jsonl(RECEIPTS_FILE)
     filtered = [r for r in receipts if r.get("task_id") == args.task_id]
-    print(f"Receipts for {args.task_id}: {len(filtered)}")
+    print(f"HyperFlow ledger receipts for {args.task_id}: {len(filtered)}")
     for r in filtered:
         print(json.dumps(r, indent=2))
 
@@ -196,9 +199,30 @@ filtered = [r for r in rows if r.get('task_id') == '{args.task_id}']
 print(json.dumps(filtered, indent=2))
 """)
     if lab_receipts["success"]:
-        print("\nYTL-MCP receipts:")
-        print(lab_receipts["stdout"])
+        try:
+            lab_rows = json.loads(lab_receipts["stdout"])
+            print(f"\nYTL-MCP ledger receipts for {args.task_id}: {len(lab_rows)}")
+            for r in lab_rows:
+                print(json.dumps(r, indent=2))
+        except Exception as e:
+            print(f"\nYTL-MCP receipt output parse error: {e}")
+            print(lab_receipts["stdout"])
     return 0
+
+
+def _verify_ytl_chain() -> Dict[str, Any]:
+    result = _run_ytl_lab("""
+import json
+from ytl_lab.config import Settings
+from ytl_lab.receipts import ReceiptLedger
+print(json.dumps(ReceiptLedger(Settings.load_settings()).verify_chain()))
+""")
+    if result["success"]:
+        try:
+            return json.loads(result["stdout"].strip().split("\n")[-1])
+        except Exception:
+            return {"error": "could not parse ytl chain result"}
+    return {"error": result.get("stderr", "unknown")}
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
@@ -222,7 +246,21 @@ def cmd_verify(args: argparse.Namespace) -> int:
     else:
         checks.append({"name": "ytl_mcp_tests", "success": False, "output": "", "errors": "venv not found"})
 
-    # 3. Receipt ledgers exist and are readable
+    # 3. Receipt chain integrity
+    hf_chain = _run_hyperflow_core(["receipt", "verify"])
+    hf_chain_ok = False
+    try:
+        hf_chain_data = json.loads(hf_chain["stdout"])
+        hf_chain_ok = len(hf_chain_data.get("broken", [])) == 0
+    except Exception:
+        pass
+    checks.append({"name": "hyperflow_receipt_chain", "success": hf_chain_ok, "output": hf_chain["stdout"][:200], "errors": hf_chain["stderr"][:200]})
+
+    ytl_chain = _verify_ytl_chain()
+    ytl_chain_ok = isinstance(ytl_chain, dict) and len(ytl_chain.get("broken", [])) == 0
+    checks.append({"name": "ytl_receipt_chain", "success": ytl_chain_ok, "output": json.dumps(ytl_chain), "errors": ""})
+
+    # 4. Receipt ledgers exist and are readable
     hf_receipts = _load_jsonl(RECEIPTS_FILE)
     ytl_receipts = _run_ytl_lab("""
 from ytl_lab.config import Settings
@@ -251,6 +289,16 @@ print(len(ReceiptLedger(Settings.load_settings()).read()))
     all_pass = all(c["success"] for c in checks)
     print(f"\nOverall: {'PASS' if all_pass else 'FAIL'}")
     return 0 if all_pass else 1
+
+
+def cmd_verify_receipts(args: argparse.Namespace) -> int:
+    print("HyperFlow receipt chain:")
+    hf = _run_hyperflow_core(["receipt", "verify"])
+    print(hf["stdout"])
+    print("\nYTL-MCP receipt chain:")
+    ytl = _verify_ytl_chain()
+    print(json.dumps(ytl, indent=2))
+    return 0
 
 
 def cmd_lab_status(args: argparse.Namespace) -> int:
@@ -379,6 +427,9 @@ def main() -> int:
 
     p_verify = sub.add_parser("verify", help="Run unified verification")
     p_verify.set_defaults(func=cmd_verify)
+
+    p_verify_receipts = sub.add_parser("verify-receipts", help="Verify receipt chain integrity")
+    p_verify_receipts.set_defaults(func=cmd_verify_receipts)
 
     # Lab subcommands
     p_lab = sub.add_parser("lab", help="YTL-MCP Research Lab commands")

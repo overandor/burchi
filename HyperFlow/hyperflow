@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Top-level HyperFlow executable wrapper.
+#
+# Usage:
+#   ./hyperflow status
+#   ./hyperflow new "task"
+#   ./hyperflow assign HF-0003 windsurf
+#   ./hyperflow verify
+#   ./hyperflow receipt HF-0003
+#   ./hyperflow lab status
+#   ./hyperflow lab ingest --task HF-0003 --intent "..." --url https://...
+#
+# This delegates to hyperflow_unified.py while keeping the CLI surface
+# as a single command.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON="${HYPERFLOW_PYTHON:-python3}"
+exec "$PYTHON" "$SCRIPT_DIR/hyperflow_unified.py" "$@"

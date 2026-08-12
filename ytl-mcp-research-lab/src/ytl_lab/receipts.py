@@ -33,6 +33,10 @@ class ReceiptLedger:
         evidence: Dict[str, Any],
         experiment_id: Optional[str] = None,
     ) -> Dict[str, Any]:
+        prev_hash = ""
+        existing = self.read()
+        if existing:
+            prev_hash = existing[-1].get("hash", "")
         receipt = {
             "receipt_id": f"R-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}",
             "task_id": task_id,
@@ -41,6 +45,7 @@ class ReceiptLedger:
             "step": step,
             "status": status,
             "evidence": evidence,
+            "prev_hash": prev_hash,
         }
         receipt["hash"] = _hash_record(receipt)
         with open(self.path, "a") as f:
@@ -67,3 +72,26 @@ class ReceiptLedger:
     def last_for_experiment(self, experiment_id: str) -> Optional[Dict[str, Any]]:
         rows = self.for_experiment(experiment_id)
         return rows[-1] if rows else None
+
+    def verify_chain(self) -> Dict[str, Any]:
+        rows = self.read()
+        broken = []
+        verified = 0
+        for i, row in enumerate(rows):
+            if "hash" not in row:
+                continue  # legacy entry, skip
+            recompute = _hash_record({k: v for k, v in row.items() if k != "hash"})
+            if recompute != row.get("hash"):
+                broken.append({"index": i, "receipt_id": row.get("receipt_id"), "error": "hash_mismatch"})
+                continue
+            if i > 0:
+                prev_row = rows[i - 1]
+                expected_prev = prev_row.get("hash", "")
+                actual_prev = row.get("prev_hash", "")
+                # Empty prev_hash is allowed as a transition from pre-chain receipts.
+                # Once set, it must match the previous hash.
+                if actual_prev and actual_prev != expected_prev:
+                    broken.append({"index": i, "receipt_id": row.get("receipt_id"), "error": "chain_break"})
+                    continue
+            verified += 1
+        return {"total": len(rows), "verified": verified, "broken": broken}
