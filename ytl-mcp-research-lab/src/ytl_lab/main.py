@@ -114,6 +114,12 @@ def browse_page(url: str = "") -> str:
     return _BROWSER_HTML
 
 
+@app.get("/desktop", response_class=HTMLResponse)
+def desktop_page() -> str:
+    """macOS-like desktop environment in the browser with apps."""
+    return _DESKTOP_HTML
+
+
 @app.post("/api/ingest")
 def api_ingest(req: IngestRequest) -> Dict[str, Any]:
     return tools.ingest_video(req.task_id, req.intent, req.video_url)
@@ -1047,6 +1053,315 @@ const params = new URLSearchParams(location.search);
 if (params.get('url')) {
     browserGo(params.get('url'));
 }
+</script>
+</body>
+</html>"""
+
+
+_DESKTOP_HTML = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperFlow OS</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; }
+#desktop { width: 100vw; height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #1a1a2e 100%); position: relative; overflow: hidden; }
+#desktop::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, rgba(88,166,255,0.08) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(188,140,255,0.06) 0%, transparent 50%); }
+#menubar { position: absolute; top: 0; left: 0; right: 0; height: 28px; background: rgba(0,0,0,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; align-items: center; padding: 0 12px; z-index: 10000; font-size: 13px; color: #fff; }
+#menubar .apple-logo { font-size: 16px; margin-right: 16px; cursor: pointer; }
+#menubar .menu-item { padding: 0 10px; height: 28px; display: flex; align-items: center; cursor: pointer; border-radius: 4px; }
+#menubar .menu-item:hover { background: rgba(255,255,255,0.15); }
+#menubar .app-name { font-weight: 600; }
+#menubar .spacer { flex: 1; }
+#menubar .status-item { padding: 0 8px; font-size: 12px; cursor: pointer; border-radius: 4px; }
+#menubar .status-item:hover { background: rgba(255,255,255,0.15); }
+#menubar .status-item .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+#menubar .status-item .dot.green { background: #3fb950; }
+#menubar .status-item .dot.red { background: #f85149; }
+#desktop-icons { position: absolute; top: 40px; right: 20px; display: flex; flex-direction: column; gap: 16px; z-index: 1; }
+.desktop-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 8px; border-radius: 8px; width: 80px; }
+.desktop-icon:hover { background: rgba(255,255,255,0.1); }
+.desktop-icon .icon { font-size: 36px; }
+.desktop-icon .label { font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); text-align: center; }
+.window { position: absolute; background: rgba(28,28,46,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; z-index: 100; min-width: 300px; min-height: 200px; }
+.window.active { box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(88,166,255,0.3); }
+.window.maximized { top: 28px !important; left: 0 !important; width: 100vw !important; height: calc(100vh - 28px - 80px) !important; border-radius: 0; }
+.titlebar { height: 32px; background: rgba(0,0,0,0.2); display: flex; align-items: center; padding: 0 12px; cursor: grab; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+.titlebar:active { cursor: grabbing; }
+.traffic-lights { display: flex; gap: 8px; margin-right: 12px; }
+.traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+.traffic-light.close { background: #ff5f57; }
+.traffic-light.min { background: #febc2e; }
+.traffic-light.max { background: #28c840; }
+.window-title { flex: 1; text-align: center; font-size: 13px; color: #aaa; font-weight: 500; }
+.window-content { flex: 1; overflow: auto; position: relative; }
+#dock { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; z-index: 10000; }
+.dock-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.15s; position: relative; }
+.dock-item:hover { transform: translateY(-8px) scale(1.15); }
+.dock-item .icon { font-size: 40px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+.dock-item .label { font-size: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); margin-top: 2px; opacity: 0; transition: opacity 0.15s; }
+.dock-item:hover .label { opacity: 1; }
+.dock-item.running::after { content: ''; position: absolute; bottom: -4px; width: 4px; height: 4px; border-radius: 50%; background: #fff; }
+.dock-separator { width: 1px; height: 40px; background: rgba(255,255,255,0.2); margin: 0 4px; }
+.browser-app { display: flex; flex-direction: column; height: 100%; background: #0d1117; }
+.browser-app .tab-bar { display: flex; align-items: center; padding: 0 6px; height: 30px; gap: 2px; background: #161b22; border-bottom: 1px solid #21262d; }
+.browser-app .tab { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: #21262d; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 11px; color: #8b949e; max-width: 160px; white-space: nowrap; overflow: hidden; }
+.browser-app .tab.active { background: #0d1117; color: #f0f6fc; }
+.browser-app .tab .close { margin-left: 4px; opacity: 0.5; }
+.browser-app .tab .close:hover { opacity: 1; }
+.browser-app .nav-bar { display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: #161b22; }
+.browser-app .nav-btn { width: 26px; height: 26px; border-radius: 5px; border: none; background: #21262d; color: #8b949e; cursor: pointer; font-size: 14px; }
+.browser-app .nav-btn:hover:not(:disabled) { background: #30363d; color: #fff; }
+.browser-app .nav-btn:disabled { opacity: 0.3; }
+.browser-app .address { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 14px; padding: 3px 12px; color: #c9d1d9; font-size: 12px; outline: none; }
+.browser-app .address:focus { border-color: #58a6ff; }
+.browser-app .viewport { flex: 1; overflow: hidden; position: relative; background: #fff; }
+.browser-app .loading { position: absolute; inset: 0; background: #0d1117; display: flex; align-items: center; justify-content: center; }
+.browser-app .loading .spin { width: 28px; height: 28px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.browser-app .newtab { position: absolute; inset: 0; background: #0d1117; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.browser-app .newtab h2 { color: #f0f6fc; font-size: 20px; }
+.browser-app .quicklinks { display: grid; grid-template-columns: repeat(4, 80px); gap: 12px; }
+.browser-app .quicklink { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; cursor: pointer; }
+.browser-app .quicklink:hover { border-color: #58a6ff; }
+.browser-app .quicklink .ic { font-size: 24px; }
+.browser-app .quicklink .nm { font-size: 10px; color: #8b949e; }
+.terminal-app { background: #0c0c0c; color: #00ff41; font-family: 'SF Mono', 'Monaco', monospace; font-size: 13px; padding: 12px; height: 100%; overflow-y: auto; line-height: 1.5; }
+.terminal-app .line { white-space: pre-wrap; word-break: break-all; }
+.terminal-app .prompt { color: #58a6ff; }
+.terminal-app .input-line { display: flex; }
+.terminal-app .input-line input { background: none; border: none; color: #00ff41; font-family: inherit; font-size: inherit; outline: none; flex: 1; }
+.llm-app { display: flex; flex-direction: column; height: 100%; background: #0d1117; }
+.llm-app .chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.llm-app .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+.llm-app .msg.user { background: #238636; color: #fff; align-self: flex-end; }
+.llm-app .msg.assistant { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; align-self: flex-start; }
+.llm-app .msg.system { background: #1c1c2e; color: #8b949e; font-size: 12px; font-style: italic; align-self: center; }
+.llm-app .input-bar { display: flex; gap: 8px; padding: 12px; background: #161b22; border-top: 1px solid #30363d; }
+.llm-app .input-bar textarea { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px; color: #c9d1d9; font-size: 14px; font-family: inherit; resize: none; outline: none; min-height: 40px; max-height: 120px; }
+.llm-app .input-bar textarea:focus { border-color: #58a6ff; }
+.llm-app .input-bar button { background: #238636; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+.llm-app .input-bar button:hover { background: #2ea043; }
+.llm-app .input-bar button:disabled { background: #21262d; color: #6e7681; }
+.llm-app .model-bar { padding: 8px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 12px; font-size: 12px; color: #8b949e; }
+.llm-app .model-bar select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 4px 8px; color: #c9d1d9; font-size: 12px; }
+.discover-app { display: flex; flex-direction: column; height: 100%; background: #0d1117; padding: 16px; gap: 12px; overflow-y: auto; }
+.discover-app input { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #c9d1d9; font-size: 14px; outline: none; }
+.discover-app input:focus { border-color: #58a6ff; }
+.discover-app button { background: #238636; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+.discover-app button:disabled { background: #21262d; color: #6e7681; }
+.discover-app .result { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+.discover-app .result .title { font-weight: 600; color: #f0f6fc; font-size: 14px; }
+.discover-app .result .url { color: #58a6ff; font-size: 12px; }
+.discover-app .result .score { float: right; font-size: 20px; font-weight: 700; color: #58a6ff; }
+.discover-app .result .apis { font-family: monospace; font-size: 11px; color: #f0883e; margin-top: 6px; }
+.discover-app .result .tech { margin-top: 6px; }
+.discover-app .result .tech span { font-size: 10px; color: #bc8cff; background: #1f1f2e; border: 1px solid #30363d; border-radius: 10px; padding: 1px 6px; margin: 2px; display: inline-block; }
+.discover-app .result .actions { margin-top: 8px; display: flex; gap: 6px; }
+.discover-app .result .actions button { font-size: 11px; padding: 4px 10px; }
+.discover-app .result .actions .video-btn { background: #da3633; }
+.lab-app { padding: 20px; background: #0d1117; color: #c9d1d9; overflow-y: auto; height: 100%; }
+.lab-app h2 { color: #f0f6fc; margin-bottom: 16px; }
+.lab-app .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.lab-app .stat { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; text-align: center; }
+.lab-app .stat .val { font-size: 28px; font-weight: 700; color: #58a6ff; }
+.lab-app .stat .lbl { font-size: 11px; color: #8b949e; text-transform: uppercase; margin-top: 4px; }
+.lab-app .receipt { background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 10px; margin-bottom: 6px; font-family: monospace; font-size: 11px; }
+.lab-app .receipt .step { color: #58a6ff; }
+.resize-handle { position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+</style>
+</head>
+<body>
+<div id="desktop">
+<div id="menubar">
+<span class="apple-logo"></span>
+<span class="menu-item app-name" id="active-app-name">HyperFlow OS</span>
+<span class="menu-item" onclick="openApp('browser')">File</span>
+<span class="menu-item" onclick="openApp('terminal')">Edit</span>
+<span class="menu-item">View</span>
+<span class="spacer"></span>
+<span class="status-item" id="lab-status"><span class="dot green"></span>Lab Online</span>
+<span class="status-item" id="clock">--:--</span>
+</div>
+<div id="desktop-icons">
+<div class="desktop-icon" ondblclick="openApp('browser')"><span class="icon">🌐</span><span class="label">Browser</span></div>
+<div class="desktop-icon" ondblclick="openApp('terminal')"><span class="icon">⬛</span><span class="label">Terminal</span></div>
+<div class="desktop-icon" ondblclick="openApp('llm')"><span class="icon">🧠</span><span class="label">LLM Studio</span></div>
+<div class="desktop-icon" ondblclick="openApp('discover')"><span class="icon">🔍</span><span class="label">Discover</span></div>
+<div class="desktop-icon" ondblclick="openApp('lab')"><span class="icon">📊</span><span class="label">Lab Status</span></div>
+</div>
+<div id="windows"></div>
+<div id="dock">
+<div class="dock-item" onclick="openApp('browser')"><span class="icon">🌐</span><span class="label">Browser</span></div>
+<div class="dock-item" onclick="openApp('terminal')"><span class="icon">⬛</span><span class="label">Terminal</span></div>
+<div class="dock-item" onclick="openApp('llm')"><span class="icon">🧠</span><span class="label">LLM Studio</span></div>
+<div class="dock-item" onclick="openApp('discover')"><span class="icon">🔍</span><span class="label">Discover</span></div>
+<div class="dock-item" onclick="openApp('lab')"><span class="icon">📊</span><span class="label">Lab Status</span></div>
+<div class="dock-separator"></div>
+<div class="dock-item" onclick="openApp('browser')"><span class="icon">⚙️</span><span class="label">Settings</span></div>
+</div>
+</div>
+<script>
+const wm = { windows: [], nextId: 1, zIndex: 100, active: null };
+function createWindow(app, title, w, h, contentFn) {
+    const id = wm.nextId++;
+    const win = { id, app, title, width: w, height: h, x: 80 + (wm.windows.length * 30), y: 50 + (wm.windows.length * 25), maximized: false, contentFn };
+    wm.windows.push(win);
+    renderWindow(win);
+    setActive(id);
+    updateDock();
+    return id;
+}
+function renderWindow(w) {
+    let el = document.getElementById('win-' + w.id);
+    if (!el) { el = document.createElement('div'); el.id = 'win-' + w.id; el.className = 'window'; document.getElementById('windows').appendChild(el); }
+    el.style.left = w.x + 'px'; el.style.top = w.y + 'px'; el.style.width = w.width + 'px'; el.style.height = w.height + 'px'; el.style.zIndex = ++wm.zIndex;
+    el.className = 'window' + (w.maximized ? ' maximized' : '') + (wm.active === w.id ? ' active' : '');
+    el.innerHTML = '<div class="titlebar" onmousedown="startDrag(' + w.id + ',event)" ondblclick="toggleMaximize(' + w.id + ')"><div class="traffic-lights"><div class="traffic-light close" onclick="closeWindow(' + w.id + ')"></div><div class="traffic-light min" onclick="minimizeWindow(' + w.id + ')"></div><div class="traffic-light max" onclick="toggleMaximize(' + w.id + ')"></div></div><div class="window-title">' + escapeHtml(w.title) + '</div><div style="width:60px"></div></div><div class="window-content" id="win-content-' + w.id + '"></div><div class="resize-handle" onmousedown="startResize(' + w.id + ',event)"></div>';
+    w.contentFn(document.getElementById('win-content-' + w.id), w);
+}
+function setActive(id) {
+    wm.active = id;
+    document.querySelectorAll('.window').forEach(e => e.classList.remove('active'));
+    const el = document.getElementById('win-' + id);
+    if (el) { el.style.zIndex = ++wm.zIndex; el.classList.add('active'); }
+    const w = wm.windows.find(x => x.id === id);
+    if (w) document.getElementById('active-app-name').textContent = w.title;
+}
+function closeWindow(id) { document.getElementById('win-' + id)?.remove(); wm.windows = wm.windows.filter(w => w.id !== id); updateDock(); }
+function minimizeWindow(id) { const el = document.getElementById('win-' + id); if (el) el.style.display = 'none'; }
+function toggleMaximize(id) { const w = wm.windows.find(x => x.id === id); if (w) { w.maximized = !w.maximized; renderWindow(w); } }
+let dragState = null;
+function startDrag(id, e) { const w = wm.windows.find(x => x.id === id); if (!w || w.maximized) return; dragState = { id, sx: e.clientX, sy: e.clientY, ox: w.x, oy: w.y }; setActive(id); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag); }
+function onDrag(e) { if (!dragState) return; const w = wm.windows.find(x => x.id === dragState.id); if (!w) return; w.x = dragState.ox + (e.clientX - dragState.sx); w.y = Math.max(28, dragState.oy + (e.clientY - dragState.sy)); const el = document.getElementById('win-' + dragState.id); if (el) { el.style.left = w.x + 'px'; el.style.top = w.y + 'px'; } }
+function stopDrag() { dragState = null; document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', stopDrag); }
+let resizeState = null;
+function startResize(id, e) { e.stopPropagation(); const w = wm.windows.find(x => x.id === id); if (!w) return; resizeState = { id, sx: e.clientX, sy: e.clientY, ow: w.width, oh: w.height }; document.addEventListener('mousemove', onResize); document.addEventListener('mouseup', stopResize); }
+function onResize(e) { if (!resizeState) return; const w = wm.windows.find(x => x.id === resizeState.id); if (!w) return; w.width = Math.max(300, resizeState.ow + (e.clientX - resizeState.sx)); w.height = Math.max(200, resizeState.oh + (e.clientY - resizeState.sy)); const el = document.getElementById('win-' + resizeState.id); if (el) { el.style.width = w.width + 'px'; el.style.height = w.height + 'px'; } }
+function stopResize() { resizeState = null; document.removeEventListener('mousemove', onResize); document.removeEventListener('mouseup', stopResize); }
+function updateDock() { document.querySelectorAll('.dock-item').forEach((item, i) => { const apps = ['browser','terminal','llm','discover','lab']; if (apps[i] && wm.windows.some(w => w.app === apps[i])) item.classList.add('running'); else item.classList.remove('running'); }); }
+function openApp(name) {
+    const existing = wm.windows.find(w => w.app === name);
+    if (existing) { const el = document.getElementById('win-' + existing.id); if (el) el.style.display = ''; setActive(existing.id); return; }
+    if (name === 'browser') createWindow('browser', 'Browser', 900, 600, renderBrowserApp);
+    else if (name === 'terminal') createWindow('terminal', 'Terminal', 600, 400, renderTerminalApp);
+    else if (name === 'llm') createWindow('llm', 'LLM Studio', 500, 600, renderLLMApp);
+    else if (name === 'discover') createWindow('discover', 'Discovery', 700, 500, renderDiscoverApp);
+    else if (name === 'lab') createWindow('lab', 'Lab Status', 600, 500, renderLabApp);
+}
+// Browser App
+function renderBrowserApp(c, win) {
+    c.innerHTML = '<div class="browser-app"><div class="tab-bar" id="brt-' + win.id + '"></div><div class="nav-bar"><button class="nav-btn" onclick="brBack(' + win.id + ')">←</button><button class="nav-btn" onclick="brFwd(' + win.id + ')">→</button><button class="nav-btn" onclick="brReload(' + win.id + ')">⟳</button><input class="address" id="bra-' + win.id + '" placeholder="Search or enter URL" onkeydown="if(event.key===\'Enter\')brNavigate(' + win.id + ')"><button class="nav-btn" onclick="brNavigate(' + win.id + ')" style="background:#238636;color:#fff">Go</button></div><div class="viewport" id="brv-' + win.id + '"><div class="newtab"><h2>Browser</h2><div class="quicklinks"><div class="quicklink" onclick="brGo(' + win.id + ',\'https://docs.python.org/3/\')"><span class="ic">🐍</span><span class="nm">Python</span></div><div class="quicklink" onclick="brGo(' + win.id + ',\'https://news.ycombinator.com/\')"><span class="ic">📰</span><span class="nm">HN</span></div><div class="quicklink" onclick="brGo(' + win.id + ',\'https://github.com/trending\')"><span class="ic">🐙</span><span class="nm">GitHub</span></div><div class="quicklink" onclick="brGo(' + win.id + ',\'https://en.wikipedia.org/wiki/Main_Page\')"><span class="ic">📚</span><span class="nm">Wiki</span></div></div></div></div></div>';
+    win.brTabs = [{ id: 1, url: null, title: 'New Tab', history: [], histIdx: -1, pageData: null }];
+    win.brActive = 1; win.brNext = 2;
+    brRenderTabs(win);
+}
+function brRenderTabs(win) { const bar = document.getElementById('brt-' + win.id); if (!bar) return; bar.innerHTML = win.brTabs.map(t => '<div class="tab ' + (t.id === win.brActive ? 'active' : '') + '" onclick="brSwitch(' + win.id + ',' + t.id + ')"><span>' + escapeHtml(t.title.slice(0,18)) + '</span><span class="close" onclick="event.stopPropagation();brClose(' + win.id + ',' + t.id + ')">×</span></div>').join('') + '<div class="tab" onclick="brNew(' + win.id + ')" style="background:none;border:none">+</div>'; }
+function brNew(winId) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const tid = win.brNext++; win.brTabs.push({ id: tid, url: null, title: 'New Tab', history: [], histIdx: -1, pageData: null }); win.brActive = tid; brRenderTabs(win); brShowNew(win); }
+function brClose(winId, tid) { const win = wm.windows.find(w => w.id === winId); if (!win) return; win.brTabs = win.brTabs.filter(t => t.id !== tid); if (!win.brTabs.length) { brNew(winId); return; } if (win.brActive === tid) { win.brActive = win.brTabs[0].id; brRenderTab(win); } brRenderTabs(win); }
+function brSwitch(winId, tid) { const win = wm.windows.find(w => w.id === winId); if (!win) return; win.brActive = tid; brRenderTabs(win); brRenderTab(win); }
+function brTab(win) { return win.brTabs.find(t => t.id === win.brActive); }
+function brNavigate(winId) { const win = wm.windows.find(w => w.id === winId); if (!win) return; let url = document.getElementById('bra-' + winId).value.trim(); if (!url) return; if (!/^https?:\/\//.test(url)) { if (/^[\w-]+(\.[\w-]+)+/.test(url)) url = 'https://' + url; else url = 'https://www.bing.com/search?format=rss&q=' + encodeURIComponent(url); } brGo(winId, url); }
+function brGo(winId, url) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const tab = brTab(win); if (!tab) return; if (tab.histIdx < tab.history.length - 1) tab.history = tab.history.slice(0, tab.histIdx + 1); tab.history.push(url); tab.histIdx = tab.history.length - 1; brLoad(win, tab, url); }
+function brBack(winId) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const tab = brTab(win); if (!tab || tab.histIdx <= 0) return; tab.histIdx--; brLoad(win, tab, tab.history[tab.histIdx]); }
+function brFwd(winId) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const tab = brTab(win); if (!tab || tab.histIdx >= tab.history.length - 1) return; tab.histIdx++; brLoad(win, tab, tab.history[tab.histIdx]); }
+function brReload(winId) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const tab = brTab(win); if (tab && tab.url) brLoad(win, tab, tab.url); }
+async function brLoad(win, tab, url) {
+    tab.url = url;
+    document.getElementById('bra-' + win.id).value = url;
+    const vp = document.getElementById('brv-' + win.id);
+    vp.innerHTML = '<div class="loading"><div class="spin"></div></div>';
+    try {
+        const res = await fetch('/api/proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+        const data = await res.json();
+        if (!data.ok) { vp.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#0d1117;color:#f85149;gap:12px"><div style="font-size:48px">!</div><div>' + escapeHtml(data.error) + '</div></div>'; return; }
+        tab.title = data.title || 'Untitled'; tab.pageData = data; brRenderTabs(win);
+        vp.innerHTML = '<div id="pr-' + win.id + '" style="width:100%;height:100%;overflow-y:auto"></div>';
+        const root = document.getElementById('pr-' + win.id);
+        const shadow = root.attachShadow({ mode: 'open' });
+        shadow.innerHTML = data.html;
+    } catch (e) { vp.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0d1117;color:#f85149">' + escapeHtml(e.message) + '</div>'; }
+}
+function brShowNew(win) { const vp = document.getElementById('brv-' + win.id); if (!vp) return; vp.innerHTML = '<div class="newtab"><h2>Browser</h2><div class="quicklinks"><div class="quicklink" onclick="brGo(' + win.id + ',\'https://docs.python.org/3/\')"><span class="ic">🐍</span><span class="nm">Python</span></div><div class="quicklink" onclick="brGo(' + win.id + ',\'https://news.ycombinator.com/\')"><span class="ic">📰</span><span class="nm">HN</span></div><div class="quicklink" onclick="brGo(' + win.id + ',\'https://github.com/trending\')"><span class="ic">🐙</span><span class="nm">GitHub</span></div><div class="quicklink" onclick="brGo(' + win.id + ',\'https://en.wikipedia.org/wiki/Main_Page\')"><span class="ic">📚</span><span class="nm">Wiki</span></div></div></div>'; document.getElementById('bra-' + win.id).value = ''; }
+function brRenderTab(win) { const tab = brTab(win); if (!tab) return; if (tab.pageData && tab.pageData.ok) { const vp = document.getElementById('brv-' + win.id); vp.innerHTML = '<div id="pr-' + win.id + '" style="width:100%;height:100%;overflow-y:auto"></div>'; const root = document.getElementById('pr-' + win.id); const shadow = root.attachShadow({ mode: 'open' }); shadow.innerHTML = tab.pageData.html; document.getElementById('bra-' + win.id).value = tab.url; } else if (tab.url) { brLoad(win, tab, tab.url); } else { brShowNew(win); } }
+// Terminal App
+function renderTerminalApp(c, win) {
+    c.innerHTML = '<div class="terminal-app" id="term-' + win.id + '"></div>';
+    win.termHist = []; win.termIdx = -1;
+    termPrint(win, 'HyperFlow OS Terminal v2.0', 'system');
+    termPrint(win, 'Connected to YTL-MCP Research Lab', 'system');
+    termPrint(win, 'Type "help" for commands.', 'system');
+    termPrint(win, '');
+    termInput(win);
+}
+function termPrint(win, text, type) { const term = document.getElementById('term-' + win.id); if (!term) return; const div = document.createElement('div'); div.className = 'line'; if (type === 'system') div.style.color = '#8b949e'; else if (type === 'error') div.style.color = '#f85149'; else if (type === 'ok') div.style.color = '#3fb950'; div.textContent = text; term.appendChild(div); term.scrollTop = term.scrollHeight; }
+function termInput(win) { const term = document.getElementById('term-' + win.id); const line = document.createElement('div'); line.className = 'input-line'; line.innerHTML = '<span class="prompt">ytl@hyperflow:~$ </span><input type="text" autofocus onkeydown="termKey(' + win.id + ',event)">'; term.appendChild(line); line.querySelector('input').focus(); term.scrollTop = term.scrollHeight; }
+function termKey(winId, e) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const input = e.target; if (e.key === 'Enter') { const cmd = input.value; input.disabled = true; input.parentElement.removeChild(input); const term = document.getElementById('term-' + win.id); if (term.lastChild) term.lastChild.innerHTML = '<span class="prompt">ytl@hyperflow:~$ </span>' + escapeHtml(cmd); win.termHist.push(cmd); win.termIdx = win.termHist.length; termExec(win, cmd); } else if (e.key === 'ArrowUp') { e.preventDefault(); if (win.termIdx > 0) { win.termIdx--; input.value = win.termHist[win.termIdx]; } } else if (e.key === 'ArrowDown') { e.preventDefault(); if (win.termIdx < win.termHist.length - 1) { win.termIdx++; input.value = win.termHist[win.termIdx]; } else input.value = ''; } }
+async function termExec(win, cmd) {
+    const args = cmd.trim().split(/\s+/); const command = args[0];
+    if (!command) { termInput(win); return; }
+    if (command === 'help') { termPrint(win, 'Commands:', 'system'); termPrint(win, '  help          Show this help'); termPrint(win, '  status        Lab status'); termPrint(win, '  discover <n>  Find competitors'); termPrint(win, '  browse <url>  Open URL in browser'); termPrint(win, '  video <url>   Create video from URL'); termPrint(win, '  receipts      Show recent receipts'); termPrint(win, '  clear         Clear terminal'); termPrint(win, '  open <app>    Open app'); }
+    else if (command === 'status') { try { const r = await (await fetch('/api/status')).json(); termPrint(win, 'Experiments: ' + r.summary.total_experiments, 'ok'); termPrint(win, 'Receipts: ' + r.summary.receipts, 'ok'); termPrint(win, 'Approved: ' + r.summary.approved, 'ok'); termPrint(win, 'Avg Score: ' + r.summary.average_transcript_score.toFixed(3), 'ok'); } catch (e) { termPrint(win, 'Error: ' + e.message, 'error'); } }
+    else if (command === 'discover' && args[1]) { const niche = args.slice(1).join(' '); termPrint(win, 'Searching "' + niche + '"...', 'system'); try { const r = await (await fetch('/api/discover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ niche, max_results: 4 }) })).json(); if (r.ok) { termPrint(win, 'Found ' + r.total_found + ' competitors (' + r.with_apis_count + ' with APIs)', 'ok'); r.competitors.forEach(c => termPrint(win, '  ' + c.score + ' | ' + c.title.slice(0,40) + ' | APIs: ' + c.api_endpoints.length + ' | ' + c.url)); } else termPrint(win, 'Error: ' + (r.detail || 'failed'), 'error'); } catch (e) { termPrint(win, 'Error: ' + e.message, 'error'); } }
+    else if (command === 'browse' && args[1]) { let url = args[1]; if (!/^https?:/.test(url)) url = 'https://' + url; termPrint(win, 'Opening ' + url + '...', 'ok'); openApp('browser'); const bw = wm.windows.find(w => w.app === 'browser'); if (bw) brGo(bw.id, url); }
+    else if (command === 'video' && args[1]) { let url = args[1]; if (!/^https?:/.test(url)) url = 'https://' + url; termPrint(win, 'Creating video from ' + url + '...', 'system'); try { const r = await (await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id: 'TERM-' + Date.now(), intent: 'Terminal: ' + url, video_url: url }) })).json(); if (r.experiment_id) { const expId = r.experiment_id; termPrint(win, 'Ingested: ' + expId, 'ok'); await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/metadata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/shotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); const p = await (await fetch('/api/policy-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json(); await fetch('/api/prepare-upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); termPrint(win, 'Video created: ' + expId + ' | Policy: ' + p.policy_status, 'ok'); } } catch (e) { termPrint(win, 'Error: ' + e.message, 'error'); } }
+    else if (command === 'receipts') { try { const r = await (await fetch('/api/status')).json(); (r.recent_receipts || []).forEach(rc => termPrint(win, '  ' + rc.step + ' | ' + rc.status + ' | ' + rc.experiment_id + ' | ' + rc.hash.slice(0,16) + '...')); if (!r.recent_receipts || !r.recent_receipts.length) termPrint(win, '  No receipts', 'system'); } catch (e) { termPrint(win, 'Error: ' + e.message, 'error'); } }
+    else if (command === 'clear') { document.getElementById('term-' + win.id).innerHTML = ''; }
+    else if (command === 'open' && args[1]) { openApp(args[1]); termPrint(win, 'Opened ' + args[1], 'ok'); }
+    else { termPrint(win, 'Command not found: ' + command + '. Type "help".', 'error'); }
+    termInput(win);
+}
+// LLM App
+function renderLLMApp(c, win) {
+    c.innerHTML = '<div class="llm-app"><div class="model-bar"><span>Mode:</span><select id="llmm-' + win.id + '"><option value="lab">YTL-MCP Lab</option><option value="discover">Discover Mode</option><option value="video">Video Generator</option></select><span style="flex:1"></span><span id="llms-' + win.id + '">Ready</span></div><div class="chat" id="llmc-' + win.id + '"><div class="msg system">LLM Studio — inference via YTL-MCP Lab API</div></div><div class="input-bar"><textarea id="llmi-' + win.id + '" placeholder="Type a message..." rows="2" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();llmSend(' + win.id + ')}"></textarea><button onclick="llmSend(' + win.id + ')" id="llmb-' + win.id + '">Send</button></div></div>';
+}
+async function llmSend(winId) {
+    const win = wm.windows.find(w => w.id === winId); if (!win) return;
+    const input = document.getElementById('llmi-' + winId); const text = input.value.trim(); if (!text) return; input.value = '';
+    const chat = document.getElementById('llmc-' + winId); const model = document.getElementById('llmm-' + winId).value;
+    chat.innerHTML += '<div class="msg user">' + escapeHtml(text) + '</div>';
+    const pid = 'resp-' + Date.now(); chat.innerHTML += '<div class="msg assistant" id="' + pid + '">...</div>'; chat.scrollTop = chat.scrollHeight;
+    document.getElementById('llms-' + winId).textContent = 'Thinking...'; document.getElementById('llmb-' + winId).disabled = true;
+    try {
+        let response = '';
+        if (model === 'discover') { const r = await (await fetch('/api/discover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ niche: text, max_results: 4 }) })).json(); if (r.ok) { response = 'Found ' + r.total_found + ' competitors for "' + text + '":\n\n'; r.competitors.forEach((c, i) => { response += (i+1) + '. ' + c.title + ' (score: ' + c.score + ')\n   ' + c.url + '\n   APIs: ' + c.api_endpoints.length + ' | Tech: ' + c.tech_stack.slice(0,4).join(', ') + '\n\n'; }); } else response = 'Discovery failed'; }
+        else if (model === 'video') { const r = await (await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id: 'LLM-' + Date.now(), intent: text, video_url: 'https://youtu.be/dQw4w9WgXcQ' }) })).json(); if (r.experiment_id) { const expId = r.experiment_id; await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); const sc = await (await fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json(); await fetch('/api/metadata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/shotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); const p = await (await fetch('/api/policy-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json(); response = 'Video experiment: ' + expId + '\nPolicy: ' + p.policy_status + '\n\nScript:\n' + (sc.script || '').slice(0, 500) + '...'; } else response = 'Video creation failed'; }
+        else { const r = await (await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id: 'LLM-' + Date.now(), intent: text, video_url: 'https://youtu.be/dQw4w9WgXcQ' }) })).json(); if (r.experiment_id) { const expId = r.experiment_id; const sc = await (await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json(); response = 'Experiment: ' + expId + '\nScore: ' + sc.score + ' (' + sc.dominant_signal + ')\nReceipt: ' + r.receipt.receipt_id + '\nHash: ' + r.receipt.hash.slice(0,20) + '...'; } else response = 'Inference failed'; }
+        document.getElementById(pid).textContent = response; chat.scrollTop = chat.scrollHeight; document.getElementById('llms-' + winId).textContent = 'Ready';
+    } catch (e) { document.getElementById(pid).textContent = 'Error: ' + e.message; document.getElementById('llms-' + winId).textContent = 'Error'; }
+    document.getElementById('llmb-' + winId).disabled = false;
+}
+// Discover App
+function renderDiscoverApp(c, win) {
+    c.innerHTML = '<div class="discover-app"><input type="text" id="dn-' + win.id + '" placeholder="Niche (e.g. AI image generation)" onkeydown="if(event.key===\'Enter\')discSearch(' + win.id + ')"><button onclick="discSearch(' + win.id + ')" id="db-' + win.id + '">Find Competitors</button><div id="dr-' + win.id + '" style="flex:1;overflow-y:auto"></div></div>';
+    win.discComps = [];
+}
+async function discSearch(winId) {
+    const win = wm.windows.find(w => w.id === winId); if (!win) return;
+    const niche = document.getElementById('dn-' + winId).value.trim(); if (!niche) return;
+    const btn = document.getElementById('db-' + winId); btn.disabled = true; btn.textContent = 'Searching...';
+    const results = document.getElementById('dr-' + winId); results.innerHTML = '<div style="color:#8b949e;padding:20px">Crawling...</div>';
+    try {
+        const r = await (await fetch('/api/discover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ niche, max_results: 6 }) })).json();
+        if (r.ok) { win.discComps = r.competitors; win.discNiche = niche; results.innerHTML = r.competitors.map((c, i) => '<div class="result"><span class="score">' + c.score + '</span><div class="title">' + escapeHtml(c.title) + '</div><div class="url"><a href="' + escapeHtml(c.url) + '" target="_blank">' + escapeHtml(c.url) + '</a></div>' + (c.api_endpoints.length ? '<div class="apis">' + c.api_endpoints.slice(0,3).map(e => escapeHtml(e)).join('<br>') + '</div>' : '') + (c.tech_stack.length ? '<div class="tech">' + c.tech_stack.map(t => '<span>' + escapeHtml(t) + '</span>').join('') + '</div>' : '') + '<div class="actions"><button class="video-btn" onclick="discVideo(' + winId + ',' + i + ')">Create Video</button><button onclick="discBrowse(' + winId + ',' + i + ')">Browse</button></div></div>').join(''); }
+        else results.innerHTML = '<div style="color:#f85149">' + escapeHtml(r.detail || 'Error') + '</div>';
+    } catch (e) { results.innerHTML = '<div style="color:#f85149">' + escapeHtml(e.message) + '</div>'; }
+    btn.disabled = false; btn.textContent = 'Find Competitors';
+}
+async function discVideo(winId, i) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const comp = win.discComps[i]; if (!comp) return; const intent = 'Competitor: ' + comp.title + ' (' + comp.url + ') in ' + win.discNiche + '. APIs: ' + comp.api_endpoints.length + '. Tech: ' + comp.tech_stack.join(', ') + '.'; try { const r = await (await fetch('/api/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id: 'DISC-' + Date.now(), intent, video_url: comp.url }) })).json(); if (r.experiment_id) { const expId = r.experiment_id; await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/metadata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); await fetch('/api/shotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); const p = await (await fetch('/api/policy-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json(); await fetch('/api/prepare-upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) }); alert('Video created: ' + expId + '\nPolicy: ' + p.policy_status); } } catch (e) { alert('Error: ' + e.message); } }
+function discBrowse(winId, i) { const win = wm.windows.find(w => w.id === winId); if (!win) return; const comp = win.discComps[i]; if (!comp) return; openApp('browser'); const bw = wm.windows.find(w => w.app === 'browser'); if (bw) brGo(bw.id, comp.url); }
+// Lab App
+function renderLabApp(c, win) { c.innerHTML = '<div class="lab-app"><h2>Lab Status</h2><div class="stat-grid" id="ls-' + win.id + '"></div><h3 style="color:#8b949e;font-size:13px;text-transform:uppercase;margin-bottom:8px">Recent Receipts</h3><div id="lr-' + win.id + '"></div></div>'; labRefresh(win.id); win.labInt = setInterval(() => labRefresh(win.id), 10000); }
+async function labRefresh(winId) { const win = wm.windows.find(w => w.id === winId); if (!win) return; try { const r = await (await fetch('/api/status')).json(); const s = r.summary; const stats = document.getElementById('ls-' + winId); if (stats) stats.innerHTML = '<div class="stat"><div class="val">' + s.total_experiments + '</div><div class="lbl">Experiments</div></div><div class="stat"><div class="val">' + s.receipts + '</div><div class="lbl">Receipts</div></div><div class="stat"><div class="val">' + s.approved + '</div><div class="lbl">Approved</div></div><div class="stat"><div class="val">' + s.pending_policy + '</div><div class="lbl">Pending</div></div><div class="stat"><div class="val">' + s.projects + '</div><div class="lbl">Projects</div></div><div class="stat"><div class="val">' + s.average_transcript_score.toFixed(2) + '</div><div class="lbl">Avg Score</div></div>'; const rec = document.getElementById('lr-' + winId); if (rec) { const receipts = r.recent_receipts || []; rec.innerHTML = receipts.length ? receipts.map(rc => '<div class="receipt"><span class="step">' + rc.step + '</span> | <span style="color:#3fb950">' + rc.status + '</span> | ' + rc.experiment_id + '<br><span style="color:#8b949e">' + rc.hash.slice(0,32) + '...</span></div>').join('') : '<div style="color:#8b949e">No receipts</div>'; } const st = document.getElementById('lab-status'); if (st) st.innerHTML = '<span class="dot green"></span>Lab Online'; } catch (e) { const st = document.getElementById('lab-status'); if (st) st.innerHTML = '<span class="dot red"></span>Lab Offline'; } }
+// Utils
+function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Clock
+function updateClock() { const now = new Date(); const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; document.getElementById('clock').textContent = days[now.getDay()] + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+setInterval(updateClock, 1000); updateClock();
+// Boot
+setTimeout(() => openApp('browser'), 300);
 </script>
 </body>
 </html>"""
