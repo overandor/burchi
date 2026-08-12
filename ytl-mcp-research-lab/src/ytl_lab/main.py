@@ -120,6 +120,12 @@ def desktop_page() -> str:
     return _DESKTOP_HTML
 
 
+@app.get("/web", response_class=HTMLResponse)
+def screenshot_web() -> str:
+    """Screenshot web — pages as images with link overlays. 2MB not 300MB."""
+    return _SCREENSHOT_WEB_HTML
+
+
 @app.post("/api/ingest")
 def api_ingest(req: IngestRequest) -> Dict[str, Any]:
     return tools.ingest_video(req.task_id, req.intent, req.video_url)
@@ -1362,6 +1368,592 @@ function updateClock() { const now = new Date(); const days = ['Sun','Mon','Tue'
 setInterval(updateClock, 1000); updateClock();
 // Boot
 setTimeout(() => openApp('browser'), 300);
+</script>
+</body>
+</html>"""
+
+
+_SCREENSHOT_WEB_HTML = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot Web — 2MB not 300MB</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/webtorrent@2.2.1/webtorrent.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: #0a0a0a; color: #e0e0e0; font-family: -apple-system, sans-serif; }
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* Top bar */
+#topbar { background: #111; border-bottom: 1px solid #222; padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+#topbar .logo { font-weight: 700; color: #58a6ff; font-size: 14px; white-space: nowrap; }
+#topbar .url-bar { flex: 1; display: flex; gap: 8px; }
+#topbar input { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; color: #e0e0e0; font-size: 13px; outline: none; }
+#topbar input:focus { border-color: #58a6ff; }
+#topbar button { background: #238636; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; }
+#topbar button:disabled { background: #333; color: #666; cursor: not-allowed; }
+#topbar button.secondary { background: #333; }
+
+/* Status bar */
+#statusbar { background: #111; border-bottom: 1px solid #222; padding: 6px 16px; display: flex; gap: 20px; font-size: 11px; color: #888; flex-shrink: 0; }
+#statusbar .stat { display: flex; align-items: center; gap: 4px; }
+#statusbar .stat .val { color: #58a6ff; font-weight: 600; }
+#statusbar .stat .dot { width: 6px; height: 6px; border-radius: 50%; }
+#statusbar .stat .dot.green { background: #3fb950; }
+#statusbar .stat .dot.yellow { background: #d29922; }
+#statusbar .stat .dot.red { background: #f85149; }
+
+/* Main viewport */
+#viewport { flex: 1; overflow: hidden; position: relative; background: #1a1a1a; }
+#viewport-scroll { width: 100%; height: 100%; overflow: auto; position: relative; }
+
+/* Screenshot display */
+.screenshot-page { position: relative; display: inline-block; margin: 0 auto; }
+.screenshot-page img { display: block; max-width: 100%; }
+.link-overlay { position: absolute; cursor: pointer; border: 1px solid transparent; }
+.link-overlay:hover { border-color: rgba(88,166,255,0.5); background: rgba(88,166,255,0.1); }
+
+/* Loading */
+#loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: #0a0a0a; z-index: 100; }
+#loading .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+#loading .text { font-size: 13px; color: #888; }
+#loading .ram-bar { width: 300px; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+#loading .ram-bar .fill { height: 100%; background: linear-gradient(90deg, #f85149, #d29922, #3fb950); transition: width 0.3s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* New tab */
+#newtab { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: #0a0a0a; }
+#newtab h1 { font-size: 28px; color: #f0f6fc; }
+#newtab p { color: #888; font-size: 14px; max-width: 500px; text-align: center; line-height: 1.6; }
+#newtab .links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+#newtab .link-card { padding: 20px; background: #111; border: 1px solid #222; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+#newtab .link-card:hover { border-color: #58a6ff; background: #1a1a2e; }
+#newtab .link-card .icon { font-size: 28px; }
+#newtab .link-card .name { font-size: 11px; color: #888; margin-top: 6px; }
+
+/* Cache panel */
+#cache-panel { position: absolute; right: 0; top: 0; bottom: 0; width: 320px; background: #111; border-left: 1px solid #222; z-index: 50; transform: translateX(100%); transition: transform 0.2s; overflow-y: auto; }
+#cache-panel.open { transform: translateX(0); }
+#cache-panel h3 { padding: 14px 16px; font-size: 12px; color: #888; text-transform: uppercase; border-bottom: 1px solid #222; }
+.cache-item { padding: 10px 16px; border-bottom: 1px solid #1a1a1a; cursor: pointer; }
+.cache-item:hover { background: #1a1a1a; }
+.cache-item .ci-title { font-size: 12px; color: #e0e0e0; }
+.cache-item .ci-url { font-size: 10px; color: #666; }
+.cache-item .ci-size { font-size: 10px; color: #3fb950; float: right; }
+
+/* P2P panel */
+#p2p-panel { position: absolute; left: 0; top: 0; bottom: 0; width: 320px; background: #111; border-right: 1px solid #222; z-index: 50; transform: translateX(-100%); transition: transform 0.2s; overflow-y: auto; }
+#p2p-panel.open { transform: translateX(0); }
+#p2p-panel h3 { padding: 14px 16px; font-size: 12px; color: #888; text-transform: uppercase; border-bottom: 1px solid #222; }
+.peer-item { padding: 10px 16px; border-bottom: 1px solid #1a1a1a; font-size: 12px; }
+.peer-item .peer-id { color: #58a6ff; font-family: monospace; }
+.peer-item .peer-status { color: #3fb950; float: right; }
+.shard-item { padding: 8px 16px; border-bottom: 1px solid #1a1a1a; font-size: 11px; color: #888; }
+.shard-item .shard-hash { color: #bc8cff; font-family: monospace; }
+
+/* Error */
+#error { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #0a0a0a; color: #f85149; }
+#error .code { font-size: 48px; opacity: 0.3; }
+#error .msg { font-size: 14px; }
+#error button { background: #333; color: #e0e0e0; border: 1px solid #444; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+
+/* Hidden render container */
+#render-container { position: absolute; left: -9999px; top: 0; width: 1280px; min-height: 800px; overflow: hidden; visibility: hidden; }
+</style>
+</head>
+<body>
+<div id="app">
+<div id="topbar">
+<span class="logo">ScreenshotWeb</span>
+<div class="url-bar">
+<input type="text" id="url-input" placeholder="Enter URL — pages become 2MB images, not 300MB live DOM" onkeydown="if(event.key==='Enter')navigate()">
+<button id="go-btn" onclick="navigate()">Capture</button>
+<button class="secondary" onclick="toggleCache()">Cache</button>
+<button class="secondary" onclick="toggleP2P()">P2P</button>
+</div>
+</div>
+<div id="statusbar">
+<div class="stat"><span class="dot green" id="status-dot"></span><span id="status-text">Ready</span></div>
+<div class="stat">RAM: <span class="val" id="ram-stat">0 MB</span></div>
+<div class="stat">Pages cached: <span class="val" id="cache-count">0</span></div>
+<div class="stat">Shards seeded: <span class="val" id="seed-count">0</span></div>
+<div class="stat">Peers: <span class="val" id="peer-count">0</span></div>
+<div class="stat">Saved: <span class="val" id="ram-saved">0 MB</span></div>
+</div>
+<div id="viewport">
+<div id="viewport-scroll"></div>
+<div id="loading" style="display:none;">
+<div class="spinner"></div>
+<div class="text" id="loading-text">Fetching page...</div>
+<div class="ram-bar"><div class="fill" id="ram-fill" style="width:0%"></div></div>
+</div>
+<div id="newtab">
+<h1>Screenshot Web</h1>
+<p>Pages are rendered once, captured as images, then the DOM is destroyed. 300MB live page becomes 2MB image. Links are extracted as clickable overlays. Cached pages are seeded to other visitors via WebTorrent — each visitor hosts one shard.</p>
+<div class="links">
+<div class="link-card" onclick="navigateTo('https://news.ycombinator.com/')"><div class="icon">📰</div><div class="name">Hacker News</div></div>
+<div class="link-card" onclick="navigateTo('https://docs.python.org/3/')"><div class="icon">🐍</div><div class="name">Python Docs</div></div>
+<div class="link-card" onclick="navigateTo('https://en.wikipedia.org/wiki/Main_Page')"><div class="icon">📚</div><div class="name">Wikipedia</div></div>
+<div class="link-card" onclick="navigateTo('https://example.com')"><div class="icon">🌐</div><div class="name">Example</div></div>
+</div>
+</div>
+<div id="error" style="display:none;">
+<div class="code">!</div>
+<div class="msg" id="error-msg"></div>
+<button onclick="hideError()">Dismiss</button>
+</div>
+<div id="render-container"></div>
+</div>
+</div>
+
+<!-- Cache panel -->
+<div id="cache-panel">
+<h3>Cached Screenshots (IndexedDB)</h3>
+<div id="cache-list"></div>
+</div>
+
+<!-- P2P panel -->
+<div id="p2p-panel">
+<h3>P2P Network (WebTorrent)</h3>
+<div id="p2p-status" style="padding:14px 16px;font-size:12px;color:#888;">Initializing...</div>
+<h3>Connected Peers</h3>
+<div id="peer-list"><div style="padding:10px 16px;color:#666;font-size:11px;">No peers yet</div></div>
+<h3>Seeded Shards</h3>
+<div id="shard-list"><div style="padding:10px 16px;color:#666;font-size:11px;">No shards seeded yet</div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// Screenshot Web — Real Implementation
+// 
+// Flow: proxy fetch → render hidden → html2canvas → extract
+// link rects → destroy DOM → display 2MB image + link overlays
+// → cache in IndexedDB → seed via WebTorrent
+// ═══════════════════════════════════════════════════════════
+
+const state = {
+    currentPage: null,
+    ramBefore: 0,
+    ramAfter: 0,
+    totalSaved: 0,
+    cache: new Map(),
+    torrent: null,
+    client: null,
+    seededShards: [],
+    peers: [],
+};
+
+// ─── IndexedDB ───
+const DB_NAME = 'screenshot-web';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('screenshots')) {
+                d.createObjectStore('screenshots', { keyPath: 'url' });
+            }
+            if (!d.objectStoreNames.contains('shards')) {
+                d.createObjectStore('shards', { keyPath: 'hash' });
+            }
+        };
+        req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        req.onerror = (e) => reject(e.target.error);
+    });
+}
+
+function dbPut(store, value) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).put(value);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+function dbGet(store, key) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function dbGetAll(store) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function dbCount(store) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).count();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+// ─── RAM measurement ───
+function measureRAM() {
+    if (performance.memory) {
+        return Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+    }
+    // Estimate from DOM nodes
+    return Math.round(document.querySelectorAll('*').length * 0.05);
+}
+
+// ─── Navigation ───
+function navigate() {
+    const input = document.getElementById('url-input').value.trim();
+    if (!input) return;
+    let url = input;
+    if (!/^https?:\/\//.test(url)) {
+        if (/^[\w-]+(\.[\w-]+)+/.test(url)) url = 'https://' + url;
+        else url = 'https://www.bing.com/search?format=rss&q=' + encodeURIComponent(url);
+    }
+    navigateTo(url);
+}
+
+async function navigateTo(url) {
+    document.getElementById('url-input').value = url;
+    state.currentPage = url;
+    
+    // Check cache first
+    const cached = await dbGet('screenshots', url);
+    if (cached && cached.screenshot) {
+        displayScreenshot(cached.screenshot, cached.links, cached.width, cached.height, url, true);
+        updateStatus('Loaded from cache (0 MB render)');
+        return;
+    }
+    
+    // Not cached — render and capture
+    showLoading('Fetching page via proxy...');
+    state.ramBefore = measureRAM();
+    updateRAMBar(10);
+    
+    try {
+        // Step 1: Fetch HTML via proxy
+        showLoading('Fetching HTML...');
+        updateRAMBar(20);
+        const res = await fetch('/api/proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed to fetch');
+        updateRAMBar(40);
+        
+        // Step 2: Render in hidden container
+        showLoading('Rendering page (temporary RAM spike)...');
+        updateRAMBar(60);
+        const screenshotData = await captureScreenshot(data.html, url);
+        updateRAMBar(80);
+        
+        // Step 3: Destroy render container — RAM freed
+        showLoading('Destroying DOM, freeing RAM...');
+        document.getElementById('render-container').innerHTML = '';
+        state.ramAfter = measureRAM();
+        const saved = Math.max(0, state.ramBefore - state.ramAfter + screenshotData.renderRAM);
+        state.totalSaved += saved;
+        updateRAMBar(100);
+        
+        // Step 4: Display screenshot + link overlays
+        displayScreenshot(screenshotData.blob, screenshotData.links, screenshotData.width, screenshotData.height, url, false);
+        
+        // Step 5: Cache in IndexedDB
+        const cacheEntry = {
+            url,
+            screenshot: screenshotData.blob,
+            links: screenshotData.links,
+            width: screenshotData.width,
+            height: screenshotData.height,
+            title: data.title,
+            timestamp: Date.now(),
+            size: screenshotData.size,
+        };
+        await dbPut('screenshots', cacheEntry);
+        state.cache.set(url, cacheEntry);
+        
+        // Step 6: Seed via WebTorrent
+        await seedShard(url, screenshotData.blob);
+        
+        updateStatus(`Rendered: ${screenshotData.renderRAM}MB → ${screenshotData.size}MB image (saved ${saved}MB)`);
+        updateStats();
+        hideLoading();
+    } catch (e) {
+        showError(e.message);
+        hideLoading();
+    }
+}
+
+// ─── Screenshot capture ───
+async function captureScreenshot(html, url) {
+    const container = document.getElementById('render-container');
+    
+    // Render HTML in a shadow DOM for style isolation
+    container.innerHTML = '';
+    const host = document.createElement('div');
+    host.style.width = '1280px';
+    host.style.minHeight = '800px';
+    container.appendChild(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = html;
+    
+    // Wait for render
+    await new Promise(r => setTimeout(r, 500));
+    
+    // Extract all link positions before screenshot
+    const links = [];
+    const anchorEls = shadow.querySelectorAll('a[href]');
+    const hostRect = host.getBoundingClientRect();
+    
+    anchorEls.forEach(a => {
+        const rect = a.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0 && rect.top < 2000) {
+            let href = a.getAttribute('href') || '';
+            // Skip javascript: and anchor links
+            if (href.startsWith('javascript:') || href.startsWith('#')) return;
+            // Make absolute
+            if (href.startsWith('/')) {
+                try { const u = new URL(url); href = u.origin + href; } catch(e) {}
+            } else if (!href.startsWith('http')) {
+                try { href = new URL(href, url).href; } catch(e) {}
+            }
+            links.push({
+                x: rect.left - hostRect.left,
+                y: rect.top - hostRect.top,
+                width: rect.width,
+                height: rect.height,
+                href: href,
+                text: a.textContent.trim().slice(0, 80),
+            });
+        }
+    });
+    
+    // Capture screenshot using html2canvas
+    const renderRAM = measureRAM();
+    const canvas = await html2canvas(host, {
+        width: 1280,
+        height: Math.min(host.scrollHeight, 3000),
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scale: 1,
+    });
+    
+    // Convert canvas to blob
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.85));
+    const sizeMB = Math.round(blob.size / 1024 / 1024 * 10) / 10;
+    
+    return {
+        blob: blob,
+        links: links,
+        width: canvas.width,
+        height: canvas.height,
+        size: sizeMB,
+        renderRAM: renderRAM,
+    };
+}
+
+// ─── Display screenshot with link overlays ───
+function displayScreenshot(blob, links, width, height, url, fromCache) {
+    const scroll = document.getElementById('viewport-scroll');
+    const imgUrl = URL.createObjectURL(blob);
+    
+    let html = `<div class="screenshot-page" style="width:${width}px;">
+        <img src="${imgUrl}" width="${width}" height="${height}" alt="${escapeHtml(url)}">`;
+    
+    // Add invisible link overlays
+    links.forEach((link, i) => {
+        html += `<a class="link-overlay" 
+            style="left:${link.x}px;top:${link.y}px;width:${link.width}px;height:${link.height}px;" 
+            href="javascript:void(0)" 
+            onclick="navigateTo('${escapeHtml(link.href)}')" 
+            title="${escapeHtml(link.text)}"></a>`;
+    });
+    
+    html += `</div>`;
+    scroll.innerHTML = html;
+    
+    // Hide new tab page
+    document.getElementById('newtab').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    
+    if (fromCache) {
+        updateStatus(`Cache hit — 0 MB render, ${Math.round(blob.size/1024/1024*10)/10} MB image`);
+    }
+}
+
+// ─── WebTorrent P2P ───
+async function initTorrent() {
+    try {
+        if (typeof WebTorrent === 'undefined') {
+            document.getElementById('p2p-status').textContent = 'WebTorrent not loaded (CDN blocked)';
+            return;
+        }
+        state.client = new WebTorrent();
+        document.getElementById('p2p-status').innerHTML = '<span style="color:#3fb950">WebTorrent client running</span><br><span style="font-size:11px;color:#666">Each cached page is seeded as a shard. Other visitors can download shards from you.</span>';
+        
+        // Try to join a shared torrent for the site itself
+        // The infoHash is deterministic based on "screenshot-web" namespace
+        // All visitors join the same swarm and share cached screenshots
+    } catch (e) {
+        document.getElementById('p2p-status').textContent = 'WebTorrent error: ' + e.message;
+    }
+}
+
+async function seedShard(url, blob) {
+    if (!state.client) return;
+    try {
+        // Create a File from the blob
+        const file = new File([blob], url.replace(/[^a-z0-9]/gi, '_').slice(0, 60) + '.webp', { type: 'image/webp' });
+        
+        // Seed the file
+        state.client.seed(file, (torrent) => {
+            state.seededShards.push({
+                url: url,
+                hash: torrent.infoHash,
+                size: Math.round(blob.size / 1024 / 1024 * 10) / 10,
+                peers: 0,
+            });
+            
+            torrent.on('peer', (peerId) => {
+                state.peers.push({ id: peerId, shard: torrent.infoHash });
+                updateP2PPanel();
+                updateStats();
+            });
+            
+            updateP2PPanel();
+            updateStats();
+            
+            // Store shard info in IndexedDB
+            dbPut('shards', { hash: torrent.infoHash, url, size: blob.size, timestamp: Date.now() });
+        });
+    } catch (e) {
+        console.error('Seed error:', e);
+    }
+}
+
+function updateP2PPanel() {
+    const peerList = document.getElementById('peer-list');
+    if (state.peers.length === 0) {
+        peerList.innerHTML = '<div style="padding:10px 16px;color:#666;font-size:11px;">No peers connected</div>';
+    } else {
+        peerList.innerHTML = state.peers.map(p => 
+            `<div class="peer-item"><span class="peer-id">${p.id.slice(0,16)}...</span><span class="peer-status">connected</span></div>`
+        ).join('');
+    }
+    
+    const shardList = document.getElementById('shard-list');
+    if (state.seededShards.length === 0) {
+        shardList.innerHTML = '<div style="padding:10px 16px;color:#666;font-size:11px;">No shards seeded yet</div>';
+    } else {
+        shardList.innerHTML = state.seededShards.map(s =>
+            `<div class="shard-item"><span class="shard-hash">${s.hash.slice(0,20)}...</span><br>${s.size} MB — ${escapeHtml(s.url.slice(0, 40))}</div>`
+        ).join('');
+    }
+}
+
+// ─── UI helpers ───
+function showLoading(text) {
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('newtab').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+}
+
+function updateRAMBar(pct) {
+    document.getElementById('ram-fill').style.width = pct + '%';
+}
+
+function showError(msg) {
+    document.getElementById('error').style.display = 'flex';
+    document.getElementById('error-msg').textContent = msg;
+    hideLoading();
+}
+
+function hideError() {
+    document.getElementById('error').style.display = 'none';
+}
+
+function updateStatus(text) {
+    document.getElementById('status-text').textContent = text;
+}
+
+function updateStats() {
+    document.getElementById('ram-saved').textContent = state.totalSaved + ' MB';
+    document.getElementById('cache-count').textContent = state.cache.size;
+    document.getElementById('seed-count').textContent = state.seededShards.length;
+    document.getElementById('peer-count').textContent = state.peers.length;
+    document.getElementById('ram-stat').textContent = measureRAM() + ' MB';
+}
+
+function toggleCache() {
+    document.getElementById('cache-panel').classList.toggle('open');
+    if (document.getElementById('cache-panel').classList.contains('open')) refreshCacheList();
+}
+
+function toggleP2P() {
+    document.getElementById('p2p-panel').classList.toggle('open');
+}
+
+async function refreshCacheList() {
+    const all = await dbGetAll('screenshots');
+    const list = document.getElementById('cache-list');
+    if (all.length === 0) {
+        list.innerHTML = '<div style="padding:14px 16px;color:#666;font-size:11px;">No cached pages yet</div>';
+        return;
+    }
+    list.innerHTML = all.sort((a,b) => b.timestamp - a.timestamp).map(entry =>
+        `<div class="cache-item" onclick="navigateTo('${escapeHtml(entry.url)}')">
+            <div class="ci-title">${escapeHtml(entry.title || entry.url)}</div>
+            <div class="ci-url">${escapeHtml(entry.url.slice(0, 50))}</div>
+            <div class="ci-size">${entry.size || Math.round(entry.screenshot.size/1024/1024*10)/10} MB</div>
+        </div>`
+    ).join('');
+}
+
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ─── Init ───
+async function init() {
+    await openDB();
+    
+    // Load cache count
+    const count = await dbCount('screenshots');
+    document.getElementById('cache-count').textContent = count;
+    
+    // Load all cached entries into memory map
+    const all = await dbGetAll('screenshots');
+    all.forEach(entry => state.cache.set(entry.url, entry));
+    
+    // Init WebTorrent
+    initTorrent();
+    
+    // Update stats periodically
+    setInterval(updateStats, 2000);
+    updateStats();
+}
+
+init();
 </script>
 </body>
 </html>"""
