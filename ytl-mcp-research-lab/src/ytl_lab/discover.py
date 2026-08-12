@@ -330,57 +330,137 @@ def proxy_page(url: str) -> Dict[str, Any]:
     else:
         html = base_tag + html
 
-    # 2. Rewrite relative URLs in src/href attributes to absolute
-    def _absolutize(match):
+    # 2. Rewrite all href links to route through our browser
+    #    Links become: javascript:browseTo('original-url')
+    #    This keeps navigation inside the browser-in-browser
+    def _rewrite_href(match):
+        val = match.group(2)
+        if val.startswith(("javascript:", "mailto:", "tel:", "#", "data:")):
+            return match.group(0)
+        if val.startswith("//"):
+            val = parsed.scheme + ":" + val
+        absolute = urljoin(url, val)
+        return f'{match.group(1)}="javascript:browserNavigate(\'{absolute}\')"'
+
+    html = re.sub(r'(href)="([^"]+)"', _rewrite_href, html, flags=re.IGNORECASE)
+    html = re.sub(r"(href)='([^']+)'", _rewrite_href, html, flags=re.IGNORECASE)
+
+    # 3. Rewrite form actions to submit through proxy
+    def _rewrite_form(match):
+        form_tag = match.group(0)
+        action_match = re.search(r'action="([^"]+)"', form_tag, re.IGNORECASE)
+        if action_match:
+            action_val = action_match.group(1)
+            if not action_val.startswith(("javascript:", "mailto:")):
+                absolute = urljoin(url, action_val)
+                form_tag = form_tag.replace(action_match.group(0), f'action="javascript:browserSubmit(\'{absolute}\', this)"')
+        else:
+            # No action attribute — submit to current URL
+            form_tag = form_tag.replace("<form", f'<form action="javascript:browserSubmit(\'{url}\', this)"', 1)
+        # Add method tracking
+        form_tag = form_tag.replace("<form", '<form data-proxy="1"', 1)
+        return form_tag
+
+    html = re.sub(r"<form[^>]*>", _rewrite_form, html, flags=re.IGNORECASE)
+
+    # 4. Absolutize src attributes (images, CSS, JS) — don't route through proxy
+    def _absolutize_src(match):
         attr = match.group(1)
         val = match.group(2)
-        if val.startswith(("http://", "https://", "//", "data:", "javascript:", "mailto:", "#")):
-            return match.group(0)
+        if val.startswith(("http://", "https://", "//", "data:", "javascript:", "blob:")):
+            if val.startswith("//"):
+                val = parsed.scheme + ":" + val
+            return f'{attr}="{val}"'
         absolute = urljoin(url, val)
         return f'{attr}="{absolute}"'
 
-    html = re.sub(r'(src|href)="([^"]+)"', _absolutize, html, flags=re.IGNORECASE)
-    html = re.sub(r"(src|href)='([^']+)'", _absolutize, html, flags=re.IGNORECASE)
+    html = re.sub(r'(src)="([^"]+)"', _absolutize_src, html, flags=re.IGNORECASE)
+    html = re.sub(r"(src)='([^']+)'", _absolutize_src, html, flags=re.IGNORECASE)
 
-    # 3. Remove X-Frame-Options and CSP meta tags (irrelevant when proxied)
+    # Also fix CSS url() references
+    def _fix_css_url(match):
+        val = match.group(1).strip().strip("'\"")
+        if val.startswith(("http://", "https://", "//", "data:")):
+            if val.startswith("//"):
+                val = parsed.scheme + ":" + val
+            return f"url({val})"
+        absolute = urljoin(url, val)
+        return f"url({absolute})"
+
+    html = re.sub(r"url\(([^)]+)\)", _fix_css_url, html, flags=re.IGNORECASE)
+
+    # 5. Remove X-Frame-Options and CSP meta tags
     html = re.sub(r'<meta[^>]+http-equiv=["\']X-Frame-Options["\'][^>]*>', "", html, re.IGNORECASE)
     html = re.sub(r'<meta[^>]+http-equiv=["\']Content-Security-Policy["\'][^>]*>', "", html, re.IGNORECASE)
 
-    # 4. Extract readable content for reader-mode display
-    # Remove script tags for safety (prevent XSS from proxied content)
+    # 6. Inject browser controller script — intercepts clicks, manages navigation
+    browser_script = """
+<script>
+// Browser-in-browser navigation controller
+function browserNavigate(url) {
+    if (window.parent && window.parent.browserGo) {
+        window.parent.browserGo(url);
+    }
+}
+function browserSubmit(url, form) {
+    if (window.parent && window.parent.browserSubmitForm) {
+        window.parent.browserSubmitForm(url, form);
+    }
+    return false;
+}
+// Intercept all clicks on links that weren't rewritten
+document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (a && a.href && !a.href.startsWith('javascript:')) {
+        e.preventDefault();
+        e.stopPropagation();
+        browserNavigate(a.href);
+    }
+}, true);
+</script>
+"""
+    # Insert before </body> or at end
+    if re.search(r"</body>", html, re.IGNORECASE):
+        html = re.sub(r"</body>", browser_script + "</body>", html, count=1, flags=re.IGNORECASE)
+    else:
+        html += browser_script
+
+    # 7. Extract readable content for reader-mode display
     html_no_script = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
-    html_no_script = re.sub(r"<style[^>]*>.*?</style>", "", html_no_script, flags=re.DOTALL | re.IGNORECASE)
+    html_no_style = re.sub(r"<style[^>]*>.*?</style>", "", html_no_script, flags=re.DOTALL | re.IGNORECASE)
 
-    # Extract main content area (common patterns)
-    content_match = re.search(r'<(?:main|article|div[^>]*class="[^"]*(?:content|main|post|article|entry)[^"]*")[^>]*>(.*?)</(?:main|article|div)>', html_no_script, re.DOTALL | re.IGNORECASE)
-    reader_html = content_match.group(1) if content_match else html_no_script
+    content_match = re.search(r'<(?:main|article|div[^>]*class="[^"]*(?:content|main|post|article|entry)[^"]*")[^>]*>(.*?)</(?:main|article|div)>', html_no_style, re.DOTALL | re.IGNORECASE)
+    reader_html = content_match.group(1) if content_match else html_no_style
 
-    # Extract text for word count
     text_only = re.sub(r"<[^>]+>", " ", reader_html)
     text_only = re.sub(r"\s+", " ", text_only).strip()
     word_count = len(text_only.split())
 
-    # Extract images
     images = re.findall(r'<img[^>]+src="([^"]+)"', html, re.IGNORECASE)
-
-    # Extract headings for table of contents
-    headings = re.findall(r"<(h[1-3])[^>]*>([^<]+)</\1>", html_no_script, re.IGNORECASE)
+    headings = re.findall(r"<(h[1-3])[^>]*>([^<]+)</\1>", html_no_style, re.IGNORECASE)
     toc = [{"level": int(h[0][1]), "text": h[1].strip()} for h in headings[:20]]
 
     meta = _extract_meta(html)
 
+    # Extract all links for the browser's link map
+    all_links = []
+    for match in re.finditer(r'javascript:browserNavigate\(\'([^\']+)\'\)', html):
+        all_links.append(match.group(1))
+
     return {
         "ok": True,
         "url": url,
+        "final_url": url,  # TODO: track redirects
         "status": result["status"],
         "title": meta.get("title") or parsed.netloc,
         "description": meta.get("description"),
         "og_image": meta.get("og_image"),
-        "html": html,  # full HTML for same-origin iframe
-        "reader_html": reader_html[:50000],  # sanitized content for div injection
+        "html": html,  # full rewritten HTML — renders in div, links route through browser
+        "reader_html": reader_html[:50000],
         "word_count": word_count,
         "image_count": len(images),
         "images": images[:10],
         "toc": toc,
+        "links": all_links[:50],  # all navigable links on the page
         "content_type": result.get("content_type", ""),
     }

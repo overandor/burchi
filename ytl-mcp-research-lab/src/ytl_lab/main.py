@@ -110,8 +110,8 @@ def api_proxy_get(url: str) -> Dict[str, Any]:
 
 @app.get("/browse", response_class=HTMLResponse)
 def browse_page(url: str = "") -> str:
-    """In-app browser — fetches pages via proxy, renders in a div (no iframe)."""
-    return _BROWSE_HTML
+    """Browser-in-browser — full navigation, tabs, history. No iframe."""
+    return _BROWSER_HTML
 
 
 @app.post("/api/ingest")
@@ -616,95 +616,241 @@ setInterval(loadStatus, 10000);
 </html>"""
 
 
-_BROWSE_HTML = """<!DOCTYPE html>
+_BROWSER_HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Browse — YTL-MCP Lab</title>
+<title>Browser — YTL-MCP Lab</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; height: 100vh; }
-.header { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.header a { color: #58a6ff; text-decoration: none; font-size: 14px; }
-.header a:hover { text-decoration: underline; }
-.bar { flex: 1; display: flex; gap: 8px; }
-.bar input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 14px; color: #c9d1d9; font-size: 14px; }
-.bar input:focus { outline: none; border-color: #58a6ff; }
-.bar button { background: #238636; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.bar button:hover { background: #2ea043; }
-.bar button:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
-.content { flex: 1; overflow: hidden; display: flex; }
-.reader { flex: 1; overflow-y: auto; padding: 30px 40px; max-width: 800px; margin: 0 auto; }
-.reader h1, .reader h2, .reader h3 { color: #f0f6fc; margin: 20px 0 10px; }
-.reader h1 { font-size: 24px; }
-.reader h2 { font-size: 20px; }
-.reader h3 { font-size: 17px; }
-.reader p { color: #c9d1d9; line-height: 1.7; margin-bottom: 14px; font-size: 15px; }
-.reader a { color: #58a6ff; }
-.reader img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
-.reader ul, .reader ol { margin: 10px 0 14px 24px; }
-.reader li { margin-bottom: 6px; color: #c9d1d9; }
-.reader pre, .reader code { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-family: 'SF Mono', monospace; font-size: 13px; overflow-x: auto; display: block; color: #c9d1d9; }
-.reader table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-.reader th, .reader td { border: 1px solid #30363d; padding: 8px 12px; text-align: left; }
-.reader th { background: #161b22; color: #f0f6fc; }
-.sidebar { width: 280px; background: #161b22; border-right: 1px solid #30363d; padding: 20px; overflow-y: auto; flex-shrink: 0; }
-.sidebar h3 { font-size: 13px; color: #8b949e; text-transform: uppercase; margin-bottom: 10px; }
-.sidebar .meta-item { font-size: 13px; margin-bottom: 6px; color: #c9d1d9; }
-.sidebar .meta-item .label { color: #8b949e; }
-.sidebar .toc-item { font-size: 13px; margin-bottom: 4px; cursor: pointer; color: #58a6ff; }
-.sidebar .toc-item:hover { text-decoration: underline; }
-.sidebar .toc-item.h2 { margin-left: 12px; }
-.sidebar .toc-item.h3 { margin-left: 24px; }
-.sidebar img { width: 100%; border-radius: 6px; margin: 6px 0; }
-.loading { display: flex; align-items: center; justify-content: center; height: 100%; }
-.loading .spinner { width: 32px; height: 32px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; }
+
+/* Chrome */
+.chrome { background: #1c1c2e; border-bottom: 1px solid #30363d; flex-shrink: 0; }
+.tab-bar { display: flex; align-items: center; padding: 0 8px; height: 36px; gap: 2px; background: #161b22; border-bottom: 1px solid #21262d; }
+.tab { display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: #21262d; border: 1px solid #30363d; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 12px; color: #8b949e; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; top: 1px; }
+.tab.active { background: #0d1117; color: #f0f6fc; border-color: #30363d; }
+.tab:hover:not(.active) { background: #30363d; }
+.tab .close { width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: 0.5; }
+.tab .close:hover { opacity: 1; background: #f85149; color: #fff; }
+.tab .favicon { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+.new-tab { padding: 6px 10px; cursor: pointer; color: #8b949e; font-size: 16px; border-radius: 4px; }
+.new-tab:hover { background: #30363d; color: #f0f6fc; }
+
+/* Nav bar */
+.nav-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #161b22; }
+.nav-btn { width: 30px; height: 30px; border-radius: 6px; border: none; background: #21262d; color: #8b949e; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.nav-btn:hover:not(:disabled) { background: #30363d; color: #f0f6fc; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.address-bar { flex: 1; display: flex; align-items: center; gap: 8px; background: #0d1117; border: 1px solid #30363d; border-radius: 20px; padding: 4px 14px; }
+.address-bar:focus-within { border-color: #58a6ff; }
+.address-bar input { flex: 1; background: none; border: none; color: #c9d1d9; font-size: 14px; outline: none; padding: 4px 0; }
+.address-bar .security { font-size: 12px; color: #3fb950; flex-shrink: 0; }
+.go-btn { background: #238636; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.go-btn:hover { background: #2ea043; }
+.go-btn:disabled { background: #21262d; color: #6e7681; }
+.action-btn { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.action-btn:hover { background: #30363d; }
+.action-btn.video { background: #da3633; color: #fff; border-color: #da3633; }
+.action-btn.video:hover { background: #f85149; }
+
+/* Viewport */
+.viewport { flex: 1; overflow: hidden; position: relative; background: #fff; }
+.page-render { width: 100%; height: 100%; overflow-y: auto; border: none; background: #fff; }
+.page-render.dark { background: #0d1117; }
+
+/* Loading */
+.loading-overlay { position: absolute; inset: 0; background: #0d1117; display: flex; align-items: center; justify-content: center; z-index: 100; }
+.loading-overlay .spinner { width: 36px; height: 36px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.error { color: #f85149; padding: 40px; text-align: center; font-size: 16px; }
-.empty { color: #8b949e; padding: 60px; text-align: center; font-size: 15px; }
-.actions { display: flex; gap: 8px; margin-top: 12px; }
-.actions button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-.actions button:hover { background: #30363d; }
-.actions button.primary { background: #da3633; color: #fff; border-color: #da3633; }
-.actions button.primary:hover { background: #f85149; }
+
+/* Error */
+.error-page { position: absolute; inset: 0; background: #0d1117; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f85149; font-size: 16px; gap: 12px; }
+.error-page .code { font-size: 48px; font-weight: 700; opacity: 0.3; }
+
+/* New tab page */
+.new-tab-page { position: absolute; inset: 0; background: #0d1117; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.new-tab-page h1 { font-size: 28px; color: #f0f6fc; }
+.new-tab-page .quick-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 600px; }
+.new-tab-page .quick-link { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+.new-tab-page .quick-link:hover { border-color: #58a6ff; background: #1c1c2e; }
+.new-tab-page .quick-link .icon { font-size: 28px; }
+.new-tab-page .quick-link .name { font-size: 12px; color: #8b949e; }
+
+/* History panel */
+.history-panel { position: absolute; right: 0; top: 0; bottom: 0; width: 300px; background: #161b22; border-left: 1px solid #30363d; z-index: 50; transform: translateX(100%); transition: transform 0.2s; overflow-y: auto; }
+.history-panel.open { transform: translateX(0); }
+.history-panel h3 { padding: 16px; font-size: 14px; color: #8b949e; text-transform: uppercase; border-bottom: 1px solid #30363d; }
+.history-item { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid #21262d; }
+.history-item:hover { background: #21262d; }
+.history-item .title { font-size: 13px; color: #c9d1d9; }
+.history-item .url { font-size: 11px; color: #8b949e; }
+.history-item .time { font-size: 10px; color: #6e7681; }
 </style>
 </head>
 <body>
-<div class="header">
-<a href="/">← Lab</a>
-<div class="bar">
-<input type="text" id="url-input" placeholder="Enter URL to browse (https://example.com)" onkeydown="if(event.key==='Enter')browse()">
-<button id="go-btn" onclick="browse()">Browse</button>
+<div class="chrome">
+<!-- Tab bar -->
+<div class="tab-bar" id="tab-bar"></div>
+<!-- Nav bar -->
+<div class="nav-bar">
+<button class="nav-btn" id="back-btn" onclick="goBack()" title="Back">←</button>
+<button class="nav-btn" id="fwd-btn" onclick="goForward()" title="Forward">→</button>
+<button class="nav-btn" onclick="reload()" title="Reload">⟳</button>
+<div class="address-bar">
+<span class="security" id="security-icon">🔒</span>
+<input type="text" id="address-input" placeholder="Search or enter URL" onkeydown="if(event.key==='Enter')navigate()">
+</div>
+<button class="go-btn" id="go-btn" onclick="navigate()">Go</button>
+<button class="action-btn video" onclick="createVideoFromPage()">Create Video</button>
+<button class="action-btn" onclick="toggleHistory()">History</button>
+<a href="/" class="action-btn" style="text-decoration:none;">Lab ←</a>
 </div>
 </div>
-<div class="content">
-<div class="sidebar" id="sidebar" style="display:none;">
-<div id="sidebar-content"></div>
-</div>
-<div class="reader" id="reader">
-<div class="empty">Enter a URL above to browse without iframes.<br><br>The page is fetched server-side, security headers stripped, and content rendered directly in this div.</div>
-</div>
-</div>
-<script>
-let currentUrl = '';
 
-async function browse() {
-    const input = document.getElementById('url-input').value.trim();
+<!-- Viewport -->
+<div class="viewport" id="viewport">
+<div class="new-tab-page" id="new-tab-page">
+<h1>Browser</h1>
+<p style="color:#8b949e;font-size:14px;">Enter a URL above or pick a shortcut</p>
+<div class="quick-links">
+<div class="quick-link" onclick="browserGo('https://docs.python.org/3/')"><span class="icon">🐍</span><span class="name">Python Docs</span></div>
+<div class="quick-link" onclick="browserGo('https://news.ycombinator.com/')"><span class="icon">📰</span><span class="name">Hacker News</span></div>
+<div class="quick-link" onclick="browserGo('https://github.com/trending')"><span class="icon">🐙</span><span class="name">GitHub Trending</span></div>
+<div class="quick-link" onclick="browserGo('https://en.wikipedia.org/wiki/Main_Page')"><span class="icon">📚</span><span class="name">Wikipedia</span></div>
+</div>
+</div>
+</div>
+
+<!-- History panel -->
+<div class="history-panel" id="history-panel">
+<h3>History</h3>
+<div id="history-list"></div>
+</div>
+
+<script>
+// ─── Browser state ───
+const browser = {
+    tabs: [],
+    activeTab: null,
+    nextTabId: 1,
+    history: [], // global history
+};
+
+// ─── Tab management ───
+function createTab(url = null) {
+    const tab = {
+        id: browser.nextTabId++,
+        url: url || null,
+        title: 'New Tab',
+        history: [],
+        historyIndex: -1,
+        loading: false,
+        pageData: null,
+    };
+    browser.tabs.push(tab);
+    browser.activeTab = tab.id;
+    renderTabs();
+    if (url) {
+        loadPage(url);
+    } else {
+        showNewTabPage();
+    }
+}
+
+function closeTab(id) {
+    const idx = browser.tabs.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    browser.tabs.splice(idx, 1);
+    if (browser.tabs.length === 0) {
+        createTab();
+        return;
+    }
+    if (browser.activeTab === id) {
+        browser.activeTab = browser.tabs[Math.min(idx, browser.tabs.length - 1)].id;
+        renderTab(browser.activeTab);
+    }
+    renderTabs();
+}
+
+function switchTab(id) {
+    browser.activeTab = id;
+    renderTabs();
+    renderTab(id);
+}
+
+function renderTabs() {
+    const bar = document.getElementById('tab-bar');
+    bar.innerHTML = browser.tabs.map(t => `
+        <div class="tab ${t.id === browser.activeTab ? 'active' : ''}" onclick="switchTab(${t.id})">
+            <span>${escapeHtml(t.title.slice(0, 20))}</span>
+            <span class="close" onclick="event.stopPropagation();closeTab(${t.id})">×</span>
+        </div>
+    `).join('') + `<div class="new-tab" onclick="createTab()">+</div>`;
+}
+
+function getActiveTab() {
+    return browser.tabs.find(t => t.id === browser.activeTab);
+}
+
+// ─── Navigation ───
+function navigate() {
+    const input = document.getElementById('address-input').value.trim();
     if (!input) return;
     let url = input;
-    if (!/^https?:\\/\\//.test(url)) {
+    if (!/^https?:\/\//.test(url)) {
         if (/^[\w-]+(\.[\w-]+)+/.test(url)) url = 'https://' + url;
-        else url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+        else url = 'https://www.bing.com/search?format=rss&q=' + encodeURIComponent(url);
     }
-    document.getElementById('url-input').value = url;
-    currentUrl = url;
+    browserGo(url);
+}
 
-    const reader = document.getElementById('reader');
-    const sidebar = document.getElementById('sidebar');
-    reader.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-    sidebar.style.display = 'none';
-    document.getElementById('go-btn').disabled = true;
+// Called by proxied pages (via window.parent.browserGo)
+function browserGo(url) {
+    const tab = getActiveTab();
+    if (!tab) return;
+    // Add to tab history
+    if (tab.historyIndex < tab.history.length - 1) {
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+    }
+    tab.history.push(url);
+    tab.historyIndex = tab.history.length - 1;
+    // Add to global history
+    browser.history.push({ url, time: new Date().toLocaleTimeString(), title: '' });
+    loadPage(url);
+}
+
+function goBack() {
+    const tab = getActiveTab();
+    if (!tab || tab.historyIndex <= 0) return;
+    tab.historyIndex--;
+    loadPage(tab.history[tab.historyIndex]);
+}
+
+function goForward() {
+    const tab = getActiveTab();
+    if (!tab || tab.historyIndex >= tab.history.length - 1) return;
+    tab.historyIndex++;
+    loadPage(tab.history[tab.historyIndex]);
+}
+
+function reload() {
+    const tab = getActiveTab();
+    if (!tab || !tab.url) return;
+    loadPage(tab.url);
+}
+
+// ─── Page loading ───
+async function loadPage(url) {
+    const tab = getActiveTab();
+    if (!tab) return;
+    tab.url = url;
+    tab.loading = true;
+    document.getElementById('address-input').value = url;
+    updateNavButtons();
+    showLoading();
 
     try {
         const res = await fetch('/api/proxy', {
@@ -713,96 +859,193 @@ async function browse() {
             body: JSON.stringify({ url })
         });
         const data = await res.json();
+        tab.loading = false;
+        tab.pageData = data;
 
         if (!data.ok) {
-            reader.innerHTML = `<div class="error">Failed to load: ${escapeHtml(data.error)}</div>`;
+            showError(data.error || 'Failed to load page');
         } else {
-            // Render reader content
-            reader.innerHTML = `
-                <h1>${escapeHtml(data.title)}</h1>
-                ${data.description ? `<p style="color:#8b949e;font-size:14px;">${escapeHtml(data.description)}</p>` : ''}
-                <div class="actions">
-                    <button class="primary" onclick="createVideo()">Create Video</button>
-                    <button onclick="window.open('${escapeHtml(data.url)}','_blank')">Open Original ↗</button>
-                    <button onclick="toggleRaw()">View Raw HTML</button>
-                </div>
-                <hr style="border-color:#30363d;margin:16px 0;">
-                <div id="reader-content">${data.reader_html || '<p>No content extracted.</p>'}</div>
-                <div id="raw-html" style="display:none;"><pre>${escapeHtml(data.html.slice(0, 50000))}</pre></div>
-            `;
-
-            // Render sidebar
-            if (data.toc.length || data.images.length || data.word_count) {
-                sidebar.style.display = 'block';
-                document.getElementById('sidebar-content').innerHTML = `
-                    <h3>Page Info</h3>
-                    <div class="meta-item"><span class="label">URL:</span> ${escapeHtml(data.url.slice(0, 50))}</div>
-                    <div class="meta-item"><span class="label">Status:</span> ${data.status}</div>
-                    <div class="meta-item"><span class="label">Words:</span> ${data.word_count}</div>
-                    <div class="meta-item"><span class="label">Images:</span> ${data.image_count}</div>
-                    ${data.og_image ? `<img src="${escapeHtml(data.og_image)}" alt="OG Image">` : ''}
-                    ${data.toc.length ? `<h3 style="margin-top:20px;">Contents</h3>${data.toc.map(t => `<div class="toc-item h${t.level}" onclick="scrollToHeading(${t.level},'${escapeHtml(t.text)}')">${escapeHtml(t.text)}</div>`).join('')}` : ''}
-                `;
+            tab.title = data.title || 'Untitled';
+            renderTabs();
+            renderPage(data);
+            // Update history title
+            if (browser.history.length > 0) {
+                browser.history[browser.history.length - 1].title = tab.title;
             }
-
-            // Update URL bar
-            history.replaceState(null, '', '/browse?url=' + encodeURIComponent(url));
         }
     } catch (e) {
-        reader.innerHTML = `<div class="error">Error: ${escapeHtml(e.message)}</div>`;
+        tab.loading = false;
+        showError(e.message);
     }
-    document.getElementById('go-btn').disabled = false;
+    updateNavButtons();
 }
 
-function toggleRaw() {
-    const reader = document.getElementById('reader-content');
-    const raw = document.getElementById('raw-html');
-    if (raw.style.display === 'none') { reader.style.display = 'none'; raw.style.display = 'block'; }
-    else { reader.style.display = 'block'; raw.style.display = 'none'; }
+function renderPage(data) {
+    const viewport = document.getElementById('viewport');
+    // Create a shadow DOM container so proxied page styles don't leak
+    viewport.innerHTML = '<div id="page-root" style="width:100%;height:100%;overflow-y:auto;"></div>';
+    const pageRoot = document.getElementById('page-root');
+
+    // Use srcdoc on an iframe with sandbox — this IS a browser-like context
+    // but same-origin (no X-Frame-Options issue since we're serving our own HTML)
+    // Actually, let's use a shadow DOM div to avoid iframe entirely
+    const shadow = pageRoot.attachShadow({ mode: 'open' });
+
+    // Inject the proxied HTML into the shadow DOM
+    shadow.innerHTML = data.html;
+
+    // The proxied HTML has <base> tag so resources load from original domain
+    // Links have been rewritten to call browserNavigate() which calls window.parent.browserGo()
 }
 
-function scrollToHeading(level, text) {
-    const headings = document.querySelectorAll('#reader-content h' + level);
-    for (const h of headings) {
-        if (h.textContent.trim() === text) { h.scrollIntoView({ behavior: 'smooth' }); break; }
+function showLoading() {
+    const viewport = document.getElementById('viewport');
+    viewport.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+}
+
+function showError(msg) {
+    const viewport = document.getElementById('viewport');
+    viewport.innerHTML = `<div class="error-page"><div class="code">!</div><div>${escapeHtml(msg)}</div><button class="action-btn" onclick="reload()">Retry</button></div>`;
+}
+
+function showNewTabPage() {
+    const viewport = document.getElementById('viewport');
+    viewport.innerHTML = `
+    <div class="new-tab-page">
+        <h1>Browser</h1>
+        <p style="color:#8b949e;font-size:14px;">Enter a URL above or pick a shortcut</p>
+        <div class="quick-links">
+            <div class="quick-link" onclick="browserGo('https://docs.python.org/3/')"><span class="icon">🐍</span><span class="name">Python Docs</span></div>
+            <div class="quick-link" onclick="browserGo('https://news.ycombinator.com/')"><span class="icon">📰</span><span class="name">Hacker News</span></div>
+            <div class="quick-link" onclick="browserGo('https://github.com/trending')"><span class="icon">🐙</span><span class="name">GitHub</span></div>
+            <div class="quick-link" onclick="browserGo('https://en.wikipedia.org/wiki/Main_Page')"><span class="icon">📚</span><span class="name">Wikipedia</span></div>
+        </div>
+    </div>`;
+    document.getElementById('address-input').value = '';
+}
+
+function renderTab(id) {
+    const tab = browser.tabs.find(t => t.id === id);
+    if (!tab) return;
+    if (tab.pageData && tab.pageData.ok) {
+        renderPage(tab.pageData);
+        document.getElementById('address-input').value = tab.url || '';
+    } else if (tab.url) {
+        loadPage(tab.url);
+    } else {
+        showNewTabPage();
+    }
+    updateNavButtons();
+}
+
+function updateNavButtons() {
+    const tab = getActiveTab();
+    document.getElementById('back-btn').disabled = !tab || tab.historyIndex <= 0;
+    document.getElementById('fwd-btn').disabled = !tab || tab.historyIndex >= tab.history.length - 1;
+}
+
+// ─── History panel ───
+function toggleHistory() {
+    const panel = document.getElementById('history-panel');
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+    } else {
+        panel.classList.add('open');
+        renderHistory();
     }
 }
 
-async function createVideo() {
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (browser.history.length === 0) {
+        list.innerHTML = '<div style="padding:16px;color:#8b949e;font-size:13px;">No history yet</div>';
+        return;
+    }
+    list.innerHTML = browser.history.slice().reverse().map(h => `
+        <div class="history-item" onclick="browserGo('${escapeHtml(h.url)}');toggleHistory();">
+            <div class="title">${escapeHtml(h.title || h.url)}</div>
+            <div class="url">${escapeHtml(h.url.slice(0, 60))}</div>
+            <div class="time">${escapeHtml(h.time)}</div>
+        </div>
+    `).join('');
+}
+
+// ─── Video creation ───
+async function createVideoFromPage() {
+    const tab = getActiveTab();
+    if (!tab || !tab.url) { alert('Open a page first'); return; }
     if (!confirm('Create a video experiment from this page?')) return;
-    const res = await fetch('/api/ingest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            task_id: 'BROWSE-' + Date.now(),
-            intent: 'Browsed page: ' + currentUrl,
-            video_url: currentUrl
-        })
-    });
-    const data = await res.json();
-    if (data.experiment_id) {
-        // Run full cycle
-        const expId = data.experiment_id;
-        await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
-        await fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
-        await fetch('/api/metadata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
-        await fetch('/api/shotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
-        const policy = await (await fetch('/api/policy-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json();
-        await fetch('/api/prepare-upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
-        alert('Video created: ' + expId + '\\nPolicy: ' + policy.policy_status);
-        window.location.href = '/';
+
+    const intent = 'Browsed page: ' + tab.title + ' (' + tab.url + ')';
+    try {
+        const res = await fetch('/api/ingest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task_id: 'BROWSE-' + Date.now(), intent, video_url: tab.url })
+        });
+        const data = await res.json();
+        if (data.experiment_id) {
+            const expId = data.experiment_id;
+            await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+            await fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+            await fetch('/api/metadata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+            await fetch('/api/shotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+            const policy = await (await fetch('/api/policy-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json();
+            await fetch('/api/prepare-upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+            alert('Video created: ' + expId + '\nPolicy: ' + policy.policy_status);
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
     }
 }
 
+// ─── Form submission (called by proxied forms) ───
+async function browserSubmitForm(url, form) {
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+        params.append(key, value);
+    }
+    const method = (form.method || 'get').toLowerCase();
+    let targetUrl = url;
+    if (method === 'get') {
+        targetUrl = url + '?' + params.toString();
+        browserGo(targetUrl);
+    } else {
+        // POST — submit through proxy
+        try {
+            const res = await fetch('/api/proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, method: 'POST', body: params.toString() })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                const tab = getActiveTab();
+                tab.pageData = data;
+                tab.title = data.title;
+                renderPage(data);
+                renderTabs();
+            }
+        } catch (e) {
+            showError(e.message);
+        }
+    }
+    return false;
+}
+
+// ─── Utils ───
 function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// Auto-browse if URL in query string
+// ─── Init ───
+createTab();
+
+// Auto-navigate if URL in query string
 const params = new URLSearchParams(location.search);
 if (params.get('url')) {
-    document.getElementById('url-input').value = params.get('url');
-    browse();
+    browserGo(params.get('url'));
 }
 </script>
 </body>
