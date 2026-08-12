@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from ytl_lab.config import Settings
 from ytl_lab.db import LabDB
+from ytl_lab.discover import find_competitors
 from ytl_lab.receipts import ReceiptLedger
 from ytl_lab.tools import LabTools
 
@@ -54,6 +55,11 @@ class MCPRequest(BaseModel):
     params: Dict[str, Any] | None = None
 
 
+class DiscoverRequest(BaseModel):
+    niche: str
+    max_results: int = 6
+
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard() -> str:
     return _DASHBOARD_HTML
@@ -67,6 +73,21 @@ def health() -> Dict[str, str]:
 @app.get("/api/status")
 def api_status() -> Dict[str, Any]:
     return tools.status()
+
+
+@app.post("/api/discover")
+def api_discover(req: DiscoverRequest) -> Dict[str, Any]:
+    if not req.niche or len(req.niche.strip()) < 2:
+        raise HTTPException(status_code=400, detail="niche is required (min 2 chars)")
+    competitors = find_competitors(req.niche.strip(), req.max_results)
+    return {
+        "ok": True,
+        "niche": req.niche.strip(),
+        "competitors": competitors,
+        "total_found": len(competitors),
+        "reachable_count": sum(1 for c in competitors if c["reachable"]),
+        "with_apis_count": sum(1 for c in competitors if c["api_endpoints"]),
+    }
 
 
 @app.post("/api/ingest")
@@ -331,6 +352,17 @@ a:hover { text-decoration: underline; }
 </div>
 
 <div class="panel">
+<div class="panel-header">Competitor Discovery <span style="font-size:12px;color:#8b949e;font-weight:400;">Find APIs + competitors</span></div>
+<div class="panel-body">
+<div class="form-row">
+<input type="text" id="niche" placeholder="Niche (e.g. AI image generation, crypto tracking, resume builder)">
+<button class="btn" id="discover-btn" onclick="discoverCompetitors()">Find Competitors</button>
+</div>
+<div id="discover-results" style="margin-top:12px;"></div>
+</div>
+</div>
+
+<div class="panel">
 <div class="panel-header">Recent Receipts <span style="font-size:12px;color:#8b949e;font-weight:400;" id="receipt-count"></span></div>
 <div class="panel-body">
 <div class="receipts" id="receipts"><div style="color:#8b949e;text-align:center;padding:20px;">No receipts yet</div></div>
@@ -469,6 +501,88 @@ async function runFullCycle() {
 
     btn.disabled = false;
     btn.textContent = 'Run Full Cycle';
+}
+
+async function discoverCompetitors() {
+    const niche = document.getElementById('niche').value.trim();
+    if (!niche) { log('Enter a niche first', false); return; }
+    const btn = document.getElementById('discover-btn');
+    btn.disabled = true; btn.textContent = 'Searching...';
+    document.getElementById('discover-results').innerHTML = '<div style="color:#8b949e;padding:20px;">Crawling the web for competitors...</div>';
+    try {
+        log(`Discovering competitors for "${niche}"...`);
+        const r = await api('POST', '/api/discover', { niche, max_results: 6 });
+        log(`Found ${r.total_found} competitors (${r.with_apis_count} with APIs)`, true);
+        const comps = r.competitors;
+        if (!comps.length) {
+            document.getElementById('discover-results').innerHTML = '<div style="color:#8b949e;padding:12px;">No competitors found.</div>';
+        } else {
+            document.getElementById('discover-results').innerHTML = comps.map((c, i) => `
+                <div class="experiment" style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:start;">
+                        <div>
+                            <span style="font-family:'SF Mono',monospace;color:#8b949e;font-size:11px;">#${i+1}</span>
+                            <span style="font-weight:600;color:#f0f6fc;">${escapeHtml(c.title)}</span>
+                            ${c.reachable ? '<span class="status success" style="float:none;color:#3fb950;font-size:11px;margin-left:8px;">Live</span>' : '<span style="color:#f85149;font-size:11px;margin-left:8px;">Unreachable</span>'}
+                            <div style="margin-top:4px;"><a href="${escapeHtml(c.url)}" target="_blank" style="font-size:12px;">${escapeHtml(c.url)}</a></div>
+                            ${c.description ? `<div style="font-size:12px;color:#8b949e;margin-top:4px;">${escapeHtml(c.description.slice(0,120))}</div>` : ''}
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="score ${c.score >= 70 ? 'high' : c.score >= 40 ? 'mid' : 'low'}">${c.score}</span>
+                        </div>
+                    </div>
+                    ${c.api_endpoints.length ? `<div style="margin-top:8px;"><span style="font-size:10px;color:#8b949e;text-transform:uppercase;">APIs (${c.api_endpoints.length})</span><div style="margin-top:4px;">${c.api_endpoints.slice(0,3).map(e => `<div style="font-family:'SF Mono',monospace;font-size:11px;color:#f0883e;word-break:break-all;">${escapeHtml(e)}</div>`).join('')}</div></div>` : ''}
+                    ${c.tech_stack.length ? `<div style="margin-top:8px;"><span style="font-size:10px;color:#8b949e;text-transform:uppercase;">Tech</span> ${c.tech_stack.map(t => `<span style="font-size:10px;color:#bc8cff;background:#1f1f2e;border:1px solid #30363d;border-radius:10px;padding:1px 8px;margin:2px;display:inline-block;">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+                    ${c.pricing_signals.length ? `<div style="margin-top:8px;"><span style="font-size:10px;color:#8b949e;text-transform:uppercase;">Pricing</span> ${c.pricing_signals.map(s => `<span style="font-size:10px;color:#3fb950;background:#0d1f0d;border:1px solid #1f3f1f;border-radius:10px;padding:1px 8px;margin:2px;display:inline-block;">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+                    <div style="margin-top:10px;">
+                        <button class="btn" style="background:#da3633;font-size:12px;padding:6px 14px;" onclick="createVideoFromCompetitor(${i})">Create Video</button>
+                    </div>
+                    <div id="video-result-${i}" style="margin-top:8px;"></div>
+                </div>
+            `).join('');
+            window._competitors = comps;
+            window._niche = niche;
+        }
+    } catch (e) {
+        log('Discovery failed: ' + e.message, false);
+        document.getElementById('discover-results').innerHTML = `<div style="color:#f85149;padding:12px;">${escapeHtml(e.message)}</div>`;
+    }
+    btn.disabled = false; btn.textContent = 'Find Competitors';
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function createVideoFromCompetitor(i) {
+    const comp = window._competitors[i];
+    const niche = window._niche;
+    const el = document.getElementById('video-result-' + i);
+    el.innerHTML = '<div style="color:#8b949e;font-size:12px;">Creating video experiment...</div>';
+    try {
+        log(`Creating video for ${comp.title}...`);
+        const intent = `Competitor analysis: ${comp.title} (${comp.url}) in ${niche}. APIs: ${comp.api_endpoints.length}. Tech: ${comp.tech_stack.join(', ')}. Pricing: ${comp.pricing_signals.join(', ')}.`;
+        const ingest = await api('POST', '/api/ingest', { task_id: 'SIX-BROWSE-' + Date.now(), intent, video_url: comp.url });
+        const expId = ingest.experiment_id;
+        log(`Ingested: ${expId}`, true);
+        await api('POST', '/api/score', { experiment_id: expId });
+        await api('POST', '/api/script', { experiment_id: expId });
+        await api('POST', '/api/metadata', { experiment_id: expId });
+        await api('POST', '/api/shotlist', { experiment_id: expId });
+        const policy = await api('POST', '/api/policy-check', { experiment_id: expId });
+        const pkg = await api('POST', '/api/prepare-upload', { experiment_id: expId });
+        log(`Video created: ${expId} — policy: ${policy.policy_status}`, true);
+        el.innerHTML = `<div style="background:#0d1f0d;border:1px solid #1f3f1f;border-radius:6px;padding:10px;font-size:12px;">
+            <div style="color:#3fb950;font-weight:600;">Video Experiment Created</div>
+            <div style="margin-top:4px;">ID: <span style="font-family:'SF Mono',monospace;color:#58a6ff;">${expId}</span></div>
+            <div>Policy: <span style="color:#3fb950;">${policy.policy_status}</span></div>
+            <div>Receipts: ${pkg.package.receipts.length}</div>
+        </div>`;
+        await loadStatus();
+    } catch (e) {
+        log('Video creation failed: ' + e.message, false);
+        el.innerHTML = `<div style="color:#f85149;font-size:12px;">${escapeHtml(e.message)}</div>`;
+    }
 }
 
 loadStatus();
