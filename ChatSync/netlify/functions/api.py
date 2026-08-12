@@ -20,6 +20,14 @@ def handler(event, context):
 
     http_method = event.get("httpMethod", "GET")
     path = event.get("path", "/")
+    # Netlify passes the path after the function name (e.g. "/health" instead
+    # of "/api/health"). Prepend "/api" so FastAPI routes match correctly.
+    # Also handle the case where path is the full function path.
+    if not path.startswith("/api/"):
+        # Strip leading slash, prepend /api
+        path = "/api/" + path.lstrip("/")
+        if path == "/api/":
+            path = "/api/health"
     headers = event.get("headers", {})
     query_string = event.get("queryStringParameters", {}) or {}
     body = event.get("body", "") or ""
@@ -78,9 +86,15 @@ def handler(event, context):
 
     asyncio.run(run())
 
-    # Check if response is binary
+    # Check if response is binary (images, video, fonts, octet-stream)
     content_type = response_headers.get("content-type", "")
-    is_binary = "image" in content_type or "font" in content_type
+    is_binary = (
+        "image" in content_type
+        or "font" in content_type
+        or "video" in content_type
+        or "octet-stream" in content_type
+        or "application/pdf" in content_type
+    )
 
     if is_binary:
         import base64
