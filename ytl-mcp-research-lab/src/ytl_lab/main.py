@@ -64,6 +64,23 @@ class ProxyRequest(BaseModel):
     url: str
 
 
+# ─── P2P Signaling Relay ───
+# In-memory store for WebRTC signaling. Works on Vercel serverless
+# because each request hits the same instance within a session.
+# For production, use Redis/Upstash — but this works for peer discovery.
+_SIGNAL_STORE: Dict[str, Dict[str, Any]] = {}
+_SIGNAL_TTL = 300  # 5 minutes
+
+
+class SignalRequest(BaseModel):
+    node_id: str
+    type: str  # "register", "offer", "answer", "ice", "poll", "unregister"
+    target: str | None = None
+    sdp: str | None = None
+    ice: str | None = None
+    capabilities: Dict[str, Any] | None = None
+
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard() -> str:
     return _DASHBOARD_HTML
@@ -106,6 +123,118 @@ def api_proxy_get(url: str) -> Dict[str, Any]:
     if not url or not url.startswith(("http://", "https://")):
         raise HTTPException(status_code=400, detail="valid url query param is required")
     return proxy_page(url)
+
+
+# ─── P2P Signaling Relay endpoints ───
+
+@app.post("/api/signal")
+def api_signal(req: SignalRequest) -> Dict[str, Any]:
+    """WebRTC signaling relay for cross-device peer discovery."""
+    import time
+    now = time.time()
+
+    # Clean expired entries
+    expired = [k for k, v in _SIGNAL_STORE.items() if now - v.get("_ts", 0) > _SIGNAL_TTL]
+    for k in expired:
+        del _SIGNAL_STORE[k]
+
+    if req.type == "register":
+        _SIGNAL_STORE[req.node_id] = {
+            "_ts": now,
+            "capabilities": req.capabilities or {},
+            "offers": [],
+            "answers": [],
+            "ice_candidates": [],
+        }
+        # Return list of other registered nodes
+        peers = [
+            {"node_id": nid, "capabilities": v.get("capabilities", {})}
+            for nid, v in _SIGNAL_STORE.items()
+            if nid != req.node_id
+        ]
+        return {"ok": True, "peers": peers}
+
+    elif req.type == "offer":
+        # Send offer to target node
+        target = _SIGNAL_STORE.get(req.target)
+        if not target:
+            return {"ok": False, "error": "target node not found"}
+        target["offers"].append({
+            "from": req.node_id,
+            "sdp": req.sdp,
+            "ts": now,
+        })
+        return {"ok": True}
+
+    elif req.type == "answer":
+        target = _SIGNAL_STORE.get(req.target)
+        if not target:
+            return {"ok": False, "error": "target node not found"}
+        target["answers"].append({
+            "from": req.node_id,
+            "sdp": req.sdp,
+            "ts": now,
+        })
+        return {"ok": True}
+
+    elif req.type == "ice":
+        target = _SIGNAL_STORE.get(req.target)
+        if not target:
+            return {"ok": False, "error": "target node not found"}
+        target["ice_candidates"].append({
+            "from": req.node_id,
+            "ice": req.ice,
+            "ts": now,
+        })
+        return {"ok": True}
+
+    elif req.type == "poll":
+        # Check for incoming offers, answers, ICE candidates
+        node = _SIGNAL_STORE.get(req.node_id)
+        if not node:
+            return {"ok": False, "error": "not registered"}
+        node["_ts"] = now  # refresh TTL
+        offers = node["offers"]
+        answers = node["answers"]
+        ice = node["ice_candidates"]
+        # Clear after reading
+        node["offers"] = []
+        node["answers"] = []
+        node["ice_candidates"] = []
+        # Also return updated peer list
+        peers = [
+            {"node_id": nid, "capabilities": v.get("capabilities", {})}
+            for nid, v in _SIGNAL_STORE.items()
+            if nid != req.node_id
+        ]
+        return {
+            "ok": True,
+            "offers": offers,
+            "answers": answers,
+            "ice_candidates": ice,
+            "peers": peers,
+        }
+
+    elif req.type == "unregister":
+        _SIGNAL_STORE.pop(req.node_id, None)
+        return {"ok": True}
+
+    return {"ok": False, "error": "unknown signal type"}
+
+
+@app.get("/api/peers")
+def api_peers() -> Dict[str, Any]:
+    """List all registered nodes and their capabilities."""
+    import time
+    now = time.time()
+    expired = [k for k, v in _SIGNAL_STORE.items() if now - v.get("_ts", 0) > _SIGNAL_TTL]
+    for k in expired:
+        del _SIGNAL_STORE[k]
+    peers = [
+        {"node_id": nid, "capabilities": v.get("capabilities", {})}
+        for nid, v in _SIGNAL_STORE.items()
+    ]
+    return {"ok": True, "peers": peers, "count": len(peers)}
 
 
 @app.get("/browse", response_class=HTMLResponse)
@@ -2305,6 +2434,15 @@ async function loadModel(modelId, modelName) {
         termPrint(`Model loaded: ${modelName}`, 'ok');
         termPrint('Type "chat <message>" to talk to the LLM. It runs entirely in your browser.', 'info');
         termPrint('No API calls. No server. The model is in your GPU memory.', 'info');
+        termPrint('You are now an inference node. Peers without a model will route to you.', 'ok');
+        // Re-register with updated capabilities so peers know we have inference
+        await signalUpdateCapabilities();
+        // Announce to connected peers via data channels
+        for (const [peerId, dc] of dataChannels) {
+            if (dc.readyState === 'open') {
+                dc.send(JSON.stringify({ type: 'caps', gpu: true, model: state.currentModel, inference: true }));
+            }
+        }
         updateStats();
     } catch (e) {
         state.modelLoaded = false;
@@ -2357,41 +2495,386 @@ async function llmChat(message) {
     state.generating = false;
 }
 
-// ─── P2P via WebRTC (simplified — manual signaling) ───
-async function initP2P() {
-    // For real P2P we need a signaling server. Since we're serverless,
-    // we use BroadcastChannel for same-origin tabs and manual peer IDs
-    // for cross-device. In production this would use a WebSocket signaling server.
+// ─── P2P via WebRTC + Signaling Relay ───
+// Cross-device peer discovery via /api/signal relay
+// Inference sharing: node with loaded model serves inference to peers
+
+const nodeId = Math.random().toString(36).slice(2, 12);
+const SIGNAL_URL = '/api/signal';
+const POLL_INTERVAL = 3000; // 3 seconds
+let pollTimer = null;
+let signalRegistered = false;
+
+async function signalRegister() {
+    const caps = {
+        gpu: state.gpuSupported,
+        model: state.modelLoaded ? state.currentModel : null,
+        modelName: state.modelLoaded ? state.currentModel : null,
+        inference: state.modelLoaded, // can this node serve inference?
+    };
     try {
-        if ('BroadcastChannel' in window) {
-            const bc = new BroadcastChannel('compute-node-p2p');
-            bc.onmessage = (e) => {
-                if (e.data.type === 'hello' && e.data.id !== nodeId) {
-                    addPeer(e.data.id, 'same-origin');
-                    bc.postMessage({ type: 'ack', id: nodeId });
-                } else if (e.data.type === 'ack' && e.data.id !== nodeId) {
-                    addPeer(e.data.id, 'same-origin');
-                } else if (e.data.type === 'msg' && e.data.id !== nodeId) {
-                    termPrint(`[peer:${e.data.id.slice(0,8)}] ${e.data.text}`, 'info');
-                }
-            };
-            bc.postMessage({ type: 'hello', id: nodeId });
-            window._bc = bc;
+        const res = await fetch(SIGNAL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ node_id: nodeId, type: 'register', capabilities: caps })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            signalRegistered = true;
             document.getElementById('p2p-dot').className = 'dot on';
-            document.getElementById('p2p-text').textContent = 'P2P: listening';
-            termPrint('P2P channel open (BroadcastChannel for same-origin tabs)', 'info');
-            termPrint('Open this page in another tab to see peer discovery', 'info');
+            document.getElementById('p2p-text').textContent = `P2P: registered (${data.peers.length} peers seen)`;
+            // Try to connect to peers that have inference capability
+            for (const peer of data.peers) {
+                if (peer.capabilities?.inference && !state.peers.find(p => p.id === peer.node_id)) {
+                    termPrint(`Found inference node: ${peer.node_id.slice(0,8)} (${peer.capabilities.modelName})`, 'info');
+                    await webrtcConnect(peer.node_id, true);
+                }
+            }
+            // Also connect to peers without inference (they might want ours)
+            for (const peer of data.peers) {
+                if (!peer.capabilities?.inference && !state.peers.find(p => p.id === peer.node_id)) {
+                    await webrtcConnect(peer.node_id, true);
+                }
+            }
+            startPolling();
         }
     } catch (e) {
-        document.getElementById('p2p-text').textContent = 'P2P: error';
+        document.getElementById('p2p-text').textContent = 'P2P: signal failed';
+        termPrint('Signal registration failed: ' + e.message, 'err');
     }
 }
 
-const nodeId = Math.random().toString(36).slice(2, 12);
+async function signalUpdateCapabilities() {
+    if (!signalRegistered) return;
+    const caps = {
+        gpu: state.gpuSupported,
+        model: state.modelLoaded ? state.currentModel : null,
+        modelName: state.modelLoaded ? state.currentModel : null,
+        inference: state.modelLoaded,
+    };
+    try {
+        await fetch(SIGNAL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ node_id: nodeId, type: 'register', capabilities: caps })
+        });
+    } catch (e) {}
+}
+
+function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+        try {
+            const res = await fetch(SIGNAL_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ node_id: nodeId, type: 'poll' })
+            });
+            const data = await res.json();
+            if (!data.ok) return;
+
+            // Process incoming offers
+            for (const offer of data.offers) {
+                await webrtcHandleOffer(offer.from, offer.sdp);
+            }
+            // Process incoming answers
+            for (const answer of data.answers) {
+                await webrtcHandleAnswer(answer.from, answer.sdp);
+            }
+            // Process ICE candidates
+            for (const ice of data.ice_candidates) {
+                await webrtcHandleIce(ice.from, ice.ice);
+            }
+            // Check for new peers
+            for (const peer of data.peers) {
+                if (!state.peers.find(p => p.id === peer.node_id) && peer.node_id !== nodeId) {
+                    // New peer discovered — initiate connection
+                    termPrint(`New peer discovered: ${peer.node_id.slice(0,8)}`, 'info');
+                    if (peer.capabilities?.inference) {
+                        termPrint(`  → has inference: ${peer.capabilities.modelName}`, 'info');
+                    }
+                    await webrtcConnect(peer.node_id, true);
+                }
+            }
+        } catch (e) {}
+    }, POLL_INTERVAL);
+}
+
+// ─── WebRTC connection management ───
+const peerConnections = new Map(); // nodeId -> RTCPeerConnection
+const dataChannels = new Map(); // nodeId -> RTCDataChannel
+
+async function webrtcConnect(targetId, isInitiator) {
+    if (peerConnections.has(targetId)) return;
+    if (targetId === nodeId) return;
+
+    const pc = new RTCPeerConnection({
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+        ]
+    });
+    peerConnections.set(targetId, pc);
+
+    let dc;
+    if (isInitiator) {
+        dc = pc.createDataChannel('compute', { ordered: true });
+        setupDataChannel(dc, targetId);
+    }
+
+    pc.onicecandidate = async (e) => {
+        if (e.candidate) {
+            await fetch(SIGNAL_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ node_id: nodeId, type: 'ice', target: targetId, ice: JSON.stringify(e.candidate) })
+            });
+        }
+    };
+
+    pc.ondatachannel = (e) => {
+        dc = e.channel;
+        setupDataChannel(dc, targetId);
+    };
+
+    pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'connected') {
+            addPeer(targetId, 'webrtc');
+        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+            termPrint(`Peer disconnected: ${targetId.slice(0,8)}`, 'warn');
+            state.peers = state.peers.filter(p => p.id !== targetId);
+            peerConnections.delete(targetId);
+            dataChannels.delete(targetId);
+            updatePeerList();
+        }
+    };
+
+    if (isInitiator) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await fetch(SIGNAL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ node_id: nodeId, type: 'offer', target: targetId, sdp: JSON.stringify(offer) })
+        });
+    }
+}
+
+async function webrtcHandleOffer(fromId, sdpStr) {
+    if (peerConnections.has(fromId)) return; // already connected or connecting
+    const pc = new RTCPeerConnection({
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+        ]
+    });
+    peerConnections.set(fromId, pc);
+
+    pc.onicecandidate = async (e) => {
+        if (e.candidate) {
+            await fetch(SIGNAL_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ node_id: nodeId, type: 'ice', target: fromId, ice: JSON.stringify(e.candidate) })
+            });
+        }
+    };
+
+    pc.ondatachannel = (e) => {
+        setupDataChannel(e.channel, fromId);
+    };
+
+    pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'connected') {
+            addPeer(fromId, 'webrtc');
+        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+            state.peers = state.peers.filter(p => p.id !== fromId);
+            peerConnections.delete(fromId);
+            dataChannels.delete(fromId);
+            updatePeerList();
+        }
+    };
+
+    const offer = JSON.parse(sdpStr);
+    await pc.setRemoteDescription(offer);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await fetch(SIGNAL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node_id: nodeId, type: 'answer', target: fromId, sdp: JSON.stringify(answer) })
+    });
+}
+
+async function webrtcHandleAnswer(fromId, sdpStr) {
+    const pc = peerConnections.get(fromId);
+    if (!pc) return;
+    const answer = JSON.parse(sdpStr);
+    if (pc.signalingState !== 'stable') {
+        await pc.setRemoteDescription(answer);
+    }
+}
+
+async function webrtcHandleIce(fromId, iceStr) {
+    const pc = peerConnections.get(fromId);
+    if (!pc) return;
+    try {
+        const candidate = JSON.parse(iceStr);
+        await pc.addIceCandidate(candidate);
+    } catch (e) {}
+}
+
+// ─── Data channel: inference sharing + messaging ───
+function setupDataChannel(dc, peerId) {
+    dataChannels.set(peerId, dc);
+
+    dc.onopen = () => {
+        addPeer(peerId, 'webrtc');
+        // Announce our capabilities
+        dc.send(JSON.stringify({
+            type: 'caps',
+            gpu: state.gpuSupported,
+            model: state.modelLoaded ? state.currentModel : null,
+            inference: state.modelLoaded,
+        }));
+    };
+
+    dc.onmessage = async (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'caps') {
+            // Peer announced capabilities
+            const peer = state.peers.find(p => p.id === peerId);
+            if (peer) {
+                peer.capabilities = msg;
+                if (msg.inference) {
+                    termPrint(`Peer ${peerId.slice(0,8)} has inference: ${msg.model}`, 'ok');
+                }
+            }
+            updatePeerList();
+        } else if (msg.type === 'chat-request') {
+            // Peer is asking us to run inference
+            if (state.modelLoaded && state.engine) {
+                termPrint(`[peer:${peerId.slice(0,8)}] inference request: "${msg.message.slice(0,40)}..."`, 'info');
+                try {
+                    const completion = await state.engine.chat.completions.create({
+                        messages: msg.history || [{ role: 'user', content: msg.message }],
+                        stream: false,
+                    });
+                    const response = completion.choices[0]?.message?.content || '';
+                    dc.send(JSON.stringify({ type: 'chat-response', response, requestId: msg.requestId }));
+                    termPrint(`[peer:${peerId.slice(0,8)}] inference served (${response.length} chars)`, 'ok');
+                    updateStats();
+                } catch (err) {
+                    dc.send(JSON.stringify({ type: 'chat-error', error: err.message, requestId: msg.requestId }));
+                }
+            } else {
+                dc.send(JSON.stringify({ type: 'chat-error', error: 'no model loaded', requestId: msg.requestId }));
+            }
+        } else if (msg.type === 'chat-response') {
+            // Response from peer's inference
+            const callback = inferenceCallbacks.get(msg.requestId);
+            if (callback) {
+                callback.resolve(msg.response);
+                inferenceCallbacks.delete(msg.requestId);
+            }
+        } else if (msg.type === 'chat-error') {
+            const callback = inferenceCallbacks.get(msg.requestId);
+            if (callback) {
+                callback.reject(new Error(msg.error));
+                inferenceCallbacks.delete(msg.requestId);
+            }
+        } else if (msg.type === 'msg') {
+            termPrint(`[peer:${peerId.slice(0,8)}] ${msg.text}`, 'info');
+        } else if (msg.type === 'file-share') {
+            termPrint(`[peer:${peerId.slice(0,8)}] shared file: ${msg.path} (${msg.content.length} bytes)`, 'info');
+            await fsWrite(msg.path, msg.content);
+            termPrint(`  saved to filesystem`, 'ok');
+        }
+    };
+
+    dc.onclose = () => {
+        dataChannels.delete(peerId);
+        state.peers = state.peers.filter(p => p.id !== peerId);
+        updatePeerList();
+    };
+}
+
+// ─── Inference routing: local model OR peer with model ───
+const inferenceCallbacks = new Map();
+let requestCounter = 0;
+
+function findInferencePeer() {
+    for (const [peerId, dc] of dataChannels) {
+        if (dc.readyState === 'open') {
+            const peer = state.peers.find(p => p.id === peerId);
+            if (peer?.capabilities?.inference) return peerId;
+        }
+    }
+    return null;
+}
+
+async function llmChatRouted(message) {
+    // If we have a local model, use it
+    if (state.modelLoaded && state.engine) {
+        return await llmChatLocal(message);
+    }
+    // Otherwise, find a peer with inference capability
+    const peerId = findInferencePeer();
+    if (peerId) {
+        const dc = dataChannels.get(peerId);
+        if (dc && dc.readyState === 'open') {
+            termPrint(`Routing inference to peer ${peerId.slice(0,8)} (no local model)`, 'info');
+            const requestId = 'req-' + (++requestCounter);
+            const promise = new Promise((resolve, reject) => {
+                inferenceCallbacks.set(requestId, { resolve, reject });
+                // Timeout after 30 seconds
+                setTimeout(() => {
+                    if (inferenceCallbacks.has(requestId)) {
+                        inferenceCallbacks.delete(requestId);
+                        reject(new Error('inference request timed out'));
+                    }
+                }, 30000);
+            });
+            dc.send(JSON.stringify({
+                type: 'chat-request',
+                message,
+                history: state.chatHistory,
+                requestId,
+            }));
+            const response = await promise;
+            state.chatHistory.push({ role: 'user', content: message });
+            state.chatHistory.push({ role: 'assistant', content: response });
+            return response;
+        }
+    }
+    throw new Error('No inference available. Load a model with "model <n>" or connect to a peer with a model.');
+}
+
+async function llmChatLocal(message) {
+    if (!state.modelLoaded || !state.engine) throw new Error('no local model');
+    state.chatHistory.push({ role: 'user', content: message });
+    termPrintHTML('<span class="llm-header">LLM Output (local):</span>', 'llm');
+    const outputLine = document.createElement('div');
+    outputLine.className = 'line llm';
+    document.getElementById('term-output').appendChild(outputLine);
+    const completion = await state.engine.chat.completions.create({
+        messages: state.chatHistory, stream: true,
+    });
+    let fullText = '';
+    for await (const chunk of completion) {
+        const delta = chunk.choices[0]?.delta?.content || '';
+        fullText += delta;
+        outputLine.textContent = fullText + '▌';
+        document.getElementById('term-output').scrollTop = document.getElementById('term-output').scrollHeight;
+    }
+    outputLine.textContent = fullText;
+    state.chatHistory.push({ role: 'assistant', content: fullText });
+    return fullText;
+}
 
 function addPeer(id, type) {
     if (!state.peers.find(p => p.id === id)) {
-        state.peers.push({ id, type, connected: true });
+        state.peers.push({ id, type, connected: true, capabilities: {} });
         updatePeerList();
         termPrint(`Peer connected: ${id.slice(0,8)} (${type})`, 'ok');
     }
@@ -2402,16 +2885,50 @@ function updatePeerList() {
     if (state.peers.length === 0) {
         list.innerHTML = '<div class="empty">No peers connected</div>';
     } else {
-        list.innerHTML = state.peers.map(p =>
-            `<div class="peer"><span class="id">${p.id.slice(0,16)}...</span><span class="status">connected</span></div>`
-        ).join('');
+        list.innerHTML = state.peers.map(p => {
+            const caps = [];
+            if (p.capabilities?.inference) caps.push('inference');
+            if (p.capabilities?.gpu) caps.push('gpu');
+            const capStr = caps.length ? ` [${caps.join(',')}]` : '';
+            return `<div class="peer"><span class="id">${p.id.slice(0,16)}...${capStr}</span><span class="status">${p.type}</span></div>`;
+        }).join('');
     }
     document.getElementById('p2p-text').textContent = `P2P: ${state.peers.length} peer(s)`;
 }
 
 function broadcastMsg(text) {
-    if (window._bc) {
-        window._bc.postMessage({ type: 'msg', id: nodeId, text });
+    for (const [peerId, dc] of dataChannels) {
+        if (dc.readyState === 'open') {
+            dc.send(JSON.stringify({ type: 'msg', text, from: nodeId }));
+        }
+    }
+}
+
+async function initP2P() {
+    // Register with signaling server
+    termPrint('Registering with signaling relay...', 'info');
+    await signalRegister();
+    if (signalRegistered) {
+        termPrint('Registered. Polling for peers every 3s...', 'info');
+        termPrint('Other devices can connect via the same URL.', 'info');
+    }
+    // Also keep BroadcastChannel for instant same-origin tab discovery
+    if ('BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('compute-node-p2p');
+        bc.onmessage = (e) => {
+            if (e.data.type === 'hello' && e.data.id !== nodeId) {
+                addPeer(e.data.id, 'same-origin');
+                bc.postMessage({ type: 'ack', id: nodeId, inference: state.modelLoaded, model: state.currentModel });
+            } else if (e.data.type === 'ack' && e.data.id !== nodeId) {
+                const peer = addPeer(e.data.id, 'same-origin');
+                if (e.data.inference) {
+                    const p = state.peers.find(pp => pp.id === e.data.id);
+                    if (p) p.capabilities = { inference: true, model: e.data.model };
+                }
+            }
+        };
+        bc.postMessage({ type: 'hello', id: nodeId });
+        window._bc = bc;
     }
 }
 
@@ -2441,7 +2958,7 @@ const commands = {
         termPrint('Available commands:', 'info');
         termPrint('  help              Show this help');
         termPrint('  model [n]         List models / load model by number');
-        termPrint('  chat <msg>        Talk to the LLM (runs in your GPU)');
+        termPrint('  chat <msg>        Talk to LLM — local model OR routed to peer');
         termPrint('  clear-chat        Clear LLM conversation history');
         termPrint('  write <f> <text>  Write file to OPFS filesystem');
         termPrint('  cat <f>           Read file from filesystem');
@@ -2449,8 +2966,9 @@ const commands = {
         termPrint('  rm <f>            Delete file');
         termPrint('  run <f>           Execute JS file in browser sandbox');
         termPrint('  eval <code>       Execute JavaScript code');
-        termPrint('  peers             List connected peers');
+        termPrint('  peers             List connected peers + capabilities');
         termPrint('  say <msg>         Broadcast message to peers');
+        termPrint('  share <f>         Share file to all connected peers');
         termPrint('  stats             Show node statistics');
         termPrint('  gpu               Check WebGPU status');
         termPrint('  clear             Clear terminal');
@@ -2483,7 +3001,11 @@ const commands = {
     chat: async (args) => {
         const msg = args.join(' ');
         if (!msg) { termPrint('Usage: chat <message>', 'err'); return; }
-        await llmChat(msg);
+        try {
+            await llmChatRouted(msg);
+        } catch (e) {
+            termPrint('Chat error: ' + e.message, 'err');
+        }
     },
 
     'clear-chat': () => {
@@ -2553,9 +3075,16 @@ const commands = {
 
     peers: () => {
         if (state.peers.length === 0) {
-            termPrint('No peers connected. Open this page in another tab.', 'info');
+            termPrint('No peers connected. Open this URL on another device.', 'info');
+            termPrint('Cross-device peers connect via signaling relay (/api/signal).', 'info');
         } else {
-            state.peers.forEach(p => termPrint(`  ${p.id} (${p.type}) — connected`, 'info'));
+            state.peers.forEach(p => {
+                const caps = [];
+                if (p.capabilities?.inference) caps.push('inference: ' + (p.capabilities.model || 'unknown'));
+                if (p.capabilities?.gpu) caps.push('gpu');
+                const capStr = caps.length ? ' [' + caps.join(', ') + ']' : '';
+                termPrint(`  ${p.id} (${p.type})${capStr}`, 'info');
+            });
         }
     },
 
@@ -2563,7 +3092,22 @@ const commands = {
         const msg = args.join(' ');
         if (!msg) { termPrint('Usage: say <message>', 'err'); return; }
         broadcastMsg(msg);
-        termPrint(`Broadcast: ${msg}`, 'ok');
+        termPrint(`Broadcast to ${state.peers.length} peer(s): ${msg}`, 'ok');
+    },
+
+    share: async (args) => {
+        const path = args[0];
+        if (!path) { termPrint('Usage: share <filename>', 'err'); return; }
+        const content = await fsRead(path);
+        if (content === null) { termPrint(`File not found: ${path}`, 'err'); return; }
+        let shared = 0;
+        for (const [peerId, dc] of dataChannels) {
+            if (dc.readyState === 'open') {
+                dc.send(JSON.stringify({ type: 'file-share', path, content }));
+                shared++;
+            }
+        }
+        termPrint(`Shared ${path} to ${shared} peer(s)`, 'ok');
     },
 
     stats: () => {
@@ -2573,6 +3117,7 @@ const commands = {
         termPrint(`RAM:         ${ram}`, 'info');
         termPrint(`WebGPU:      ${state.gpuSupported ? 'available' : 'not available'}`, 'info');
         termPrint(`Model:       ${state.currentModel || 'none'}`, 'info');
+        termPrint(`Inference:   ${state.modelLoaded ? 'local (serving peers)' : findInferencePeer() ? 'via peer' : 'none'}`, 'info');
         termPrint(`Files:       ${state.files.size}`, 'info');
         termPrint(`Peers:       ${state.peers.length}`, 'info');
         termPrint(`Chat msgs:   ${state.chatHistory.length}`, 'info');
