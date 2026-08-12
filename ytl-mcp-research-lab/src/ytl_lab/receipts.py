@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -19,7 +20,7 @@ def _now() -> str:
 
 
 def _hash_record(record: Dict[str, Any]) -> str:
-    canonical = json.dumps(record, sort_keys=True, ensure_ascii=False)
+    canonical = json.dumps(record, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -37,11 +38,8 @@ class ReceiptLedger:
         evidence: Dict[str, Any],
         experiment_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        prev_hash = ""
-        existing = self.read()
-        if existing:
-            prev_hash = existing[-1].get("hash", "")
         receipt = {
+            "schema": "ytl_lab.receipt.v1",
             "receipt_id": f"R-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}",
             "task_id": task_id,
             "experiment_id": experiment_id,
@@ -49,20 +47,31 @@ class ReceiptLedger:
             "step": step,
             "status": status,
             "evidence": evidence,
-            "prev_hash": prev_hash,
         }
         receipt["hash"] = _hash_record(receipt)
-        with open(self.path, "a") as f:
-            f.write(json.dumps(receipt, ensure_ascii=False) + "\n")
+        self._append_line(json.dumps(receipt, ensure_ascii=False, separators=(",", ":")))
         if self.db is not None:
             self.db.insert_receipt(receipt)
         return receipt
+
+    def _append_line(self, line: str) -> None:
+        import fcntl
+
+        with open(self.path, "a", encoding="utf-8") as f:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            try:
+                f.write(line)
+                f.write("\n")
+                f.flush()
+                os.fsync(f.fileno())
+            finally:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     def read(self) -> List[Dict[str, Any]]:
         if not self.path.exists():
             return []
         rows = []
-        with open(self.path, "r") as f:
+        with open(self.path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:

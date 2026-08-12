@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "api/index.py" }
+  ],
+  "env": {
+    "YTL_DATA_DIR": "/tmp/ytl_data",
+    "YTL_DB_PATH": "/tmp/ytl_data/ytl_lab.db",
+    "YTL_RECEIPT_LEDGER_PATH": "/tmp/ytl_data/receipts/ledger.jsonl"
+  }
+}

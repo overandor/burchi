@@ -42,6 +42,7 @@ RECEIPTS_FILE = BASE_DIR / "receipts.jsonl"
 
 YTL_ROOT = BASE_DIR.parent / "ytl-mcp-research-lab"
 YTL_VENV = YTL_ROOT / ".venv"
+YTL_REMOTE_URL = os.environ.get("YTL_REMOTE_URL", "https://ytl-mcp-research-lab.vercel.app")
 
 
 def _now() -> str:
@@ -84,7 +85,7 @@ def _run_hyperflow_core(args: List[str]) -> Dict[str, Any]:
 
 
 def _run_ytl_lab(script: str) -> Dict[str, Any]:
-    """Execute a Python snippet inside the YTL-MCP virtualenv."""
+    """Execute a Python snippet inside the YTL-MCP virtualenv (local mode)."""
     python_bin = YTL_VENV / "bin" / "python"
     if not python_bin.exists():
         return {"success": False, "error": f"YTL-MCP venv not found at {YTL_VENV}. Run: cd {YTL_ROOT} && python3 -m venv .venv && pip install -e '.[dev]'"}
@@ -101,6 +102,28 @@ def _run_ytl_lab(script: str) -> Dict[str, Any]:
         "stderr": result.stderr,
         "exit_code": result.returncode,
     }
+
+
+def _ytl_api(method: str, path: str, json_body: Any = None) -> Dict[str, Any]:
+    """Call the deployed YTL-MCP server API."""
+    import urllib.request
+    import urllib.error
+    url = f"{YTL_REMOTE_URL}{path}"
+    data = None
+    if json_body is not None:
+        data = json.dumps(json_body).encode("utf-8")
+    req = urllib.request.Request(url, data=data, method=method)
+    if json_body is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = resp.read().decode("utf-8")
+            return {"success": True, "data": json.loads(body), "status": resp.status}
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        return {"success": False, "error": body, "status": e.code}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -448,6 +471,39 @@ print(json.dumps(result, indent=2))
     return 0 if result["success"] else 1
 
 
+def cmd_remote_status(args: argparse.Namespace) -> int:
+    r = _ytl_api("GET", "/api/status")
+    if r["success"]:
+        print(json.dumps(r["data"], indent=2))
+    else:
+        print(f"Error: {r.get('error')}")
+        return 1
+    return 0
+
+
+def cmd_remote_ingest(args: argparse.Namespace) -> int:
+    r = _ytl_api("POST", "/api/ingest", {"task_id": args.task, "intent": args.intent, "video_url": args.url})
+    if r["success"]:
+        d = r["data"]
+        print(f"Experiment: {d['experiment_id']}")
+        print(f"Receipt: {d['receipt']['receipt_id']}")
+        print(f"Hash: {d['receipt']['hash'][:20]}...")
+    else:
+        print(f"Error: {r.get('error')}")
+        return 1
+    return 0
+
+
+def cmd_remote_projects(args: argparse.Namespace) -> int:
+    r = _ytl_api("GET", "/api/projects")
+    if r["success"]:
+        print(json.dumps(r["data"], indent=2))
+    else:
+        print(f"Error: {r.get('error')}")
+        return 1
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="hyperflow_unified",
@@ -479,6 +535,21 @@ def main() -> int:
 
     p_verify_receipts = sub.add_parser("verify-receipts", help="Verify receipt chain integrity")
     p_verify_receipts.set_defaults(func=cmd_verify_receipts)
+
+    p_remote = sub.add_parser("remote", help="Interact with deployed YTL-MCP server")
+    remote_sub = p_remote.add_subparsers(dest="remote_command", required=True)
+
+    remote_status = remote_sub.add_parser("status", help="Get remote lab status")
+    remote_status.set_defaults(func=cmd_remote_status)
+
+    remote_ingest = remote_sub.add_parser("ingest", help="Ingest video on remote server")
+    remote_ingest.add_argument("--task", required=True)
+    remote_ingest.add_argument("--intent", required=True)
+    remote_ingest.add_argument("--url", required=True)
+    remote_ingest.set_defaults(func=cmd_remote_ingest)
+
+    remote_projects = remote_sub.add_parser("projects", help="List remote projects")
+    remote_projects.set_defaults(func=cmd_remote_projects)
 
     # Lab subcommands
     p_lab = sub.add_parser("lab", help="YTL-MCP Research Lab commands")
