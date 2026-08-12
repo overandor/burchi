@@ -29,6 +29,23 @@ class ExperimentIdRequest(BaseModel):
     experiment_id: str
 
 
+class CreateProjectRequest(BaseModel):
+    project_id: str
+    name: str
+
+
+class CreateQueryRequest(BaseModel):
+    query_id: str
+    project_id: str
+    query: str
+    status: str = "open"
+
+
+class ListQueriesRequest(BaseModel):
+    project_id: str | None = None
+    limit: int = 100
+
+
 class MCPRequest(BaseModel):
     jsonrpc: str = "2.0"
     id: Any
@@ -99,6 +116,32 @@ def api_prepare_upload(req: ExperimentIdRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.post("/api/projects")
+def api_create_project(req: CreateProjectRequest) -> Dict[str, Any]:
+    try:
+        return tools.create_project(req.project_id, req.name)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/projects")
+def api_list_projects(limit: int = 100) -> Dict[str, Any]:
+    return tools.list_projects(limit)
+
+
+@app.post("/api/queries")
+def api_create_query(req: CreateQueryRequest) -> Dict[str, Any]:
+    try:
+        return tools.create_research_query(req.query_id, req.project_id, req.query, req.status)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/queries/list")
+def api_list_queries(req: ListQueriesRequest) -> Dict[str, Any]:
+    return tools.list_research_queries(req.project_id, req.limit)
+
+
 @app.post("/mcp")
 def mcp(req: MCPRequest) -> Dict[str, Any]:
     params = req.params or {}
@@ -143,6 +186,26 @@ def mcp(req: MCPRequest) -> Dict[str, Any]:
                         "description": "Get lab status summary.",
                         "inputSchema": {"type": "object", "properties": {}},
                     },
+                    {
+                        "name": "lab_create_project",
+                        "description": "Create a research project.",
+                        "inputSchema": {"type": "object", "properties": {"project_id": {"type": "string"}, "name": {"type": "string"}}, "required": ["project_id", "name"]},
+                    },
+                    {
+                        "name": "lab_list_projects",
+                        "description": "List research projects.",
+                        "inputSchema": {"type": "object", "properties": {"limit": {"type": "integer"}}},
+                    },
+                    {
+                        "name": "lab_create_query",
+                        "description": "Create a research query under a project.",
+                        "inputSchema": {"type": "object", "properties": {"query_id": {"type": "string"}, "project_id": {"type": "string"}, "query": {"type": "string"}, "status": {"type": "string"}}, "required": ["query_id", "project_id", "query"]},
+                    },
+                    {
+                        "name": "lab_list_queries",
+                        "description": "List research queries for a project.",
+                        "inputSchema": {"type": "object", "properties": {"project_id": {"type": "string"}, "limit": {"type": "integer"}}},
+                    },
                 ]
             },
         }
@@ -163,6 +226,14 @@ def mcp(req: MCPRequest) -> Dict[str, Any]:
                 result = tools.prepare_upload_package(args["experiment_id"])
             elif name == "lab_status":
                 result = tools.status()
+            elif name == "lab_create_project":
+                result = tools.create_project(args["project_id"], args["name"])
+            elif name == "lab_list_projects":
+                result = tools.list_projects(args.get("limit", 100))
+            elif name == "lab_create_query":
+                result = tools.create_research_query(args["query_id"], args["project_id"], args["query"], args.get("status", "open"))
+            elif name == "lab_list_queries":
+                result = tools.list_research_queries(args.get("project_id"), args.get("limit", 100))
             else:
                 return {"jsonrpc": "2.0", "id": req.id, "error": {"code": -32601, "message": f"Tool {name} not found"}}
             return {"jsonrpc": "2.0", "id": req.id, "result": {"content": [{"type": "text", "text": json.dumps(result)}]}}

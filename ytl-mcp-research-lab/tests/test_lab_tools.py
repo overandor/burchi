@@ -88,3 +88,38 @@ def test_status(lab: LabTools):
     assert "summary" in status
     assert "db_path" in status
     assert "receipt_ledger_path" in status
+
+
+def test_create_project(lab: LabTools):
+    result = lab.create_project("proj-test", "Test Project")
+    assert result["project_id"] == "proj-test"
+    projects = lab.list_projects()
+    assert len(projects["projects"]) == 1
+
+
+def test_create_research_query(lab: LabTools):
+    lab.create_project("proj-test", "Test Project")
+    result = lab.create_research_query("q-test", "proj-test", "test query")
+    assert result["query_id"] == "q-test"
+    queries = lab.list_research_queries(project_id="proj-test")
+    assert len(queries["queries"]) == 1
+    assert queries["queries"][0]["query"] == "test query"
+
+
+def test_receipts_persisted_to_sqlite(lab: LabTools):
+    result = lab.ingest_video("HF-test", "test intent", "https://youtu.be/dQw4w9WgXcQ")
+    exp_id = result["experiment_id"]
+    lab.score_transcript(exp_id)
+    rows = lab.db.get_receipts(task_id="HF-test")
+    assert len(rows) >= 2
+    assert rows[0]["record_hash"]
+    assert rows[0]["evidence_json"]
+
+
+def test_receipt_chain_verifies(lab: LabTools):
+    result = lab.ingest_video("HF-test", "test intent", "https://youtu.be/dQw4w9WgXcQ")
+    exp_id = result["experiment_id"]
+    lab.score_transcript(exp_id)
+    chain = lab.ledger.verify_chain()
+    assert chain["broken"] == []
+    assert chain["verified"] >= 2

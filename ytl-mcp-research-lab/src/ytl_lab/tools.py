@@ -47,7 +47,7 @@ class LabTools:
     def __init__(self, settings: Optional[Settings] = None) -> None:
         self.settings = settings or Settings.load_settings()
         self.db = LabDB(self.settings)
-        self.ledger = ReceiptLedger(self.settings)
+        self.ledger = ReceiptLedger(self.settings, db=self.db)
 
     def ingest_video(self, task_id: str, intent: str, video_url: str) -> Dict[str, Any]:
         experiment_id = f"YTL-{uuid.uuid4().hex[:8]}"
@@ -218,6 +218,30 @@ class LabTools:
             evidence={"package_fields": list(package.keys())},
         )
         return {"experiment_id": experiment_id, "package": package, "receipt": receipt}
+
+    def create_project(self, project_id: str, name: str) -> Dict[str, Any]:
+        self.db.create_project(project_id, name)
+        return {"project_id": project_id, "name": name, "status": "created"}
+
+    def list_projects(self, limit: int = 100) -> Dict[str, Any]:
+        return {"projects": self.db.list_projects(limit)}
+
+    def create_research_query(
+        self,
+        query_id: str,
+        project_id: str,
+        query: str,
+        status: str = "open",
+    ) -> Dict[str, Any]:
+        self.db.create_research_query(query_id, project_id, query, status)
+        return {"query_id": query_id, "project_id": project_id, "query": query, "status": status}
+
+    def list_research_queries(
+        self,
+        project_id: Optional[str] = None,
+        limit: int = 100,
+    ) -> Dict[str, Any]:
+        return {"queries": self.db.list_research_queries(project_id=project_id, limit=limit)}
 
     def status(self) -> Dict[str, Any]:
         return {

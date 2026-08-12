@@ -114,6 +114,30 @@ TOOLS = {
             "required": ["experiment_id"],
         },
     },
+    "hyperflow.lab.create_project": {
+        "description": "Create a research project",
+        "input_schema": {
+            "type": "object",
+            "properties": {"project_id": {"type": "string"}, "name": {"type": "string"}},
+            "required": ["project_id", "name"],
+        },
+    },
+    "hyperflow.lab.list_projects": {
+        "description": "List research projects",
+        "input_schema": {"type": "object", "properties": {"limit": {"type": "integer"}}},
+    },
+    "hyperflow.lab.create_query": {
+        "description": "Create a research query",
+        "input_schema": {
+            "type": "object",
+            "properties": {"query_id": {"type": "string"}, "project_id": {"type": "string"}, "query": {"type": "string"}, "status": {"type": "string"}},
+            "required": ["query_id", "project_id", "query"],
+        },
+    },
+    "hyperflow.lab.list_queries": {
+        "description": "List research queries",
+        "input_schema": {"type": "object", "properties": {"project_id": {"type": "string"}, "limit": {"type": "integer"}}},
+    },
 }
 
 
@@ -158,6 +182,14 @@ def _handle_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         return _run_cli(["lab", "policy", arguments["experiment_id"]])
     if name == "hyperflow.lab.prepare_upload":
         return _run_cli(["lab", "prepare", arguments["experiment_id"]])
+    if name == "hyperflow.lab.create_project":
+        return _run_cli(["lab", "project-create", "--id", arguments["project_id"], "--name", arguments["name"]])
+    if name == "hyperflow.lab.list_projects":
+        return _run_cli(["lab", "project-list", "--limit", str(arguments.get("limit", 100))])
+    if name == "hyperflow.lab.create_query":
+        return _run_cli(["lab", "query-create", "--id", arguments["query_id"], "--project", arguments["project_id"], "--query", arguments["query"], "--status", arguments.get("status", "open")])
+    if name == "hyperflow.lab.list_queries":
+        return _run_cli(["lab", "query-list", "--limit", str(arguments.get("limit", 100))])
 
     return {"error": f"Unhandled tool {name}"}
 

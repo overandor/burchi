@@ -6,9 +6,12 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ytl_lab.config import Settings
+
+if TYPE_CHECKING:
+    from ytl_lab.db import LabDB
 
 
 def _now() -> str:
@@ -21,9 +24,10 @@ def _hash_record(record: Dict[str, Any]) -> str:
 
 
 class ReceiptLedger:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, db: Optional["LabDB"] = None) -> None:
         self.path = settings.receipt_ledger_path
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.db = db
 
     def write(
         self,
@@ -50,6 +54,8 @@ class ReceiptLedger:
         receipt["hash"] = _hash_record(receipt)
         with open(self.path, "a") as f:
             f.write(json.dumps(receipt, ensure_ascii=False) + "\n")
+        if self.db is not None:
+            self.db.insert_receipt(receipt)
         return receipt
 
     def read(self) -> List[Dict[str, Any]]:

@@ -399,6 +399,55 @@ print(json.dumps(result, indent=2))
     return 0 if result["success"] else 1
 
 
+def cmd_lab_project_create(args: argparse.Namespace) -> int:
+    result = _run_ytl_lab(f"""
+import json
+from ytl_lab.config import Settings
+from ytl_lab.tools import LabTools
+result = LabTools(Settings.load_settings()).create_project('{args.id}', '{args.name}')
+print(json.dumps(result, indent=2))
+""")
+    print(result["stdout"] if result["success"] else result["stderr"])
+    return 0 if result["success"] else 1
+
+
+def cmd_lab_project_list(args: argparse.Namespace) -> int:
+    result = _run_ytl_lab(f"""
+import json
+from ytl_lab.config import Settings
+from ytl_lab.tools import LabTools
+result = LabTools(Settings.load_settings()).list_projects({args.limit})
+print(json.dumps(result, indent=2))
+""")
+    print(result["stdout"] if result["success"] else result["stderr"])
+    return 0 if result["success"] else 1
+
+
+def cmd_lab_query_create(args: argparse.Namespace) -> int:
+    result = _run_ytl_lab(f"""
+import json
+from ytl_lab.config import Settings
+from ytl_lab.tools import LabTools
+result = LabTools(Settings.load_settings()).create_research_query('{args.id}', '{args.project}', '{args.query}', '{args.status}')
+print(json.dumps(result, indent=2))
+""")
+    print(result["stdout"] if result["success"] else result["stderr"])
+    return 0 if result["success"] else 1
+
+
+def cmd_lab_query_list(args: argparse.Namespace) -> int:
+    project_filter = f"'{args.project}'" if args.project else "None"
+    result = _run_ytl_lab(f"""
+import json
+from ytl_lab.config import Settings
+from ytl_lab.tools import LabTools
+result = LabTools(Settings.load_settings()).list_research_queries({project_filter}, {args.limit})
+print(json.dumps(result, indent=2))
+""")
+    print(result["stdout"] if result["success"] else result["stderr"])
+    return 0 if result["success"] else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="hyperflow_unified",
@@ -467,6 +516,27 @@ def main() -> int:
     lab_prepare = lab_sub.add_parser("prepare", help="Prepare upload package")
     lab_prepare.add_argument("experiment_id", help="Experiment ID")
     lab_prepare.set_defaults(func=cmd_lab_prepare)
+
+    lab_project_create = lab_sub.add_parser("project-create", help="Create a research project")
+    lab_project_create.add_argument("--id", required=True, help="Project ID")
+    lab_project_create.add_argument("--name", required=True, help="Project name")
+    lab_project_create.set_defaults(func=cmd_lab_project_create)
+
+    lab_project_list = lab_sub.add_parser("project-list", help="List research projects")
+    lab_project_list.add_argument("--limit", type=int, default=100, help="Max projects")
+    lab_project_list.set_defaults(func=cmd_lab_project_list)
+
+    lab_query_create = lab_sub.add_parser("query-create", help="Create a research query")
+    lab_query_create.add_argument("--id", required=True, help="Query ID")
+    lab_query_create.add_argument("--project", required=True, help="Project ID")
+    lab_query_create.add_argument("--query", required=True, help="Query text")
+    lab_query_create.add_argument("--status", default="open", help="Query status")
+    lab_query_create.set_defaults(func=cmd_lab_query_create)
+
+    lab_query_list = lab_sub.add_parser("query-list", help="List research queries")
+    lab_query_list.add_argument("--project", help="Project ID filter")
+    lab_query_list.add_argument("--limit", type=int, default=100, help="Max queries")
+    lab_query_list.set_defaults(func=cmd_lab_query_list)
 
     args = parser.parse_args()
     return args.func(args)
