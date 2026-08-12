@@ -300,3 +300,87 @@ def find_competitors(niche: str, max_results: int = 6) -> List[Dict[str, Any]]:
 
     competitors.sort(key=lambda c: c["score"], reverse=True)
     return competitors
+
+
+# ─── Page proxy: fetch + rewrite for in-app browsing (no iframe needed) ───
+
+def proxy_page(url: str) -> Dict[str, Any]:
+    """Fetch a page server-side, strip security headers, rewrite relative URLs
+    and resource references so the HTML renders correctly when served from our
+    own domain. Returns clean HTML + metadata for in-app rendering.
+
+    This replaces iframes — most sites block framing via X-Frame-Options/CSP.
+    By proxying through our server, we bypass those restrictions and can
+    render the content in a div or a same-origin iframe.
+    """
+    from urllib.parse import urlparse, urljoin
+
+    result = _fetch(url, timeout=15)
+    if not result["reachable"]:
+        return {"ok": False, "error": result["error"] or f"HTTP {result['status']}", "html": ""}
+
+    html = result["body"]
+    parsed = urlparse(url)
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+
+    # 1. Inject <base> tag so relative URLs resolve to the original domain
+    base_tag = f'<base href="{url}">'
+    if re.search(r"<head[^>]*>", html, re.IGNORECASE):
+        html = re.sub(r"(<head[^>]*>)", rf"\1{base_tag}", html, count=1, flags=re.IGNORECASE)
+    else:
+        html = base_tag + html
+
+    # 2. Rewrite relative URLs in src/href attributes to absolute
+    def _absolutize(match):
+        attr = match.group(1)
+        val = match.group(2)
+        if val.startswith(("http://", "https://", "//", "data:", "javascript:", "mailto:", "#")):
+            return match.group(0)
+        absolute = urljoin(url, val)
+        return f'{attr}="{absolute}"'
+
+    html = re.sub(r'(src|href)="([^"]+)"', _absolutize, html, flags=re.IGNORECASE)
+    html = re.sub(r"(src|href)='([^']+)'", _absolutize, html, flags=re.IGNORECASE)
+
+    # 3. Remove X-Frame-Options and CSP meta tags (irrelevant when proxied)
+    html = re.sub(r'<meta[^>]+http-equiv=["\']X-Frame-Options["\'][^>]*>', "", html, re.IGNORECASE)
+    html = re.sub(r'<meta[^>]+http-equiv=["\']Content-Security-Policy["\'][^>]*>', "", html, re.IGNORECASE)
+
+    # 4. Extract readable content for reader-mode display
+    # Remove script tags for safety (prevent XSS from proxied content)
+    html_no_script = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
+    html_no_script = re.sub(r"<style[^>]*>.*?</style>", "", html_no_script, flags=re.DOTALL | re.IGNORECASE)
+
+    # Extract main content area (common patterns)
+    content_match = re.search(r'<(?:main|article|div[^>]*class="[^"]*(?:content|main|post|article|entry)[^"]*")[^>]*>(.*?)</(?:main|article|div)>', html_no_script, re.DOTALL | re.IGNORECASE)
+    reader_html = content_match.group(1) if content_match else html_no_script
+
+    # Extract text for word count
+    text_only = re.sub(r"<[^>]+>", " ", reader_html)
+    text_only = re.sub(r"\s+", " ", text_only).strip()
+    word_count = len(text_only.split())
+
+    # Extract images
+    images = re.findall(r'<img[^>]+src="([^"]+)"', html, re.IGNORECASE)
+
+    # Extract headings for table of contents
+    headings = re.findall(r"<(h[1-3])[^>]*>([^<]+)</\1>", html_no_script, re.IGNORECASE)
+    toc = [{"level": int(h[0][1]), "text": h[1].strip()} for h in headings[:20]]
+
+    meta = _extract_meta(html)
+
+    return {
+        "ok": True,
+        "url": url,
+        "status": result["status"],
+        "title": meta.get("title") or parsed.netloc,
+        "description": meta.get("description"),
+        "og_image": meta.get("og_image"),
+        "html": html,  # full HTML for same-origin iframe
+        "reader_html": reader_html[:50000],  # sanitized content for div injection
+        "word_count": word_count,
+        "image_count": len(images),
+        "images": images[:10],
+        "toc": toc,
+        "content_type": result.get("content_type", ""),
+    }

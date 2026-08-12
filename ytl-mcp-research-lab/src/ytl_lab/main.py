@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from ytl_lab.config import Settings
 from ytl_lab.db import LabDB
-from ytl_lab.discover import find_competitors
+from ytl_lab.discover import find_competitors, proxy_page
 from ytl_lab.receipts import ReceiptLedger
 from ytl_lab.tools import LabTools
 
@@ -60,6 +60,10 @@ class DiscoverRequest(BaseModel):
     max_results: int = 6
 
 
+class ProxyRequest(BaseModel):
+    url: str
+
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard() -> str:
     return _DASHBOARD_HTML
@@ -88,6 +92,26 @@ def api_discover(req: DiscoverRequest) -> Dict[str, Any]:
         "reachable_count": sum(1 for c in competitors if c["reachable"]),
         "with_apis_count": sum(1 for c in competitors if c["api_endpoints"]),
     }
+
+
+@app.post("/api/proxy")
+def api_proxy(req: ProxyRequest) -> Dict[str, Any]:
+    if not req.url or not req.url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="valid url is required")
+    return proxy_page(req.url)
+
+
+@app.get("/api/proxy")
+def api_proxy_get(url: str) -> Dict[str, Any]:
+    if not url or not url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="valid url query param is required")
+    return proxy_page(url)
+
+
+@app.get("/browse", response_class=HTMLResponse)
+def browse_page(url: str = "") -> str:
+    """In-app browser — fetches pages via proxy, renders in a div (no iframe)."""
+    return _BROWSE_HTML
 
 
 @app.post("/api/ingest")
@@ -587,6 +611,199 @@ async function createVideoFromCompetitor(i) {
 
 loadStatus();
 setInterval(loadStatus, 10000);
+</script>
+</body>
+</html>"""
+
+
+_BROWSE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse — YTL-MCP Lab</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; height: 100vh; }
+.header { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.header a { color: #58a6ff; text-decoration: none; font-size: 14px; }
+.header a:hover { text-decoration: underline; }
+.bar { flex: 1; display: flex; gap: 8px; }
+.bar input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 14px; color: #c9d1d9; font-size: 14px; }
+.bar input:focus { outline: none; border-color: #58a6ff; }
+.bar button { background: #238636; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.bar button:hover { background: #2ea043; }
+.bar button:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
+.content { flex: 1; overflow: hidden; display: flex; }
+.reader { flex: 1; overflow-y: auto; padding: 30px 40px; max-width: 800px; margin: 0 auto; }
+.reader h1, .reader h2, .reader h3 { color: #f0f6fc; margin: 20px 0 10px; }
+.reader h1 { font-size: 24px; }
+.reader h2 { font-size: 20px; }
+.reader h3 { font-size: 17px; }
+.reader p { color: #c9d1d9; line-height: 1.7; margin-bottom: 14px; font-size: 15px; }
+.reader a { color: #58a6ff; }
+.reader img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
+.reader ul, .reader ol { margin: 10px 0 14px 24px; }
+.reader li { margin-bottom: 6px; color: #c9d1d9; }
+.reader pre, .reader code { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-family: 'SF Mono', monospace; font-size: 13px; overflow-x: auto; display: block; color: #c9d1d9; }
+.reader table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+.reader th, .reader td { border: 1px solid #30363d; padding: 8px 12px; text-align: left; }
+.reader th { background: #161b22; color: #f0f6fc; }
+.sidebar { width: 280px; background: #161b22; border-right: 1px solid #30363d; padding: 20px; overflow-y: auto; flex-shrink: 0; }
+.sidebar h3 { font-size: 13px; color: #8b949e; text-transform: uppercase; margin-bottom: 10px; }
+.sidebar .meta-item { font-size: 13px; margin-bottom: 6px; color: #c9d1d9; }
+.sidebar .meta-item .label { color: #8b949e; }
+.sidebar .toc-item { font-size: 13px; margin-bottom: 4px; cursor: pointer; color: #58a6ff; }
+.sidebar .toc-item:hover { text-decoration: underline; }
+.sidebar .toc-item.h2 { margin-left: 12px; }
+.sidebar .toc-item.h3 { margin-left: 24px; }
+.sidebar img { width: 100%; border-radius: 6px; margin: 6px 0; }
+.loading { display: flex; align-items: center; justify-content: center; height: 100%; }
+.loading .spinner { width: 32px; height: 32px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error { color: #f85149; padding: 40px; text-align: center; font-size: 16px; }
+.empty { color: #8b949e; padding: 60px; text-align: center; font-size: 15px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.actions button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.actions button:hover { background: #30363d; }
+.actions button.primary { background: #da3633; color: #fff; border-color: #da3633; }
+.actions button.primary:hover { background: #f85149; }
+</style>
+</head>
+<body>
+<div class="header">
+<a href="/">← Lab</a>
+<div class="bar">
+<input type="text" id="url-input" placeholder="Enter URL to browse (https://example.com)" onkeydown="if(event.key==='Enter')browse()">
+<button id="go-btn" onclick="browse()">Browse</button>
+</div>
+</div>
+<div class="content">
+<div class="sidebar" id="sidebar" style="display:none;">
+<div id="sidebar-content"></div>
+</div>
+<div class="reader" id="reader">
+<div class="empty">Enter a URL above to browse without iframes.<br><br>The page is fetched server-side, security headers stripped, and content rendered directly in this div.</div>
+</div>
+</div>
+<script>
+let currentUrl = '';
+
+async function browse() {
+    const input = document.getElementById('url-input').value.trim();
+    if (!input) return;
+    let url = input;
+    if (!/^https?:\\/\\//.test(url)) {
+        if (/^[\w-]+(\.[\w-]+)+/.test(url)) url = 'https://' + url;
+        else url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+    }
+    document.getElementById('url-input').value = url;
+    currentUrl = url;
+
+    const reader = document.getElementById('reader');
+    const sidebar = document.getElementById('sidebar');
+    reader.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    sidebar.style.display = 'none';
+    document.getElementById('go-btn').disabled = true;
+
+    try {
+        const res = await fetch('/api/proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+            reader.innerHTML = `<div class="error">Failed to load: ${escapeHtml(data.error)}</div>`;
+        } else {
+            // Render reader content
+            reader.innerHTML = `
+                <h1>${escapeHtml(data.title)}</h1>
+                ${data.description ? `<p style="color:#8b949e;font-size:14px;">${escapeHtml(data.description)}</p>` : ''}
+                <div class="actions">
+                    <button class="primary" onclick="createVideo()">Create Video</button>
+                    <button onclick="window.open('${escapeHtml(data.url)}','_blank')">Open Original ↗</button>
+                    <button onclick="toggleRaw()">View Raw HTML</button>
+                </div>
+                <hr style="border-color:#30363d;margin:16px 0;">
+                <div id="reader-content">${data.reader_html || '<p>No content extracted.</p>'}</div>
+                <div id="raw-html" style="display:none;"><pre>${escapeHtml(data.html.slice(0, 50000))}</pre></div>
+            `;
+
+            // Render sidebar
+            if (data.toc.length || data.images.length || data.word_count) {
+                sidebar.style.display = 'block';
+                document.getElementById('sidebar-content').innerHTML = `
+                    <h3>Page Info</h3>
+                    <div class="meta-item"><span class="label">URL:</span> ${escapeHtml(data.url.slice(0, 50))}</div>
+                    <div class="meta-item"><span class="label">Status:</span> ${data.status}</div>
+                    <div class="meta-item"><span class="label">Words:</span> ${data.word_count}</div>
+                    <div class="meta-item"><span class="label">Images:</span> ${data.image_count}</div>
+                    ${data.og_image ? `<img src="${escapeHtml(data.og_image)}" alt="OG Image">` : ''}
+                    ${data.toc.length ? `<h3 style="margin-top:20px;">Contents</h3>${data.toc.map(t => `<div class="toc-item h${t.level}" onclick="scrollToHeading(${t.level},'${escapeHtml(t.text)}')">${escapeHtml(t.text)}</div>`).join('')}` : ''}
+                `;
+            }
+
+            // Update URL bar
+            history.replaceState(null, '', '/browse?url=' + encodeURIComponent(url));
+        }
+    } catch (e) {
+        reader.innerHTML = `<div class="error">Error: ${escapeHtml(e.message)}</div>`;
+    }
+    document.getElementById('go-btn').disabled = false;
+}
+
+function toggleRaw() {
+    const reader = document.getElementById('reader-content');
+    const raw = document.getElementById('raw-html');
+    if (raw.style.display === 'none') { reader.style.display = 'none'; raw.style.display = 'block'; }
+    else { reader.style.display = 'block'; raw.style.display = 'none'; }
+}
+
+function scrollToHeading(level, text) {
+    const headings = document.querySelectorAll('#reader-content h' + level);
+    for (const h of headings) {
+        if (h.textContent.trim() === text) { h.scrollIntoView({ behavior: 'smooth' }); break; }
+    }
+}
+
+async function createVideo() {
+    if (!confirm('Create a video experiment from this page?')) return;
+    const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            task_id: 'BROWSE-' + Date.now(),
+            intent: 'Browsed page: ' + currentUrl,
+            video_url: currentUrl
+        })
+    });
+    const data = await res.json();
+    if (data.experiment_id) {
+        // Run full cycle
+        const expId = data.experiment_id;
+        await fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+        await fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+        await fetch('/api/metadata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+        await fetch('/api/shotlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+        const policy = await (await fetch('/api/policy-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) })).json();
+        await fetch('/api/prepare-upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ experiment_id: expId }) });
+        alert('Video created: ' + expId + '\\nPolicy: ' + policy.policy_status);
+        window.location.href = '/';
+    }
+}
+
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Auto-browse if URL in query string
+const params = new URLSearchParams(location.search);
+if (params.get('url')) {
+    document.getElementById('url-input').value = params.get('url');
+    browse();
+}
 </script>
 </body>
 </html>"""
