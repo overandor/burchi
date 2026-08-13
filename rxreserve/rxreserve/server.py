@@ -8,6 +8,7 @@ from uuid import uuid4
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from rxreserve.database import Database
@@ -436,6 +437,129 @@ class SystemCostRequest(BaseModel):
 def create_app(db_path: str = "rxreserve.db") -> FastAPI:
     app = FastAPI(title="RxReserve", description="Pharmaceutical Frontier Reserve")
     db = Database(db_path)
+
+    @app.get("/", response_class=HTMLResponse)
+    def dashboard():
+        return """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RxReserve — Pharmaceutical Frontier Reserve</title>
+<style>
+  :root { --bg: #0f1117; --card: #1a1d27; --border: #2a2d3a; --text: #e0e0e8; --accent: #6366f1; --green: #22c55e; --red: #ef4444; --yellow: #f59e0b; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; } h2 { font-size: 1.1rem; margin-bottom: 12px; color: #a0a0b0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 10px; }
+  .stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .stat:last-child { border: none; } .stat span:last-child { font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-blue { background: rgba(99,102,241,0.15); color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { text-align: left; padding: 8px; color: #888; border-bottom: 1px solid var(--border); }
+  td { padding: 8px; border-bottom: 1px solid var(--border); }
+  .tabs { display: flex; gap: 4px; margin-top: 20px; flex-wrap: wrap; }
+  .tab { padding: 8px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px 8px 0 0; cursor: pointer; font-size: 0.85rem; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-content { display: none; } .tab-content.active { display: block; }
+  .btn { padding: 6px 14px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+  .btn:hover { opacity: 0.85; } .error { color: var(--red); } #loading { color: #888; text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+<h1>RxReserve</h1>
+<h2>Pharmaceutical Frontier Reserve — Real Data Dashboard</h2>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('overview')">Overview</div>
+  <div class="tab" onclick="showTab('frontiers')">Frontiers</div>
+  <div class="tab" onclick="showTab('hcps')">HCPs</div>
+  <div class="tab" onclick="showTab('systems')">Systems</div>
+  <div class="tab" onclick="showTab('mailos')">MailOS</div>
+</div>
+<div id="loading">Loading...</div>
+<div id="tab-overview" class="tab-content active"><div class="grid" id="overview-grid"></div></div>
+<div id="tab-frontiers" class="tab-content"><div class="card"><h3>Pharmaceutical Frontiers</h3><table id="frontiers-table"><thead><tr><th>ID</th><th>Problem</th><th>State</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tab-hcps" class="tab-content"><div class="card"><h3>Healthcare Providers</h3><table id="hcps-table"><thead><tr><th>ID</th><th>Name</th><th>Specialty</th><th>Territory</th></tr></thead><tbody></tbody></table></div></div>
+<div id="tab-systems" class="tab-content"><div class="card"><h3>Proprietary Systems</h3><div id="systems-list"></div></div></div>
+<div id="tab-mailos" class="tab-content"><div class="card"><h3>MailOS Summary</h3><div id="mailos-summary"></div></div></div>
+<script>
+const API = '';
+async function api(path) { try { const r = await fetch(API + path); return await r.json(); } catch(e) { return null; } }
+function badge(text, cls) { return `<span class="badge badge-${cls}">${text}</span>`; }
+function stateBadge(s) { const m = {'resolved':'green','active':'blue','dormant':'yellow','abandoned':'red'}; return badge(s, m[s]||'blue'); }
+
+async function loadOverview() {
+  const [frontiers, hcps, systems, mailos] = await Promise.all([
+    api('/api/frontiers'), api('/api/hcps'), api('/api/proprietary/systems'), api('/api/mailos/summary')
+  ]);
+  document.getElementById('loading').style.display = 'none';
+  const grid = document.getElementById('overview-grid');
+  const cards = [];
+  cards.push(`<div class="card"><h3>Frontiers</h3><div class="stat"><span>Total</span><span>${frontiers ? frontiers.length : 0}</span></div></div>`);
+  if (frontiers && frontiers.length) {
+    const byState = {};
+    frontiers.forEach(f => { byState[f.state] = (byState[f.state]||0)+1; });
+    Object.entries(byState).forEach(([k,v]) => cards.push(`<div class="card"><h3>State: ${k}</h3><div class="stat"><span>Count</span><span>${v}</span></div></div>`));
+  }
+  cards.push(`<div class="card"><h3>HCPs</h3><div class="stat"><span>Total</span><span>${hcps ? hcps.length : 0}</span></div></div>`);
+  if (systems) {
+    cards.push(`<div class="card"><h3>Systems</h3><div class="stat"><span>Total</span><span>${systems.total_systems||0}</span></div><div class="stat"><span>Endpoints</span><span>${systems.total_endpoints||0}</span></div></div>`);
+  }
+  if (mailos && !mailos.error) {
+    cards.push(`<div class="card"><h3>MailOS</h3><div class="stat"><span>Ingested</span><span>${mailos.mails_ingested||0}</span></div><div class="stat"><span>Obligations</span><span>${mailos.obligations_compiled||0}</span></div><div class="stat"><span>Overdue</span><span>${mailos.overdue||0}</span></div></div>`);
+  }
+  grid.innerHTML = cards.join('');
+}
+
+async function loadFrontiers() {
+  const frontiers = await api('/api/frontiers');
+  const tbody = document.querySelector('#frontiers-table tbody');
+  if (!frontiers) { tbody.innerHTML = '<tr><td colspan="3">No data</td></tr>'; return; }
+  tbody.innerHTML = frontiers.map(f => `<tr><td>${f.frontier_id.slice(0,12)}</td><td>${(f.problem||'').slice(0,60)}</td><td>${stateBadge(f.state)}</td></tr>`).join('');
+}
+
+async function loadHCPs() {
+  const hcps = await api('/api/hcps');
+  const tbody = document.querySelector('#hcps-table tbody');
+  if (!hcps) { tbody.innerHTML = '<tr><td colspan="4">No data</td></tr>'; return; }
+  tbody.innerHTML = hcps.map(h => `<tr><td>${(h.hcp_id||'').slice(0,12)}</td><td>${h.name||''}</td><td>${h.specialty||''}</td><td>${h.territory||''}</td></tr>`).join('');
+}
+
+async function loadSystems() {
+  const systems = await api('/api/proprietary/systems');
+  const el = document.getElementById('systems-list');
+  if (!systems || !systems.systems) { el.innerHTML = '<p>No data</p>'; return; }
+  el.innerHTML = systems.systems.map(s => `<div class="stat"><span>${s.name}</span><span>${badge(s.built?'Built':'WIP', s.built?'green':'yellow')}</span></div>`).join('');
+}
+
+async function loadMailOS() {
+  const s = await api('/api/mailos/summary');
+  const el = document.getElementById('mailos-summary');
+  if (!s || s.error) { el.innerHTML = '<p>No data</p>'; return; }
+  el.innerHTML = `<div class="stat"><span>Mails Ingested</span><span>${s.mails_ingested||0}</span></div><div class="stat"><span>Obligations</span><span>${s.obligations_compiled||0}</span></div><div class="stat"><span>Intents</span><span>${s.intents_extracted||0}</span></div><div class="stat"><span>Verifications</span><span>${s.verifications||0}</span></div><div class="stat"><span>Pending</span><span>${s.pending||0}</span></div><div class="stat"><span>Overdue</span><span>${s.overdue||0}</span></div>`;
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'frontiers') loadFrontiers();
+  if (name === 'hcps') loadHCPs();
+  if (name === 'systems') loadSystems();
+  if (name === 'mailos') loadMailOS();
+}
+
+loadOverview();
+</script>
+</body>
+</html>"""
 
     @app.get("/api/frontiers")
     def list_frontiers(state: Optional[str] = None):

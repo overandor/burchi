@@ -1123,11 +1123,24 @@ def cmd_genome_curator(args):
     print(json.dumps(rt.curator.summary(), indent=2))
 
 
+def cmd_serve(args):
+    import uvicorn
+    from rxreserve.server import create_app
+    app = create_app(db_path=args.db)
+    uvicorn.run(app, host=args.host, port=args.port)
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(prog="rxreserve", description="RxReserve — Pharmaceutical Frontier Reserve")
     parser.add_argument("--db", default="rxreserve.db", help="Database path")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    # serve
+    p = sub.add_parser("serve", help="Start the FastAPI server")
+    p.add_argument("--host", default="0.0.0.0")
+    p.add_argument("--port", type=int, default=8000)
+    p.set_defaults(func=cmd_serve)
 
     # create
     p = sub.add_parser("create", help="Create a new PharmaFrontier")
