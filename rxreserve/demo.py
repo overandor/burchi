@@ -103,8 +103,10 @@ async def fetch_real_html(url: str, timeout: float = 15.0) -> tuple[str, dict[st
 async def run_demo():
     banner("DESIGN GENOME RUNTIME — LIVE DEMO (real data)")
     print("  Initializing runtime with all agents...")
+    print("  📹 Video recording enabled — browser will open visibly!")
 
-    rt = DesignGenomeRuntime()
+    video_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "demo_videos")
+    rt = DesignGenomeRuntime(headless=False, video_dir=video_dir)
     print("  ✓ Scout, Oracle, Builder, BrowserLab, Curator, Judge, Verifier, Archivist")
 
     # ═══════════════════════════════════════════════════════════
@@ -192,6 +194,37 @@ async def run_demo():
     field("Unusual decisions", len(obs.unusual_design_decisions))
     for d in obs.unusual_design_decisions:
         print(f"        • {d}")
+
+    # ═══════════════════════════════════════════════════════════
+    # 1b. VISIBLE BROWSING — Agent opens the page and records its journey
+    # ═══════════════════════════════════════════════════════════
+    banner("1b. VISIBLE BROWSING — Agent opens the page in a real browser")
+    print(f"  🌐 Opening {target_url} in visible Chromium...")
+    print("  The agent will scroll through the page, capture frames,")
+    print("  and record a video of its journey. Watch the browser window!")
+
+    try:
+        journey_render = await rt.lab.renderer.navigate_to_url(
+            target_url,
+            viewports=[{"name": "desktop", "width": 1440, "height": 900}],
+        )
+        sub("Agent browsing journey complete")
+        field("Frames captured", len(journey_render.desktop_frames))
+        field("Interaction elements", len(journey_render.interaction_trace.hover_elements) if journey_render.interaction_trace else 0)
+        field("Scroll depth", journey_render.interaction_trace.scroll_depth if journey_render.interaction_trace else 0.0)
+        if journey_render.performance_trace:
+            field("DOM elements", journey_render.performance_trace.get("domCount", 0))
+            field("FCP (ms)", journey_render.performance_trace.get("firstContentfulPaint", 0))
+            field("LCP (ms)", journey_render.performance_trace.get("largestContentfulPaint", 0))
+            field("CLS", journey_render.performance_trace.get("cumulativeLayoutShift", 0))
+        video_path = rt.lab.renderer._last_video_path
+        if video_path:
+            field("Video recorded", video_path)
+        else:
+            print("  (Video may still be finalizing)")
+    except Exception as e:
+        print(f"  ⚠ Visible browsing error: {e}")
+        print("  Continuing with pipeline...")
 
     # ═══════════════════════════════════════════════════════════
     # 2. CURATION — Curator assigns population
@@ -617,7 +650,13 @@ async def run_demo():
     print(f"  Renders: {len(renders)} evaluated in real browser")
     print(f"  Transfer tests: {1 if transfer_result else 0} run in real browser")
     print(f"  Failures: {rt.failure_memory.count()} from actual rejections")
+    video_path = rt.lab.renderer._last_video_path
+    if video_path:
+        print(f"  📹 Video: {video_path}")
     print(f"  Every score computed from actual render/observation/capability data.")
+
+    # Clean up browser
+    await rt.lab.renderer.close()
 
 
 if __name__ == "__main__":
