@@ -709,9 +709,10 @@ class BrowserLab:
     and enforces acceptance thresholds including WCAG 2.2 as a hard constraint.
     """
 
-    def __init__(self, thresholds: AcceptanceThresholds = None) -> None:
+    def __init__(self, thresholds: AcceptanceThresholds = None,
+                 headless: bool = True, video_dir: str = None) -> None:
         self.thresholds = thresholds or AcceptanceThresholds()
-        self.renderer = BrowserRenderer()
+        self.renderer = BrowserRenderer(headless=headless, video_dir=video_dir)
         self.evaluator = MultiAxisEvaluator()
         self._lighthouse = LighthouseEvaluator()
 
