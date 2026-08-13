@@ -1758,7 +1758,7 @@ class CostPerCallHalver:
     The system saves cost by downgrading low-value touches to cheaper channels.
     """
 
-    CHANNEL_COSTS = {
+    DEFAULT_CHANNEL_COSTS = {
         "in_person": 200.0,
         "virtual": 75.0,
         "phone": 30.0,
@@ -1767,7 +1767,7 @@ class CostPerCallHalver:
         "sms": 0.25,
     }
 
-    CHANNEL_TIME = {
+    DEFAULT_CHANNEL_TIME = {
         "in_person": 90.0,  # including travel
         "virtual": 30.0,
         "phone": 15.0,
@@ -1776,9 +1776,12 @@ class CostPerCallHalver:
         "sms": 1.0,
     }
 
-    def __init__(self):
+    def __init__(self, channel_costs: dict[str, float] = None,
+                 channel_time: dict[str, float] = None):
         self.decisions: dict[str, TouchDecision] = {}
         self.hcp_history: dict[str, list[dict]] = {}  # hcp_id -> touch history
+        self.channel_costs = channel_costs or dict(self.DEFAULT_CHANNEL_COSTS)
+        self.channel_time = channel_time or dict(self.DEFAULT_CHANNEL_TIME)
 
     def classify_touch(self, hcp_id: str, rep_id: str,
                        planned_channel: str = "in_person",
@@ -1804,10 +1807,10 @@ class CostPerCallHalver:
             hcp_intent, touch_reason, hcp_trust)
 
         # Calculate savings
-        orig_cost = self.CHANNEL_COSTS.get(planned_channel, 200)
-        new_cost = self.CHANNEL_COSTS.get(channel, 3)
-        orig_time = self.CHANNEL_TIME.get(planned_channel, 90)
-        new_time = self.CHANNEL_TIME.get(channel, 5)
+        orig_cost = self.channel_costs.get(planned_channel, self.channel_costs.get("in_person", 200))
+        new_cost = self.channel_costs.get(channel, self.channel_costs.get("approved_email", 3))
+        orig_time = self.channel_time.get(planned_channel, self.channel_time.get("in_person", 90))
+        new_time = self.channel_time.get(channel, self.channel_time.get("approved_email", 5))
 
         decision = TouchDecision(
             hcp_id=hcp_id, rep_id=rep_id,

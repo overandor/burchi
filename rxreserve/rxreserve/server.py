@@ -2042,7 +2042,7 @@ def create_app(db_path: str = "rxreserve.db") -> FastAPI:
 
     @app.get("/api/proprietary/cost-halver/channels")
     def cost_halver_channels():
-        return _cost_halver.CHANNEL_COSTS
+        return _cost_halver.channel_costs
 
     @app.get("/api/proprietary/cost-halver/auto-executable")
     def cost_halver_auto():

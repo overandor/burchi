@@ -43,9 +43,9 @@ logger = logging.getLogger(__name__)
 # LLM client (uses existing Ollama infrastructure)
 # ─────────────────────────────────────────────────────────────────────
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "https://prism-ollama.fly.dev")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "phi3:mini")
-REQUEST_TIMEOUT = 60
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
+REQUEST_TIMEOUT = 120
 
 
 def _call_ollama(messages: list[dict], temperature: float = 0.7) -> Optional[str]:

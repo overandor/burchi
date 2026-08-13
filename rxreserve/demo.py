@@ -478,10 +478,10 @@ async def run_demo():
     )
 
     sub("Running transfer test in different product context...")
+    transfer_result = None
     try:
         transfer_result = await rt._run_transfer_test(
             prelim_cap, best_proto, project, contract)
-        rt.transfer_memory.add(transfer_result)
 
         field("Transfer target", transfer_result.target_product_category)
         field("Target audience", transfer_result.target_audience)
@@ -496,7 +496,6 @@ async def run_demo():
             print(f"          Reason: {transfer_result.failure_reason[:80]}")
     except Exception as e:
         print(f"  Transfer test error: {e}")
-        transfer_result = None
 
     # ═══════════════════════════════════════════════════════════
     # 8. CAPABILITY VERIFICATION — From actual render results
@@ -561,10 +560,11 @@ async def run_demo():
     banner("9. ARCHIVIST — Browser-verified evidence gatekeeper")
 
     # Use the actual best render — no fabricated demo_render
+    transfer_tests = [transfer_result] if transfer_result else []
     if best_render.accepted:
         accepted, reason = rt.archivist.accept_capability(
             verified, best_render,
-            transfer_tests=[],  # no transfer tests run yet — honest
+            transfer_tests=transfer_tests,
             failure_records=rt.failure_memory.all_failures()[:5],
         )
     else:
@@ -615,6 +615,7 @@ async def run_demo():
     print("  All agents executed with real data.")
     print(f"  Source: {source.url} ({len(html_content)} bytes of real HTML)")
     print(f"  Renders: {len(renders)} evaluated in real browser")
+    print(f"  Transfer tests: {1 if transfer_result else 0} run in real browser")
     print(f"  Failures: {rt.failure_memory.count()} from actual rejections")
     print(f"  Every score computed from actual render/observation/capability data.")
 
