@@ -220,10 +220,14 @@ async def run_demo():
         video_path = rt.lab.renderer._last_video_path
         if video_path:
             field("Video recorded", video_path)
+        elif journey_render.rejected_reason:
+            print(f"  ⚠ Journey had error: {journey_render.rejected_reason}")
         else:
             print("  (Video may still be finalizing)")
     except Exception as e:
         print(f"  ⚠ Visible browsing error: {e}")
+        import traceback
+        traceback.print_exc()
         print("  Continuing with pipeline...")
 
     # ═══════════════════════════════════════════════════════════
@@ -269,9 +273,9 @@ async def run_demo():
     field("Renderer candidates", challenge["renderer_candidates"])
 
     # ═══════════════════════════════════════════════════════════
-    # 3. EXPERIMENT — Builder + BrowserLab + Judge
+    # 3. EXPERIMENT — Architecture search + initial render
     # ═══════════════════════════════════════════════════════════
-    banner("3. EXPERIMENT — Architecture search + tournament")
+    banner("3. EXPERIMENT — Architecture search + initial render")
 
     # Create distinction contract from actual observation data
     contract = DistinctionContract(
@@ -316,151 +320,156 @@ async def run_demo():
         rtype = p.renderer_type.value if hasattr(p.renderer_type, 'value') else str(p.renderer_type)
         print(f"        • {p.impl_id[:12]} renderer={rtype} arch={p.architecture_hypothesis[:40]}")
 
-    # Inject the real fetched HTML as source code for evaluation
-    # The Builder generates architecture hypotheses; we use the real HTML
-    # as the initial source to evaluate against the target
+    # Use the real fetched HTML as initial source for the first prototype
     for proto in prototypes:
         if not proto.source_code:
             proto.source_code = html_content
 
-    # Render and evaluate each prototype in the BrowserLab
-    # This requires Playwright — no static analysis fallback
-    sub("BrowserLab rendering + evaluation (real browser)")
-    renders = []
+    # ═══════════════════════════════════════════════════════════
+    # 4. EVOLUTION LOOP — Render, evaluate, mutate, select, repeat
+    # ═══════════════════════════════════════════════════════════
+    banner("4. EVOLUTION LOOP — Generational improvement in real browser")
+
+    NUM_GENERATIONS = 4
+    MUTATION_AXES = [
+        MutationType.COMPOSITION, MutationType.MOTION,
+        MutationType.LIGHTING, MutationType.INTERACTION,
+        MutationType.TYPOGRAPHY, MutationType.DENSITY,
+    ]
+
+    # Generation 0: render initial prototypes
+    sub(f"Generation 0 — rendering {len(prototypes)} initial prototypes")
+    population: list[tuple[Implementation, RenderResult]] = []
     for proto in prototypes:
         try:
             render = await rt.lab.evaluate_implementation(proto, target, contract)
             rt.builder.submit_render(proto, render)
-            renders.append((proto, render))
-
-            q = render.quality
+            population.append((proto, render))
             status = "ACCEPTED" if render.accepted else "REJECTED"
-            print(f"\n        {proto.impl_id[:12]} → {status}")
-            field("Total quality", q.total, indent=12)
-            field("Composition", q.composition_similarity, indent=12)
-            field("Perceptual depth", q.perceptual_depth, indent=12)
-            field("Visual hierarchy", q.visual_hierarchy, indent=12)
-            field("Motion character", q.motion_character_match, indent=12)
-            field("Material/lighting", q.material_lighting_behavior, indent=12)
-            field("Typography", q.typography_character_match, indent=12)
-            field("Identity", q.product_specific_identity, indent=12)
-            field("Originality", q.originality_distance, indent=12)
-            field("Accessibility", q.accessibility_audit, indent=12)
-            field("Performance", q.runtime_performance, indent=12)
-            field("Cross-device", q.cross_device_stability, indent=12)
-            if not render.accepted and render.rejected_reason:
-                print(f"          REJECTED: {render.rejected_reason}")
+            print(f"        {proto.impl_id[:12]} → {status}  quality={render.quality.total:.4f}")
         except RuntimeError as e:
-            print(f"\n        {proto.impl_id[:12]} → RENDER FAILED")
-            print(f"          {e}")
+            print(f"        {proto.impl_id[:12]} → RENDER FAILED: {e}")
             print("          Install Playwright: pip install playwright && playwright install chromium")
+            return
 
-    if not renders:
-        print("\n  ⚠ No renders completed. BrowserLab requires Playwright.")
-        print("  Install: pip install playwright && playwright install chromium")
-        print("  Then re-run: python demo.py")
+    if not population:
+        print("\n  ⚠ No renders completed. Cannot evolve.")
         return
 
-    # ═══════════════════════════════════════════════════════════
-    # 4. TOURNAMENT — BrowserJudge ranks renders
-    # ═══════════════════════════════════════════════════════════
-    banner("4. TOURNAMENT — BrowserJudge independent ranking")
+    best_impl, best_render = max(population, key=lambda x: x[1].quality.total)
+    best_quality = best_render.quality.total
+    print(f"\n        Best initial quality: {best_quality:.4f}")
 
-    if len(renders) > 1:
-        renders_only = [r for _, r in renders]
-        ranked = await rt.judge.rank(renders_only, benchmark=obs, contract=contract)
+    quality_history = [best_quality]
+    failure_reasons: list[str] = []
 
-        sub("Rankings (Judge never sees source code)")
-        for i, (render, score) in enumerate(ranked):
-            print(f"        #{i+1}  render={render.render_id[:12]}  judge_score={score:.4f}")
+    # Evolve across generations
+    for gen in range(1, NUM_GENERATIONS + 1):
+        sub(f"Generation {gen} — mutate best, render all, select winner")
 
-        if len(ranked) >= 2:
-            comparison = await rt.judge.compare(
-                ranked[0][0], ranked[1][0],
-                benchmark=obs, contract=contract)
-            sub("Champion vs Challenger comparison")
-            field("Champion quality", comparison.winner_quality)
-            field("Challenger quality", comparison.loser_quality)
-            field("Margin", comparison.margin)
-            field("Judge confidence", comparison.judge_confidence)
-            field("Winner ID", comparison.winner_id[:12])
-            sub("Axis deltas")
-            for axis, delta in comparison.axis_deltas.items():
-                print(f"        {axis:30s} {delta:+.4f}")
+        # Generate mutations from current best
+        candidates: list[Implementation] = []
+        for axis in MUTATION_AXES:
+            mutant = MutationOperator.mutate(best_impl, target, axis)
+            if mutant.source_code != best_impl.source_code:
+                candidates.append(mutant)
 
-    # ═══════════════════════════════════════════════════════════
-    # 5. MUTATION — Builder applies targeted mutations
-    # ═══════════════════════════════════════════════════════════
-    banner("5. MUTATION — Builder applies structured mutations")
+        # Also try recombination if we have 2+ in population
+        if len(population) >= 2:
+            parent_b = population[1][0] if population[1][0] != best_impl else population[-1][0]
+            child = MutationOperator.recombine(best_impl, parent_b, target)
+            if child.source_code != best_impl.source_code:
+                candidates.append(child)
 
-    best_proto = max(renders, key=lambda x: x[1].quality.total)[0]
-    best_proto.source_code = best_proto.source_code or html_content
+        if not candidates:
+            print(f"        No mutations produced changes — trying all axes with forced insertion")
+            for axis in MUTATION_AXES:
+                mutant = MutationOperator.mutate(best_impl, target, axis)
+                candidates.append(mutant)
 
-    mutations = [
-        ("composition", "flex→grid conversion"),
-        ("motion", "add transitions + keyframes"),
-        ("lighting", "add shadows + backdrop-filter"),
-        ("typography", "add font-family + letter-spacing"),
-        ("interaction", "add hover states + listeners"),
-        ("density", "adjust padding + spacing"),
-    ]
+        # Render and evaluate each candidate
+        print(f"        Rendering {len(candidates)} candidates in real browser...")
+        gen_results: list[tuple[Implementation, RenderResult]] = []
+        for mutant in candidates:
+            try:
+                m_render = await rt.lab.evaluate_implementation(mutant, target, contract)
+                rt.builder.submit_render(mutant, m_render)
+                gen_results.append((mutant, m_render))
+                mtype = mutant.mutation_type if hasattr(mutant.mutation_type, 'value') else str(mutant.mutation_type)
+                status = "ACCEPTED" if m_render.accepted else "REJECTED"
+                delta = m_render.quality.total - best_quality
+                print(f"          {mutant.impl_id[:12]} [{str(mtype):15s}] → {status}  "
+                      f"q={m_render.quality.total:.4f}  Δ={delta:+.4f}")
+                if not m_render.accepted and m_render.rejected_reason:
+                    failure_reasons.append(m_render.rejected_reason)
+            except Exception as e:
+                print(f"          {mutant.impl_id[:12]} → RENDER FAILED: {e}")
 
-    sub("Mutation results (source code actually modified)")
-    for axis, desc in mutations:
-        mutated = MutationOperator.mutate(best_proto, target, axis)
-        changed = mutated.source_code != best_proto.source_code
-        code_len_delta = len(mutated.source_code) - len(best_proto.source_code)
-        print(f"        {axis:15s} changed={changed}  Δlen={code_len_delta:+4d}  ({desc})")
+        if not gen_results:
+            print(f"        All renders failed this generation.")
+            continue
 
-    # ═══════════════════════════════════════════════════════════
-    # 6. RECOMBINATION — Genetic crossover
-    # ═══════════════════════════════════════════════════════════
-    banner("6. RECOMBINATION — Genetic crossover")
+        # Select the best from this generation
+        gen_best_impl, gen_best_render = max(gen_results, key=lambda x: x[1].quality.total)
+        gen_best_quality = gen_best_render.quality.total
 
-    parent_a = best_proto
-    parent_a.source_code = parent_a.source_code or html_content
+        # Only adopt if it's an improvement (or equal but accepted)
+        if gen_best_quality > best_quality or (gen_best_render.accepted and not best_render.accepted):
+            print(f"\n        ✅ IMPROVEMENT: {best_quality:.4f} → {gen_best_quality:.4f} "
+                  f"(+{gen_best_quality - best_quality:.4f})")
+            best_impl = gen_best_impl
+            best_render = gen_best_render
+            best_quality = gen_best_quality
+            population = [(best_impl, best_render)] + gen_results[:2]
+        else:
+            print(f"\n        ❌ No improvement this generation (best={gen_best_quality:.4f} vs current={best_quality:.4f})")
+            # Record failure for the best attempt
+            worst = min(gen_results, key=lambda x: x[1].quality.total)
+            if worst[1].rejected_reason:
+                failure_reasons.append(worst[1].rejected_reason)
+            # Keep population for recombination diversity
+            population = [(best_impl, best_render)] + gen_results[:2]
 
-    # Use a second prototype as parent B (real architecture, not hardcoded HTML)
-    if len(renders) > 1:
-        parent_b = renders[1][0]
-        parent_b.source_code = parent_b.source_code or html_content
+        quality_history.append(best_quality)
+
+    # Show quality progression
+    sub("Quality progression across generations")
+    for i, q in enumerate(quality_history):
+        bar = "█" * int(q * 40)
+        print(f"        Gen {i}: {q:.4f} {bar}")
+
+    final_quality = best_render.quality
+    sub("Final best implementation")
+    status = "ACCEPTED" if best_render.accepted else "REJECTED"
+    print(f"        {best_impl.impl_id[:12]} → {status}")
+    field("Total quality", final_quality.total, indent=12)
+    field("Composition", final_quality.composition_similarity, indent=12)
+    field("Perceptual depth", final_quality.perceptual_depth, indent=12)
+    field("Visual hierarchy", final_quality.visual_hierarchy, indent=12)
+    field("Motion character", final_quality.motion_character_match, indent=12)
+    field("Material/lighting", final_quality.material_lighting_behavior, indent=12)
+    field("Typography", final_quality.typography_character_match, indent=12)
+    field("Identity", final_quality.product_specific_identity, indent=12)
+    field("Originality", final_quality.originality_distance, indent=12)
+    field("Accessibility", final_quality.accessibility_audit, indent=12)
+    field("Performance", final_quality.runtime_performance, indent=12)
+    field("Cross-device", final_quality.cross_device_stability, indent=12)
+    if best_render.accepted:
+        field("Improvement", f"{quality_history[0]:.4f} → {best_quality:.4f} (+{best_quality - quality_history[0]:.4f})")
     else:
-        # Generate parent B from a different mutation axis
-        parent_b = MutationOperator.mutate(best_proto, target, "composition")
-        parent_b.source_code = parent_b.source_code or html_content
+        print(f"          REJECTED: {best_render.rejected_reason}")
 
-    child = MutationOperator.recombine(parent_a, parent_b, target)
-    sub("Recombination result")
-    field("Child impl_id", child.impl_id[:12])
-    field("Parent A", parent_a.impl_id[:12])
-    field("Parent B", parent_b.impl_id[:12])
-    field("Mutation type", child.mutation_type)
-    field("Source length", len(child.source_code))
-    # Check what came from each parent — derived from actual source, not hardcoded
-    a_markers = set(parent_a.source_code.lower().split()) & set(child.source_code.lower().split())
-    b_markers = set(parent_b.source_code.lower().split()) & set(child.source_code.lower().split())
-    a_only = a_markers - b_markers
-    b_only = b_markers - a_markers
-    print(f"        Tokens from parent A only: {len(a_only)}")
-    print(f"        Tokens from parent B only: {len(b_only)}")
-    print(f"        Shared tokens:              {len(a_markers & b_markers)}")
+    # Use the best implementation from the evolution loop
+    renders = [(best_impl, best_render)]
+    best_proto = best_impl
 
     # ═══════════════════════════════════════════════════════════
     # 7. FAILURE RECORDING — Derived from actual rejected renders
     # ═══════════════════════════════════════════════════════════
     banner("7. FAILURE RECORDING — Negative knowledge from actual rejections")
 
-    # Collect failure reasons from renders that were actually rejected
-    failure_reasons: list[str] = []
-    for proto, render in renders:
-        if not render.accepted and render.rejected_reason:
-            failure_reasons.append(render.rejected_reason)
-
-    # Also check if any mutations produced worse results
-    for axis, _ in mutations:
-        mutated = MutationOperator.mutate(best_proto, target, axis)
-        if mutated.source_code == best_proto.source_code:
-            failure_reasons.append(f"Mutation axis '{axis}' produced no change — axis exhausted")
+    # failure_reasons was already collected during the evolution loop
+    # from renders that were actually rejected by the BrowserLab
 
     if not failure_reasons:
         print("\n  All renders were accepted. No failures to record.")

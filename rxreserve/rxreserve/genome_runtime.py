@@ -682,7 +682,8 @@ class DesignGenomeRuntime:
     the render.
     """
 
-    def __init__(self, db_path: str = "rxreserve.db") -> None:
+    def __init__(self, db_path: str = "rxreserve.db",
+                 headless: bool = True, video_dir: str = None) -> None:
         self.db_path = db_path
 
         # Agents — six isolated intelligence roles
@@ -690,7 +691,7 @@ class DesignGenomeRuntime:
         self.curator = Curator()
         self.oracle = TasteOracle()
         self.builder = VisualEngineer()
-        self.lab = BrowserLab()
+        self.lab = BrowserLab(headless=headless, video_dir=video_dir)
         self.judge = BrowserJudge()
         self.archivist = Archivist()
         self.verifier = CapabilityVerifier()
@@ -1248,9 +1249,8 @@ class DesignGenomeRuntime:
         product context and verify it still works.
 
         The winning technique must be tested on a completely different product
-        before being promoted to the capability population. This is not a
-        simulation — it creates a new implementation, renders it in the browser
-        lab, and evaluates the result.
+        before being promoted to the capability population. This creates a new
+        implementation, renders it in the browser lab, and evaluates the result.
         """
         # Pick a different product context
         different_category = "enterprise_saas" if original_project.product_category != "enterprise_saas" else "consumer_ecommerce"

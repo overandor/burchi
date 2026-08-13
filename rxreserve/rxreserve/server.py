@@ -1433,7 +1433,7 @@ def create_app(db_path: str = "rxreserve.db") -> FastAPI:
         AgentPopulationGovernance, GovernanceRuleType, AgentActionRequest,
         AttributionSettlementLoop, LoopStage,
         CompetitiveIntelligenceAgent, CompetitorSignalType, ThreatLevel,
-        LaunchReadinessAnalyzer, SimulationStrategy,
+        LaunchReadinessAnalyzer, EngagementStrategy,
         MeasurementFramework,
     )
 

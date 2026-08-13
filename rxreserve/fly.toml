@@ -6,24 +6,32 @@ primary_region = "iad"
 
 [env]
   RXRESERVE_DB = "/data/rxreserve.db"
-  OLLAMA_URL = "https://prism-ollama.fly.dev"
+  OLLAMA_URL = "http://127.0.0.1:11434"
   OLLAMA_MODEL = "phi3:mini"
-  RXRESERVE_API = "http://127.0.0.1:8000"
+  KPI_CHECKPOINT_DIR = "/data/kpi_checkpoints"
+  OLLAMA_HOST = "127.0.0.1:11434"
 
 [http_service]
   internal_port = 8000
   force_https = true
   auto_stop_machines = false
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
 
 [[http_service.checks]]
   interval = "30s"
   timeout = "10s"
-  grace_period = "60s"
+  grace_period = "120s"
   method = "GET"
-  path = "/api/mailos/summary"
+  path = "/api/stream/status"
 
+# Persistent volume: DB + KPI checkpoints + Ollama models
 [mounts]
   source = "rxreserve_data"
   destination = "/data"
+
+# Ollama model storage persists on the data volume via symlink
+# phi3:mini needs ~2GB RAM, FastAPI needs ~512MB → 4GB total
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = 4096

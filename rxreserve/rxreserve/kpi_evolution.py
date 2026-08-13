@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import os
 import random
 import urllib.parse
 import urllib.request
@@ -630,7 +631,7 @@ class KPIEvolutionEngine:
 
     # ─── Persistence (crash recovery) ───
 
-    CHECKPOINT_PATH = "/tmp/kpi_evolution_checkpoint.json"
+    CHECKPOINT_PATH = os.environ.get("KPI_CHECKPOINT_DIR", "/tmp") + "/kpi_evolution_checkpoint.json"
     MAX_GRAVEYARD = 500  # keep last 500 dead KPIs
 
     def checkpoint(self) -> str:

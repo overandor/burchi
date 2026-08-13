@@ -326,7 +326,7 @@ class ClinicalTrialsStream(StreamingSource):
     Each trial feeds:
       - CI Agent (competitor trial = threat signal)
       - MSL Router (new evidence)
-      - Launch Simulator (strategy input)
+      - Launch Analyzer (strategy input)
     """
 
     GILEAD_DRUGS = [
@@ -388,7 +388,7 @@ class ClinicalTrialsStream(StreamingSource):
                 "query_drug": query_drug,
                 "is_competitor": is_competitor,
             },
-            targets=["ci", "msl_router", "simulator"],
+            targets=["ci", "msl_router", "analyzer"],
         )
 
 

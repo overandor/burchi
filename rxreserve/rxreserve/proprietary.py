@@ -3184,7 +3184,7 @@ class CompetitiveIntelligenceAgent:
 # ═══════════════════════════════════════════════════════════════════════
 
 @dataclass
-class SimulationStrategy:
+class EngagementStrategy:
     """A single engagement strategy to analyze."""
     strategy_id: str = field(default_factory=lambda: str(uuid4()))
     name: str = ""
@@ -3253,7 +3253,7 @@ class LaunchReadinessAnalyzer:
     }
 
     def __init__(self, database=None):
-        self.strategies: dict[str, SimulationStrategy] = {}
+        self.strategies: dict[str, EngagementStrategy] = {}
         self.results: dict[str, list[StrategyAnalysisResult]] = {}  # strategy_id -> results
         self.best_strategies: dict[str, StrategyAnalysisResult] = {}  # scenario -> best result
         self.database = database
@@ -3323,9 +3323,9 @@ class LaunchReadinessAnalyzer:
         trust = 0.5 + (positive_outcomes - negative_outcomes) / max(total * 2, 1)
         return max(0.0, min(1.0, trust))
 
-    def create_strategy(self, name: str, **params) -> SimulationStrategy:
+    def create_strategy(self, name: str, **params) -> EngagementStrategy:
         """Create an engagement strategy."""
-        strategy = SimulationStrategy(name=name, **params)
+        strategy = EngagementStrategy(name=name, **params)
         self.strategies[strategy.strategy_id] = strategy
         return strategy
 
@@ -3481,7 +3481,7 @@ class LaunchReadinessAnalyzer:
         avg_cost_per_touch = sum(costs.get(ch, 100) * prop for ch, prop in channel_mix.items())
         return avg_cost_per_touch * frequency
 
-    def batch_analyze(self, strategies: list[SimulationStrategy],
+    def batch_analyze(self, strategies: list[EngagementStrategy],
                       scenario: str = "default") -> list[StrategyAnalysisResult]:
         """Analyze multiple strategies and rank them."""
         results = []
@@ -3501,7 +3501,7 @@ class LaunchReadinessAnalyzer:
 
         return results
 
-    def auto_generate_strategies(self, count: int = 100) -> list[SimulationStrategy]:
+    def auto_generate_strategies(self, count: int = 100) -> list[EngagementStrategy]:
         """Auto-generate strategy variations for batch analysis."""
         import random
         strategies = []
@@ -3515,7 +3515,7 @@ class LaunchReadinessAnalyzer:
         content_types = ["clinical", "promotional", "mixed"]
 
         for i in range(count):
-            strategy = SimulationStrategy(
+            strategy = EngagementStrategy(
                 name=f"Auto-strategy-{i+1}",
                 description=f"Auto-generated variation {i+1}",
                 target_hcp_count=random.choice([50, 100, 200, 500]),

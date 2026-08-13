@@ -1,11 +1,17 @@
-FROM python:3.13-slim
+FROM ollama/ollama:latest
+
+# Install Python and system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create venv
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
-
-# Install system deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
 COPY requirements.txt .
@@ -13,17 +19,25 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the app
 COPY . .
-
-# Install the package
 RUN pip install --no-cache-dir -e .
 
-# Create data directory
-RUN mkdir -p /data
+# Create data directories
+RUN mkdir -p /data /data/kpi_checkpoints /data/ollama
 
-# Expose port
+# Symlink Ollama model storage to persistent volume
+RUN rm -rf /root/.ollama && ln -s /data/ollama /root/.ollama
+
+# Copy startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 8000
 
-CMD ["rxreserve", "serve", "--host", "0.0.0.0", "--port", "8000"]
+# Environment
 ENV RXRESERVE_DB=/data/rxreserve.db
-ENV OLLAMA_URL=https://prism-ollama.fly.dev
+ENV OLLAMA_URL=http://127.0.0.1:11434
 ENV OLLAMA_MODEL=phi3:mini
+ENV KPI_CHECKPOINT_DIR=/data/kpi_checkpoints
+ENV OLLAMA_HOST=127.0.0.1:11434
+
+CMD ["/start.sh"]

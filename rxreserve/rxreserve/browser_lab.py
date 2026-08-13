@@ -102,6 +102,7 @@ class BrowserRenderer:
         self._page = None
         self._pw = None
         self._last_video_path: str | None = None
+        self._browser_error: str | None = None
 
     async def _ensure_browser(self) -> bool:
         """Ensure Playwright browser is available."""
@@ -111,16 +112,15 @@ class BrowserRenderer:
             from playwright.async_api import async_playwright
             self._playwright_available = True
             self._pw = await async_playwright().start()
-            launch_args = {"headless": self.headless}
-            if self.video_dir:
-                launch_args["videos_path"] = self.video_dir
-            self._browser = await self._pw.chromium.launch(**launch_args)
+            self._browser = await self._pw.chromium.launch(headless=self.headless)
             return True
         except ImportError:
             self._playwright_available = False
             return False
-        except Exception:
+        except Exception as e:
             self._playwright_available = False
+            # Store error for debugging
+            self._browser_error = str(e)
             return False
 
     async def render(self, impl: Implementation,
@@ -143,9 +143,10 @@ class BrowserRenderer:
 
         if not await self._ensure_browser():
             raise RuntimeError(
-                "Browser rendering requires Playwright. "
-                "Install with: pip install playwright && playwright install chromium. "
-                "Cannot evaluate implementation without a real browser."
+                f"Browser rendering requires Playwright. "
+                f"Install with: pip install playwright && playwright install chromium. "
+                f"Cannot evaluate implementation without a real browser. "
+                f"Error: {getattr(self, '_browser_error', 'unknown')}"
             )
 
         try:
@@ -182,14 +183,14 @@ class BrowserRenderer:
             render.performance_trace = await self._capture_performance(page)
 
             await page.close()
-            # Save video path if recording
-            if self.video_dir and hasattr(context, 'video'):
+            # Video is on page, not context
+            video_ref = page.video if self.video_dir else None
+            await context.close()
+            if video_ref:
                 try:
-                    video = await context.video.path()
-                    self._last_video_path = video
+                    self._last_video_path = await video_ref.path()
                 except Exception:
                     pass
-            await context.close()
 
         except Exception as e:
             render.rejected_reason = f"Render error: {e}"
@@ -215,11 +216,13 @@ class BrowserRenderer:
             implementation_id=f"url-{url[:32]}",
             renderer_type=RendererType.DOM_CSS,
         )
+        self._last_video_path = None
 
         if not await self._ensure_browser():
             raise RuntimeError(
-                "Browser navigation requires Playwright. "
-                "Install with: pip install playwright && playwright install chromium."
+                f"Browser navigation requires Playwright. "
+                f"Install with: pip install playwright && playwright install chromium. "
+                f"Error: {getattr(self, '_browser_error', 'unknown')}"
             )
 
         try:
@@ -253,12 +256,28 @@ class BrowserRenderer:
             render.performance_trace = await self._capture_performance(page)
 
             await page.close()
-            if self.video_dir and hasattr(context, 'video'):
+            # Close context first — Playwright saves video on context close
+            # Video is on page, not context, in this Playwright version
+            video_ref = page.video if self.video_dir else None
+            await context.close()
+            # Try to get the video path
+            if self.video_dir:
                 try:
-                    self._last_video_path = await context.video.path()
+                    if video_ref:
+                        self._last_video_path = await video_ref.path()
                 except Exception:
                     pass
-            await context.close()
+                # Fallback: wait briefly then find the newest .webm file
+                if not self._last_video_path:
+                    try:
+                        import os, glob, asyncio
+                        await asyncio.sleep(0.5)
+                        videos = sorted(glob.glob(os.path.join(self.video_dir, "*.webm")),
+                                       key=os.path.getmtime, reverse=True)
+                        if videos:
+                            self._last_video_path = videos[0]
+                    except Exception:
+                        pass
 
         except Exception as e:
             render.rejected_reason = f"Navigation error: {e}"
