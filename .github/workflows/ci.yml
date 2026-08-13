@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  swift:
+    name: Swift Build + Test
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+
+  burchiweb:
+    name: BurchiWeb Python Smoke Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BurchiWeb
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install flask>=3.0,<4.0 flask-cors>=4.0,<5.0 numpy>=1.26,<2.0
+      - name: Import smoke test
+        run: |
+          python -c "from app.nyx import NyxTFIDFEngine, NyxSynonymExpander, nyx_cosine_similarity; print('nyx OK')"
+          python -c "from app.burchi_lite import *; print('burchi_lite OK')"
+          python -c "from app.burchi import BurchiElement, BurchiMatch; print('burchi OK')"
+      - name: App factory smoke test
+        run: |
+          python -c "from app import create_app; app = create_app(); print('app factory OK', app.name)"
