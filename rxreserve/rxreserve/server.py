@@ -421,15 +421,6 @@ class StrategyCreateRequest(BaseModel):
     trust_threshold: float = 0.5
 
 
-class HCPTwinRequest(BaseModel):
-    hcp_id: str
-    specialty: str = ""
-    access_preference: str = "in_person"
-    fatigue_sensitivity: float = 0.5
-    rx_influence: float = 0.5
-    baseline_trust: float = 0.5
-
-
 class KPIRecordRequest(BaseModel):
     kpi_name: str
     value: float
@@ -2518,7 +2509,7 @@ def create_app(db_path: str = "rxreserve.db") -> FastAPI:
             "governance": _governance.summary(),
             "closed_loop": _closed_loop.summary(),
             "competitive_intelligence": _ci_agent.summary(),
-            "launch_simulator": _launch_sim.summary(),
+            "launch_analyzer": _launch_sim.summary(),
             "measurement": _measurement.summary(),
         }
 
@@ -2541,7 +2532,7 @@ def create_app(db_path: str = "rxreserve.db") -> FastAPI:
                 {"id": 11, "name": "Agent Population Governance", "endpoints": 12, "built": True},
                 {"id": 12, "name": "Attribution-Settlement Closed Loop", "endpoints": 15, "built": True},
                 {"id": 13, "name": "Competitive Intelligence Agent", "endpoints": 12, "built": True},
-                {"id": 14, "name": "Launch Readiness Simulator", "endpoints": 12, "built": True},
+                {"id": 14, "name": "Launch Readiness Analyzer", "endpoints": 12, "built": True},
                 {"id": 15, "name": "Measurement Framework + ROI Engine", "endpoints": 12, "built": True},
             ],
             "total_endpoints": 181,

@@ -94,11 +94,14 @@ class BrowserRenderer:
     not just source code.
     """
 
-    def __init__(self, headless: bool = True) -> None:
+    def __init__(self, headless: bool = True, video_dir: str = None) -> None:
         self.headless = headless
+        self.video_dir = video_dir
         self._playwright_available = False
         self._browser = None
         self._page = None
+        self._pw = None
+        self._last_video_path: str | None = None
 
     async def _ensure_browser(self) -> bool:
         """Ensure Playwright browser is available."""
@@ -107,8 +110,11 @@ class BrowserRenderer:
         try:
             from playwright.async_api import async_playwright
             self._playwright_available = True
-            pw = await async_playwright().start()
-            self._browser = await pw.chromium.launch(headless=self.headless)
+            self._pw = await async_playwright().start()
+            launch_args = {"headless": self.headless}
+            if self.video_dir:
+                launch_args["videos_path"] = self.video_dir
+            self._browser = await self._pw.chromium.launch(**launch_args)
             return True
         except ImportError:
             self._playwright_available = False
@@ -143,7 +149,14 @@ class BrowserRenderer:
             )
 
         try:
-            page = await self._browser.new_page()
+            # Create context — with video recording if configured
+            context_kwargs = {}
+            if self.video_dir:
+                import os
+                os.makedirs(self.video_dir, exist_ok=True)
+                context_kwargs["record_video_dir"] = self.video_dir
+            context = await self._browser.new_context(**context_kwargs)
+            page = await context.new_page()
 
             # Set viewport
             for vp in viewports:
@@ -169,11 +182,103 @@ class BrowserRenderer:
             render.performance_trace = await self._capture_performance(page)
 
             await page.close()
+            # Save video path if recording
+            if self.video_dir and hasattr(context, 'video'):
+                try:
+                    video = await context.video.path()
+                    self._last_video_path = video
+                except Exception:
+                    pass
+            await context.close()
 
         except Exception as e:
             render.rejected_reason = f"Render error: {e}"
 
         return render
+
+    async def navigate_to_url(self, url: str,
+                              viewports: list[dict[str, int]] = None,
+                              capture_interaction: bool = True) -> RenderResult:
+        """Navigate to a real URL and capture the agent's journey.
+
+        Opens the page, scrolls through it, captures frames at each scroll
+        position, records interactions, and collects performance metrics.
+        If video_dir is set, records a video of the entire session.
+        """
+        if viewports is None:
+            viewports = [
+                {"name": "desktop", "width": 1440, "height": 900},
+                {"name": "mobile", "width": 390, "height": 844},
+            ]
+
+        render = RenderResult(
+            implementation_id=f"url-{url[:32]}",
+            renderer_type=RendererType.DOM_CSS,
+        )
+
+        if not await self._ensure_browser():
+            raise RuntimeError(
+                "Browser navigation requires Playwright. "
+                "Install with: pip install playwright && playwright install chromium."
+            )
+
+        try:
+            context_kwargs = {}
+            if self.video_dir:
+                import os
+                os.makedirs(self.video_dir, exist_ok=True)
+                context_kwargs["record_video_dir"] = self.video_dir
+                # Set a reasonable viewport for video
+                context_kwargs["viewport"] = {"width": 1440, "height": 900}
+            context = await self._browser.new_context(**context_kwargs)
+            page = await context.new_page()
+
+            for vp in viewports:
+                await page.set_viewport_size({"width": vp["width"], "height": vp["height"]})
+
+                # Navigate to the real URL
+                await page.goto(url, wait_until="networkidle", timeout=30000)
+                await page.wait_for_timeout(1000)
+
+                # Capture frames with deliberate scrolling
+                frames = await self._capture_frames(page, vp["name"])
+                if vp["name"] == "desktop":
+                    render.desktop_frames = frames
+                elif vp["name"] == "mobile":
+                    render.mobile_frames = frames
+
+            if capture_interaction:
+                render.interaction_trace = await self._capture_interaction(page)
+
+            render.performance_trace = await self._capture_performance(page)
+
+            await page.close()
+            if self.video_dir and hasattr(context, 'video'):
+                try:
+                    self._last_video_path = await context.video.path()
+                except Exception:
+                    pass
+            await context.close()
+
+        except Exception as e:
+            render.rejected_reason = f"Navigation error: {e}"
+
+        return render
+
+    async def close(self) -> None:
+        """Close the browser and clean up."""
+        if self._browser:
+            try:
+                await self._browser.close()
+            except Exception:
+                pass
+        if self._pw:
+            try:
+                await self._pw.stop()
+            except Exception:
+                pass
+        self._browser = None
+        self._pw = None
 
     async def _capture_frames(self, page, viewport_name: str) -> list[str]:
         """Capture a sequence of frames."""
@@ -183,10 +288,10 @@ class BrowserRenderer:
             screenshot = await page.screenshot(full_page=True)
             frames.append(base64.b64encode(screenshot).decode())
 
-            # Capture scrolled frames
+            # Capture scrolled frames — deliberate pauses for video recording
             for scroll in [0.25, 0.5, 0.75, 1.0]:
                 await page.evaluate(f"window.scrollTo(0, document.body.scrollHeight * {scroll})")
-                await page.wait_for_timeout(500)
+                await page.wait_for_timeout(800)
                 screenshot = await page.screenshot()
                 frames.append(base64.b64encode(screenshot).decode())
         except Exception:

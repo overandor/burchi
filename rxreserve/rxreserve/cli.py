@@ -1203,7 +1203,7 @@ def main():
     p.set_defaults(func=cmd_wargame)
 
     # price
-    p = sub.add_parser("price", help="Monte Carlo pricing")
+    p = sub.add_parser("price", help="Deterministic scenario pricing")
     p.add_argument("frontier_id")
     p.add_argument("--rollout-cost", type=float)
     p.add_argument("--prob-invalidate", type=float)
