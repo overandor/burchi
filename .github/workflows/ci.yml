@@ -43,3 +43,21 @@ jobs:
       - name: App factory smoke test
         run: |
           python -c "from app import create_app; app = create_app(); print('app factory OK', app.name)"
+
+  rxreserve:
+    name: RxReserve Test Suite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rxreserve
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install "fastapi>=0.100.0" "uvicorn>=0.23.0" "httpx>=0.24.0" "requests>=2.28.0" "pyyaml>=6.0" "numpy>=1.24.0" "networkx>=3.1" "python-multipart>=0.0.18" "pydantic>=2.0.0" "Pillow>=10.0.0" "pytest>=8.0.0"
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
