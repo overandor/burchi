@@ -1,0 +1,29 @@
+app = "rxreserve-mailos"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  RXRESERVE_DB = "/data/rxreserve.db"
+  OLLAMA_URL = "https://prism-ollama.fly.dev"
+  OLLAMA_MODEL = "phi3:mini"
+  RXRESERVE_API = "http://127.0.0.1:8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "10s"
+  grace_period = "60s"
+  method = "GET"
+  path = "/api/mailos/summary"
+
+[mounts]
+  source = "rxreserve_data"
+  destination = "/data"

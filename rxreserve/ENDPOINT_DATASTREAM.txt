@@ -1,0 +1,4290 @@
+=== FULL DATA STREAM: 284 API ENDPOINTS ===
+Server: RxReserve + LAIDER (15 proprietary systems)
+Date: 2026-08-13
+PASS: 282 | FAIL: 0 | ERROR: 2
+
+
+┌─ GET 200 /api/ancestry/monster-metric/{employee_id}
+│  Response:
+│  {
+│    "employee_id": "test-employee_id",
+│    "M_i": 0.0,
+│    "direct_value": 0.0,
+│    "derivative_value": 0.0,
+│    "derivative_count": 0
+│  }
+└─
+
+┌─ GET 200 /api/ancestry/summary
+│  Response:
+│  {
+│    "total_nodes": 0,
+│    "total_edges": 0,
+│    "node_types": {}
+│  }
+└─
+
+┌─ GET 200 /api/career
+│  Response:
+│  []
+└─
+
+┌─ POST 200 /api/career/{employee_id}
+│  Response:
+│  {
+│    "employee_id": "test-employee_id",
+│    "name": "",
+│    "role": "",
+│    "territory": "",
+│    "manager": "",
+│    "promotion_probability": 0.1,
+│    "automation_risk": 1.0,
+│    "manager_perception": 0.5,
+│    "visibility_deficit": 0.5,
+│    "network_centrality": 0.0,
+│    "revenue_contribution": 0.0,
+│    "innovation_contribution": 0.0,
+│    "cross_functional_influence": 0.0,
+│    "monster_metric": 0.0,
+│    "direct_value": 0.0,
+│    "derivative_value": 0.0,
+│    "hcps_covered": 0,
+│    "hcps_engaged": 0,
+│    "hcps_converted": 0,
+│    "engagem
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/career/{employee_id}
+│  Response:
+│  {
+│    "employee_id": "test-employee_id",
+│    "name": "",
+│    "role": "",
+│    "territory": "",
+│    "manager": "",
+│    "promotion_probability": 0.1,
+│    "automation_risk": 1.0,
+│    "manager_perception": 0.5,
+│    "visibility_deficit": 0.5,
+│    "network_centrality": 0.0,
+│    "revenue_contribution": 0.0,
+│    "innovation_contribution": 0.0,
+│    "cross_functional_influence": 0.0,
+│    "monster_metric": 0.0,
+│    "direct_value": 0.0,
+│    "derivative_value": 0.0,
+│    "hcps_covered": 0,
+│    "hcps_engaged": 0,
+│    "hcps_converted": 0,
+│    "engagem
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/crawl/340b
+│  Response:
+│  []
+└─
+
+┌─ POST 200 /api/crawl/all
+│  Response:
+│  {
+│    "open_payments": 5,
+│    "orange_book": 4,
+│    "nih_reporter": 10,
+│    "drug_shortages": 0,
+│    "medicaid": 5,
+│    "340b": 0
+│  }
+└─
+
+┌─ GET 200 /api/crawl/drug-shortages
+│  Response:
+│  []
+└─
+
+┌─ POST 200 /api/crawl/enrich/defrag
+│  Response:
+│  {
+│    "enrichment": {
+│      "shortages_crawled": 0,
+│      "fragments_added": 0
+│    },
+│    "knowledge_graph": {
+│      "total_fragments": 0,
+│      "processed_fragments": 0,
+│      "knowledge_nodes": 0,
+│      "knowledge_edges": 0,
+│      "node_types": {},
+│      "edge_types": {}
+│    }
+│  }
+└─
+
+┌─ POST 422 /api/crawl/enrich/trust/{hcp_id}
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "npi"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/crawl/medicaid
+│  Response:
+│  [
+│    {
+│      "source": "medicaid_drug_utilization",
+│      "record_type": "data_file_link",
+│      "raw_html": "",
+│      "extracted_fields": {
+│        "state": "CA",
+│        "year": "2023",
+│        "file_url": "https://www.medicaid.gov/medicaid/prescription-drugs/state-drug-utilization-data"
+│      },
+│      "source_url": "https://www.medicaid.gov/medicaid/prescription-drugs/state-drug-utilization-data",
+│      "crawled_at": "2026-08-13T22:26:33.480676+00:00",
+│      "record_id": ""
+│    },
+│    {
+│      "source": "medicaid_drug_uti
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/crawl/nih-reporter
+│  Response:
+│  [
+│    {
+│      "source": "nih_reporter",
+│      "record_type": "research_grant",
+│      "raw_html": "",
+│      "extracted_fields": {
+│        "project_num": "7OT2OD038128-02",
+│        "title": "Cellular-level Vascular Oculomics (CVO) for monitoring systemic vascular health",
+│        "pi_names": [
+│          "Stephen A Burns",
+│          "Amani A Fawzi"
+│        ],
+│        "agency": "NIH Office of the Director",
+│        "organization": "CLEVELAND CLINIC LERNER COM-CWRU",
+│        "award_amount": 451660,
+│        "start_date": "2026-08-
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/crawl/open-payments
+│  Response:
+│  [
+│    {
+│      "source": "cms_open_payments",
+│      "record_type": "dataset_metadata",
+│      "raw_html": "",
+│      "extracted_fields": {
+│        "dataset_id": "23160558-6742-54ff-8b9f-cac7d514ff4e",
+│        "title": "Covered Recipient Profile Supplement",
+│        "description": "The Covered Recipient Profile Supplement file contains information about physicians and non-physician practitioners who have been indicated as recipients of payments, other transfers of value, or ownership and investment interest in paym
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/crawl/orange-book
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/crawl/sources
+│  Response:
+│  {
+│    "sources": {
+│      "cms_open_payments": {
+│        "url": "https://openpaymentsdata.cms.gov",
+│        "mandate": "Affordable Care Act \u00a76002 (Sunshine Act)",
+│        "data": "manufacturer payments to physicians",
+│        "auth_required": false,
+│        "js_rendered": true
+│      },
+│      "fda_orange_book": {
+│        "url": "https://www.accessdata.fda.gov/scripts/cder/ob",
+│        "mandate": "Hatch-Waxman Act",
+│        "data": "approved drug products, patent/expclusivity dates",
+│        "auth_required": false,
+│     
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/experiments
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/experiments
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "frontier_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "hypothesis"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/flywheel
+│  Response:
+│  {
+│    "employees_active": 0,
+│    "opportunities_generated": 0,
+│    "experiments_running": 0,
+│    "hcps_engaged": 0,
+│    "outcomes_verified": 0,
+│    "evidence_accumulated": 4,
+│    "total_value_created": 0,
+│    "total_derivative_value": 0,
+│    "employees_promoted": 0
+│  }
+└─
+
+┌─ POST 422 /api/franchise/evidence-path
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "question"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/franchise/summary
+│  Response:
+│  {
+│    "franchise": "Biktarvy/Descovy",
+│    "evidence_items": 4,
+│    "active_evidence": 4,
+│    "assets": 4,
+│    "active_assets": 4,
+│    "topics": 4
+│  }
+└─
+
+┌─ GET 200 /api/frontiers
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/frontiers
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "problem"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 404 /api/frontiers/{frontier_id}
+│  Response:
+│  {
+│    "detail": "Frontier not found"
+│  }
+└─
+
+┌─ DELETE 200 /api/frontiers/{frontier_id}
+│  Response:
+│  {
+│    "deleted": "test-frontier_id"
+│  }
+└─
+
+┌─ POST 404 /api/frontiers/{frontier_id}/gapswat
+│  Response:
+│  {
+│    "detail": "Frontier not found"
+│  }
+└─
+
+┌─ GET 200 /api/frontiers/{frontier_id}/history
+│  Response:
+│  []
+└─
+
+┌─ POST 404 /api/frontiers/{frontier_id}/price
+│  Response:
+│  {
+│    "detail": "Frontier not found"
+│  }
+└─
+
+┌─ POST 422 /api/frontiers/{frontier_id}/transition
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "target_state"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 404 /api/frontiers/{frontier_id}/wargame
+│  Response:
+│  {
+│    "detail": "Frontier not found"
+│  }
+└─
+
+┌─ POST 200 /api/genome/acquire
+│  Response:
+│  {
+│    "cycle_start": "2026-08-13T22:26:34.040244+00:00",
+│    "discovered": 12,
+│    "captured": 0,
+│    "decomposed": 0,
+│    "curated": 0,
+│    "promoted": 0,
+│    "retired": 0,
+│    "challenges_extracted": 0,
+│    "errors": [
+│      "cannot unpack non-iterable coroutine object"
+│    ],
+│    "cycle_end": "2026-08-13T22:26:34.042611+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/genome/capabilities
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/genome/contract
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "project_name"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/genome/curator
+│  Response:
+│  {
+│    "frontier_count": 0,
+│    "candidate_count": 0,
+│    "archived_count": 0,
+│    "challenge_count": 0,
+│    "total_assignments": 0,
+│    "category_counts": {}
+│  }
+└─
+
+┌─ POST 422 /api/genome/experiment
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "archetype_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/genome/failures
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/genome/genes
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/genome/judge
+│  Response:
+│  {
+│    "total_comparisons": 0,
+│    "judge_methods": [
+│      "perceptual",
+│      "axis_score",
+│      "distinction"
+│    ],
+│    "weights": {
+│      "alpha_self": 0.2,
+│      "beta_benchmark": 0.3,
+│      "gamma_frontier": 0.25,
+│      "delta_project": 0.25
+│    }
+│  }
+└─
+
+┌─ GET 200 /api/genome/manifests
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/genome/observations
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/genome/preference
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "project_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "design_decision"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/genome/project
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "project_name"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/genome/projects
+│  Response:
+│  []
+└─
+
+┌─ POST 200 /api/genome/release
+│  Response:
+│  {
+│    "manifest_id": "MAN-9de755d2e498",
+│    "corpus_version": "0.2.0",
+│    "release_date": "2026-08-13T22:26:34.055933+00:00",
+│    "source_hashes": [],
+│    "license_states": {},
+│    "added_patterns": [],
+│    "retired_patterns": [],
+│    "trend_velocity": 0,
+│    "oversaturated_patterns": [],
+│    "evaluation_model": "multi_axis_v1",
+│    "quality_thresholds": {},
+│    "generated_design_results": [],
+│    "total_observations": 0,
+│    "total_genes": 0,
+│    "total_capabilities": 0,
+│    "total_verified_capabilities": 0
+│  }
+└─
+
+┌─ GET 200 /api/genome/skill-weights
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/genome/state
+│  Response:
+│  {
+│    "runtime_id": "GNM-b2ad553ca780",
+│    "current_corpus_version": "0.2.0",
+│    "last_acquisition_run": "2026-08-13T22:26:34.040244+00:00",
+│    "last_corpus_release": "2026-08-13T22:26:34.055933+00:00",
+│    "observation_count": 0,
+│    "latent_value_count": 0,
+│    "attempt_count": 0,
+│    "verified_capability_count": 0,
+│    "failure_count": 0,
+│    "transfer_test_count": 0,
+│    "frontier_population_count": 0,
+│    "candidate_population_count": 0,
+│    "capability_population_count": 0,
+│    "failure_population_count": 0,
+│    "av
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/genome/summary
+│  Response:
+│  {
+│    "state": {
+│      "runtime_id": "GNM-b2ad553ca780",
+│      "current_corpus_version": "0.2.0",
+│      "last_acquisition_run": "2026-08-13T22:26:34.040244+00:00",
+│      "last_corpus_release": "2026-08-13T22:26:34.055933+00:00",
+│      "observation_count": 0,
+│      "latent_value_count": 0,
+│      "attempt_count": 0,
+│      "verified_capability_count": 0,
+│      "failure_count": 0,
+│      "transfer_test_count": 0,
+│      "frontier_population_count": 0,
+│      "candidate_population_count": 0,
+│      "capability_population_count": 0,
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/genome/transfer-tests
+│  Response:
+│  []
+└─
+
+┌─ POST 200 /api/hcps
+│  Response:
+│  {
+│    "hcp_id": "44e2fe56-3c75-4b18-bf55-5ca9007f2403",
+│    "name": "test",
+│    "specialty": "",
+│    "institution": "",
+│    "territory": "",
+│    "npi": "",
+│    "journey_state": "unknown",
+│    "context": "",
+│    "patient_panel_size": 0,
+│    "therapeutic_areas": [],
+│    "needs": [],
+│    "barriers": [],
+│    "questions": [],
+│    "interactions": [],
+│    "objection_history": [],
+│    "evidence_history": [],
+│    "preferred_channel": "in_person",
+│    "best_time": "",
+│    "hcp_connections": [],
+│    "kol_status": false,
+│    "educator_status": fals
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/hcps
+│  Response:
+│  [
+│    {
+│      "hcp_id": "44e2fe56-3c75-4b18-bf55-5ca9007f2403",
+│      "name": "test",
+│      "specialty": "",
+│      "institution": "",
+│      "territory": "",
+│      "npi": "",
+│      "journey_state": "unknown",
+│      "context": "",
+│      "patient_panel_size": 0,
+│      "therapeutic_areas": [],
+│      "needs": [],
+│      "barriers": [],
+│      "questions": [],
+│      "interactions": [],
+│      "objection_history": [],
+│      "evidence_history": [],
+│      "preferred_channel": "in_person",
+│      "best_time": "",
+│      "hcp_connections": [],
+│      "k
+│    ... (truncated)
+└─
+
+┌─ GET 404 /api/hcps/{hcp_id}
+│  Response:
+│  {
+│    "detail": "HCP not found"
+│  }
+└─
+
+┌─ POST 422 /api/hcps/{hcp_id}/transition
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "target"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/interactions
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "employee_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/interactions/employee/{employee_id}
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/interactions/hcp/{hcp_id}
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/mailos/commitments
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/mailos/debt
+│  Response:
+│  {
+│    "total_obligations": 0,
+│    "unresolved": 0,
+│    "overdue": 0,
+│    "escalated": 0,
+│    "verified": 0,
+│    "closed": 0,
+│    "by_type": {},
+│    "by_system": {},
+│    "top_debts": [],
+│    "total_priority_score": 0
+│  }
+└─
+
+┌─ GET 200 /api/mailos/diagnose/{hcp_id}
+│  Response:
+│  {
+│    "diagnosis_id": "326139b7-d858-4a84-ac4a-8586b7ef7da2",
+│    "hcp_id": "h1",
+│    "last_meaningful_reply": "",
+│    "days_since_reply": -1,
+│    "friction_factors": [
+│      "no novel evidence delivered",
+│      "last meaningful reply was 999 days ago"
+│    ],
+│    "consecutive_promotional_sends": 0,
+│    "novel_evidence_delivered": false,
+│    "unresolved_questions": 0,
+│    "avg_response_time_days": 0.0,
+│    "diagnosis": "Engagement appears stable",
+│    "recommended_intervention": "Continue current cadence; monitor for change
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/mailos/imap
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "host"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/mailos/ingest
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "from_address"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/mailos/intents
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/mailos/mails
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/mailos/obligations
+│  Response:
+│  []
+└─
+
+┌─ GET 404 /api/mailos/obligations/{obligation_id}
+│  Response:
+│  {
+│    "detail": "Obligation not found"
+│  }
+└─
+
+┌─ POST 422 /api/mailos/obligations/{obligation_id}/assign
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "owner"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/mailos/obligations/{obligation_id}/execute
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "evidence"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/mailos/obligations/{obligation_id}/verify
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "verifier"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/mailos/receipts
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/mailos/summary
+│  Response:
+│  {
+│    "mails_ingested": 0,
+│    "obligations_compiled": 0,
+│    "intents_extracted": 0,
+│    "verifications": 0,
+│    "pending": 0,
+│    "overdue": 0
+│  }
+└─
+
+┌─ POST 422 /api/opportunities
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "employee"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "barrier"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/opportunities
+│  Response:
+│  []
+└─
+
+┌─ GET 404 /api/opportunities/{opp_id}
+│  Response:
+│  {
+│    "detail": "Opportunity not found"
+│  }
+└─
+
+┌─ GET 200 /api/options
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/options
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "frontier_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 200 /api/options/check-reactivation
+│  Response:
+│  {
+│    "reactivated": [],
+│    "checked": 0
+│  }
+└─
+
+┌─ POST 200 /api/options/reprice
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/proprietary/access/batch-check
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/access/no-see
+│  Response:
+│  {
+│    "accessible": true,
+│    "reason": "Unknown \u2014 proceed with caution",
+│    "alternatives": []
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/access/restricted
+│  Response:
+│  {
+│    "accessible": true,
+│    "reason": "Unknown \u2014 proceed with caution",
+│    "alternatives": []
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/access/summary
+│  Response:
+│  {
+│    "accessible": true,
+│    "reason": "Unknown \u2014 proceed with caution",
+│    "alternatives": []
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/access/{hcp_id}
+│  Response:
+│  {
+│    "accessible": true,
+│    "reason": "Accessible",
+│    "alternatives": []
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/access/{hcp_id}/attempt
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "success"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/access/{hcp_id}/profile
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "access_status": "accessible",
+│    "accessible_channels": [
+│      "in_person",
+│      "email"
+│    ],
+│    "no_see_reason": "",
+│    "last_successful_contact": "",
+│    "access_attempts": 0,
+│    "access_successes": 0,
+│    "access_rate": 0.0,
+│    "alternative_hcps": [],
+│    "recommended_action": ""
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/access/{hcp_id}/redirect
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "accessible": true,
+│    "reason": "Accessible",
+│    "alternatives": [],
+│    "action": "proceed"
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/access/{hcp_id}/similar
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/access/{hcp_id}/status
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "status"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/ci/competitor/{competitor}
+│  Response:
+│  {
+│    "competitor": "ViiV",
+│    "total_signals": 1,
+│    "critical": 1,
+│    "high": 0,
+│    "medium": 0,
+│    "low": 0,
+│    "unacknowledged": 1,
+│    "affected_hcps_total": 1,
+│    "signal_types": {
+│      "drug_approval": 1
+│    }
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/ci/competitors
+│  Response:
+│  {
+│    "HIV": [
+│      "ViiV Healthcare",
+│      "Merck"
+│    ],
+│    "Oncology": [
+│      "BMS",
+│      "Merck",
+│      "Roche",
+│      "AstraZeneca",
+│      "Pfizer"
+│    ],
+│    "Liver": [
+│      "AbbVie",
+│      "Merck"
+│    ],
+│    "Inflammation": [
+│      "AbbVie",
+│      "Pfizer",
+│      "BMS",
+│      "J&J"
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/ci/congress-calendar
+│  Response:
+│  {
+│    "ASCO": "June",
+│    "AASLD": "November",
+│    "IDWeek": "October",
+│    "CROI": "March",
+│    "ICAAC": "September",
+│    "EASL": "June",
+│    "ESMO": "October"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/ci/critical
+│  Response:
+│  [
+│    {
+│      "signal_id": "431db3ff-2c4e-4bec-96f1-e763c1561d22",
+│      "competitor": "ViiV",
+│      "signal_type": "drug_approval",
+│      "description": "New HIV therapy",
+│      "source": "",
+│      "source_url": "",
+│      "detected_at": "2026-08-13T22:26:04.614382+00:00",
+│      "threat_level": "critical",
+│      "affected_drugs": [
+│        "Biktarvy"
+│      ],
+│      "affected_hcps": [
+│        "h1"
+│      ],
+│      "recommended_actions": [
+│        "Prepare objection handling for ViiV's new approval",
+│        "Alert top 50 HCPs in affe
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/ci/hcp/{hcp_id}/exposure
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "total_threats": 1,
+│    "critical": 1,
+│    "high": 0,
+│    "competitors_targeting": [
+│      "ViiV"
+│    ],
+│    "nearest_impact_days": 14,
+│    "signals": [
+│      {
+│        "signal_id": "431db3ff-2c4e-4bec-96f1-e763c1561d22",
+│        "competitor": "ViiV",
+│        "type": "drug_approval",
+│        "threat": "critical",
+│        "description": "New HIV therapy"
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/ci/register-hcp
+│  Response:
+│  {
+│    "registered": true,
+│    "hcp_id": ""
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/ci/signal
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "competitor"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "signal_type"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│  
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/ci/signal-types
+│  Response:
+│  {
+│    "drug_approval": "drug_approval",
+│    "label_change": "label_change",
+│    "congress_presentation": "congress_presentation",
+│    "kol_publication": "kol_publication",
+│    "clinical_trial_readout": "clinical_trial_readout",
+│    "pricing_change": "pricing_change",
+│    "launch_announcement": "launch_announcement",
+│    "msl_hiring": "msl_hiring",
+│    "rep_expansion": "rep_expansion",
+│    "acquisition": "acquisition"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/ci/signals
+│  Response:
+│  [
+│    {
+│      "signal_id": "431db3ff-2c4e-4bec-96f1-e763c1561d22",
+│      "competitor": "ViiV",
+│      "signal_type": "drug_approval",
+│      "description": "New HIV therapy",
+│      "source": "",
+│      "source_url": "",
+│      "detected_at": "2026-08-13T22:26:04.614382+00:00",
+│      "threat_level": "critical",
+│      "affected_drugs": [
+│        "Biktarvy"
+│      ],
+│      "affected_hcps": [
+│        "h1"
+│      ],
+│      "recommended_actions": [
+│        "Prepare objection handling for ViiV's new approval",
+│        "Alert top 50 HCPs in affe
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/ci/summary
+│  Response:
+│  {
+│    "total_signals": 1,
+│    "acknowledged": 0,
+│    "unacknowledged": 1,
+│    "critical": 1,
+│    "high": 0,
+│    "medium": 0,
+│    "low": 0,
+│    "competitors_tracked": 1,
+│    "total_affected_hcps": 1,
+│    "avg_time_to_impact": 14.0
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/ci/threat-levels
+│  Response:
+│  {
+│    "low": "low",
+│    "medium": "medium",
+│    "high": "high",
+│    "critical": "critical"
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/ci/{signal_id}
+│  Response:
+│  {
+│    "detail": "Signal not found"
+│  }
+└─
+
+┌─ POST 404 /api/proprietary/ci/{signal_id}/acknowledge
+│  Response:
+│  {
+│    "detail": "Signal not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/all
+│  Response:
+│  {
+│    "loop_id": "all",
+│    "stages": [],
+│    "events": [],
+│    "settlement": null,
+│    "complete": false
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/complete
+│  Response:
+│  {
+│    "loop_id": "complete",
+│    "stages": [],
+│    "events": [],
+│    "settlement": null,
+│    "complete": false
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/employee/{rep_id}/capital
+│  Response:
+│  {
+│    "rep_id": "r1",
+│    "total_loops": 1,
+│    "total_career_credit": 1.0,
+│    "total_economic_settlement": 250.0,
+│    "loops": [
+│      {
+│        "loop_id": "4550f13d-d243-4d16-8088-e143d8d29b89",
+│        "value_type": "trust_improvement",
+│        "verified_value": 5000.0,
+│        "human_contribution": 0.6,
+│        "employee_credit": 1.0
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/in-progress
+│  Response:
+│  {
+│    "loop_id": "in-progress",
+│    "stages": [],
+│    "events": [],
+│    "settlement": null,
+│    "complete": false
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/stages
+│  Response:
+│  {
+│    "loop_id": "stages",
+│    "stages": [],
+│    "events": [],
+│    "settlement": null,
+│    "complete": false
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/closed-loop/start
+│  Response:
+│  {
+│    "loop_id": "becae9f8-f4c9-4b16-962e-35fd4a507063"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/summary
+│  Response:
+│  {
+│    "loop_id": "summary",
+│    "stages": [],
+│    "events": [],
+│    "settlement": null,
+│    "complete": false
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/{loop_id}
+│  Response:
+│  {
+│    "loop_id": "4550f13d-d243-4d16-8088-e143d8d29b89",
+│    "stages": [
+│      "detect",
+│      "attribute",
+│      "settle"
+│    ],
+│    "events": [
+│      {
+│        "stage": "detect",
+│        "description": "Test loop",
+│        "timestamp": "2026-08-13T22:26:04.623050+00:00",
+│        "data": {}
+│      },
+│      {
+│        "stage": "attribute",
+│        "description": "Attributed: 60% human, 40% AI",
+│        "timestamp": "2026-08-13T22:26:04.623798+00:00",
+│        "data": {
+│          "human_contribution": 0.6,
+│          "ai_contribution": 0.4
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/closed-loop/{loop_id}/attribute
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "human_contribution"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "ai_contribution"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type":
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/closed-loop/{loop_id}/event
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "stage"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/{loop_id}/is-complete
+│  Response:
+│  {
+│    "complete": true
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/closed-loop/{loop_id}/settle
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "employee_credit"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/{loop_id}/settlement
+│  Response:
+│  {
+│    "settlement_id": "b03814c4-cc02-4ca6-be2e-b668d352c489",
+│    "loop_id": "4550f13d-d243-4d16-8088-e143d8d29b89",
+│    "hcp_id": "h1",
+│    "rep_id": "r1",
+│    "human_contribution": 0.6,
+│    "ai_contribution": 0.4,
+│    "verified_value": 5000.0,
+│    "value_type": "trust_improvement",
+│    "employee_credit": 1.0,
+│    "economic_settlement": 250.0,
+│    "settled": true,
+│    "settled_at": "2026-08-13T22:26:04.624713+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/{loop_id}/stage
+│  Response:
+│  {
+│    "current_stage": "settle",
+│    "total_events": 3
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/closed-loop/{loop_id}/trace
+│  Response:
+│  {
+│    "stages": [
+│      "detect",
+│      "attribute",
+│      "settle"
+│    ],
+│    "events": [
+│      {
+│        "stage": "detect",
+│        "description": "Test loop",
+│        "timestamp": "2026-08-13T22:26:04.623050+00:00",
+│        "data": {}
+│      },
+│      {
+│        "stage": "attribute",
+│        "description": "Attributed: 60% human, 40% AI",
+│        "timestamp": "2026-08-13T22:26:04.623798+00:00",
+│        "data": {
+│          "human_contribution": 0.6,
+│          "ai_contribution": 0.4,
+│          "verified_value": 5000.0
+│        }
+│      },
+│     
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/cost-halver/auto-executable
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/proprietary/cost-halver/batch
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/cost-halver/channels
+│  Response:
+│  {
+│    "in_person": 200.0,
+│    "virtual": 75.0,
+│    "phone": 30.0,
+│    "approved_email": 3.0,
+│    "email": 3.0,
+│    "sms": 0.25
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/cost-halver/classify
+│  Response:
+│  {
+│    "decision_id": "10ae378f-9e77-4de7-9831-d23d712189ec",
+│    "hcp_id": "h1",
+│    "rep_id": "r1",
+│    "original_channel": "in_person",
+│    "recommended_channel": "virtual",
+│    "touch_value": "medium_value",
+│    "rationale": "Standard touch \u2014 virtual is cost-effective",
+│    "estimated_cost_savings": 125.0,
+│    "estimated_time_savings": 60.0,
+│    "confidence": 0.75,
+│    "auto_executable": false,
+│    "executed": false,
+│    "created_at": "2026-08-13T22:26:34.127642+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/cost-halver/decisions
+│  Response:
+│  [
+│    {
+│      "decision_id": "effa0d25-3cf7-4cdf-a5e5-78dd68ad8a92",
+│      "hcp_id": "h1",
+│      "rep_id": "r1",
+│      "original_channel": "in_person",
+│      "recommended_channel": "phone",
+│      "touch_value": "medium_value",
+│      "rationale": "Content delivery via phone \u2014 build trust first",
+│      "estimated_cost_savings": 170.0,
+│      "estimated_time_savings": 75.0,
+│      "confidence": 0.75,
+│      "auto_executable": false,
+│      "executed": false,
+│      "created_at": "2026-08-13T22:26:04.608353+00:00"
+│    },
+│    {
+│     
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/cost-halver/hcp/{hcp_id}
+│  Response:
+│  [
+│    {
+│      "decision_id": "effa0d25-3cf7-4cdf-a5e5-78dd68ad8a92",
+│      "hcp_id": "h1",
+│      "rep_id": "r1",
+│      "original_channel": "in_person",
+│      "recommended_channel": "phone",
+│      "touch_value": "medium_value",
+│      "rationale": "Content delivery via phone \u2014 build trust first",
+│      "estimated_cost_savings": 170.0,
+│      "estimated_time_savings": 75.0,
+│      "confidence": 0.75,
+│      "auto_executable": false,
+│      "executed": false,
+│      "created_at": "2026-08-13T22:26:04.608353+00:00"
+│    },
+│    {
+│     
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/cost-halver/savings
+│  Response:
+│  {
+│    "total_cost_savings": 295.0,
+│    "total_time_savings_minutes": 135.0,
+│    "avg_savings_per_touch": 147.5
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/cost-halver/summary
+│  Response:
+│  {
+│    "total_decisions": 2,
+│    "executed": 0,
+│    "auto_executable": 0,
+│    "total_cost_savings": 295.0,
+│    "total_time_savings_minutes": 135.0,
+│    "avg_savings_per_touch": 147.5,
+│    "channel_distribution": {
+│      "phone": 1,
+│      "virtual": 1
+│    }
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/cost-halver/{decision_id}
+│  Response:
+│  {
+│    "detail": "Decision not found"
+│  }
+└─
+
+┌─ POST 400 /api/proprietary/cost-halver/{decision_id}/execute
+│  Response:
+│  {
+│    "detail": "Not auto-executable or not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/defrag/fragments
+│  Response:
+│  [
+│    {
+│      "fragment_id": "af4d09ba-cf90-47cf-9c95-9a45071fd060",
+│      "source_type": "document",
+│      "source_location": "",
+│      "processed": true,
+│      "confidence": 0.5,
+│      "entity_count": 1
+│    }
+│  ]
+└─
+
+┌─ GET 200 /api/proprietary/defrag/graph/edges
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/defrag/graph/nodes
+│  Response:
+│  [
+│    {
+│      "node_id": "b77e432b-c851-42d9-a82c-3612234ce7cd",
+│      "node_type": "drug",
+│      "label": "Biktarvy",
+│      "properties": {
+│        "source": "document"
+│      },
+│      "source_fragments": []
+│    }
+│  ]
+└─
+
+┌─ GET 200 /api/proprietary/defrag/graph/summary
+│  Response:
+│  {
+│    "total_fragments": 1,
+│    "processed_fragments": 1,
+│    "knowledge_nodes": 1,
+│    "knowledge_edges": 0,
+│    "node_types": {
+│      "drug": 1
+│    },
+│    "edge_types": {}
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/defrag/ingest
+│  Response:
+│  {
+│    "fragment_id": "abeabb81-f903-4806-a0cd-9b4fef6f3131",
+│    "source_type": "document",
+│    "source_location": "",
+│    "raw_content": "",
+│    "extracted_entities": [],
+│    "extracted_facts": [],
+│    "hcp_references": [],
+│    "drug_references": [],
+│    "processed": false,
+│    "processed_at": "",
+│    "confidence": 0.0
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/defrag/process-all
+│  Response:
+│  {
+│    "total_fragments": 2,
+│    "processed_now": 1,
+│    "total_processed": 2,
+│    "knowledge_nodes": 1,
+│    "knowledge_edges": 0
+│  }
+└─
+
+┌─ POST 404 /api/proprietary/defrag/process/{fragment_id}
+│  Response:
+│  {
+│    "detail": "Fragment not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/defrag/query/hcp/{hcp_name}
+│  Response:
+│  {
+│    "hcp": "test-hcp_name",
+│    "found": false
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/defrag/stats
+│  Response:
+│  {
+│    "total_fragments": 2,
+│    "processed": 2,
+│    "nodes": 1,
+│    "edges": 0
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/defrag/{fragment_id}
+│  Response:
+│  {
+│    "detail": "Fragment not found"
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/engagement-graph/batch-edges
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/engagement-graph/batch-nodes
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/engagement-graph/edge
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "source_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "target_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│     
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/edges
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/proprietary/engagement-graph/node
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "node_type"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "label"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/engagement-graph/node/{node_id}
+│  Response:
+│  {
+│    "detail": "Node not found"
+│  }
+└─
+
+┌─ DELETE 200 /api/proprietary/engagement-graph/node/{node_id}
+│  Response:
+│  {
+│    "deleted": true
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/nodes
+│  Response:
+│  [
+│    {
+│      "node_id": "42823ada-236b-4c92-bbd3-742b1b874341",
+│      "node_type": "hcp",
+│      "label": "Dr. Smith",
+│      "properties": {
+│        "specialty": "ID"
+│      },
+│      "created_at": "2026-08-13T22:26:04.611330+00:00"
+│    },
+│    {
+│      "node_id": "e5d284c5-0764-4b20-b70b-fd841cf800e4",
+│      "node_type": "drug",
+│      "label": "Biktarvy",
+│      "properties": {
+│        "indication": "HIV"
+│      },
+│      "created_at": "2026-08-13T22:26:04.612094+00:00"
+│    }
+│  ]
+└─
+
+┌─ GET 422 /api/proprietary/engagement-graph/path
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "source_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "target_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/query/hcp/{hcp_id}
+│  Response:
+│  {
+│    "found": false
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/summary
+│  Response:
+│  {
+│    "total_nodes": 2,
+│    "total_edges": 0,
+│    "node_types": {
+│      "hcp": 1,
+│      "drug": 1
+│    },
+│    "edge_types": {}
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/types
+│  Response:
+│  {
+│    "hcp": 1,
+│    "drug": 1
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/{node_id}/edges
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/{node_id}/neighbors
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/engagement-graph/{node_id}/subgraph
+│  Response:
+│  {
+│    "center": "test-node_id",
+│    "nodes": [],
+│    "edges": []
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/all
+│  Response:
+│  {
+│    "hcp_id": "all",
+│    "level": "none",
+│    "contacts_30d": 0,
+│    "contacts_7d": 0,
+│    "last_contact": "",
+│    "days_since_contact": 999,
+│    "cooling_period_days": 0,
+│    "cooling_until": "",
+│    "fatigue_score": 0.0,
+│    "signals": [],
+│    "recommended_action": "Normal contact cadence OK.",
+│    "computed_at": "2026-08-13T22:26:34.155228+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/cooling
+│  Response:
+│  {
+│    "hcp_id": "cooling",
+│    "level": "none",
+│    "contacts_30d": 0,
+│    "contacts_7d": 0,
+│    "last_contact": "",
+│    "days_since_contact": 999,
+│    "cooling_period_days": 0,
+│    "cooling_until": "",
+│    "fatigue_score": 0.0,
+│    "signals": [],
+│    "recommended_action": "Normal contact cadence OK.",
+│    "computed_at": "2026-08-13T22:26:34.155947+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/critical
+│  Response:
+│  {
+│    "hcp_id": "critical",
+│    "level": "none",
+│    "contacts_30d": 0,
+│    "contacts_7d": 0,
+│    "last_contact": "",
+│    "days_since_contact": 999,
+│    "cooling_period_days": 0,
+│    "cooling_until": "",
+│    "fatigue_score": 0.0,
+│    "signals": [],
+│    "recommended_action": "Normal contact cadence OK.",
+│    "computed_at": "2026-08-13T22:26:34.156625+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/summary
+│  Response:
+│  {
+│    "hcp_id": "summary",
+│    "level": "none",
+│    "contacts_30d": 0,
+│    "contacts_7d": 0,
+│    "last_contact": "",
+│    "days_since_contact": 999,
+│    "cooling_period_days": 0,
+│    "cooling_until": "",
+│    "fatigue_score": 0.0,
+│    "signals": [],
+│    "recommended_action": "Normal contact cadence OK.",
+│    "computed_at": "2026-08-13T22:26:34.157328+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/thresholds
+│  Response:
+│  {
+│    "hcp_id": "thresholds",
+│    "level": "none",
+│    "contacts_30d": 0,
+│    "contacts_7d": 0,
+│    "last_contact": "",
+│    "days_since_contact": 999,
+│    "cooling_period_days": 0,
+│    "cooling_until": "",
+│    "fatigue_score": 0.0,
+│    "signals": [],
+│    "recommended_action": "Normal contact cadence OK.",
+│    "computed_at": "2026-08-13T22:26:34.159213+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/{hcp_id}
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "level": "low",
+│    "contacts_30d": 1,
+│    "contacts_7d": 1,
+│    "last_contact": "2026-08-13T22:26:04.609354+00:00",
+│    "days_since_contact": 0,
+│    "cooling_period_days": 7,
+│    "cooling_until": "2026-08-20T22:26:34.160703+00:00",
+│    "fatigue_score": 0.2,
+│    "signals": [],
+│    "recommended_action": "Monitor. Space out future contacts.",
+│    "computed_at": "2026-08-13T22:26:34.160726+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/{hcp_id}/can-contact
+│  Response:
+│  {
+│    "can_contact": false,
+│    "reason": "Cooling period active until 2026-08-20"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/fatigue/{hcp_id}/contacts
+│  Response:
+│  [
+│    {
+│      "channel": "",
+│      "timestamp": "2026-08-13T22:26:04.609354+00:00",
+│      "rep_id": ""
+│    }
+│  ]
+└─
+
+┌─ POST 200 /api/proprietary/fatigue/{hcp_id}/log-contact
+│  Response:
+│  {
+│    "logged": true
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/fatigue/{hcp_id}/log-signal
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "signal"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/governance/agents
+│  Response:
+│  [
+│    "a1"
+│  ]
+└─
+
+┌─ POST 422 /api/proprietary/governance/check
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "agent_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "agent_type"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/governance/rule/{rule_id}
+│  Response:
+│  {
+│    "detail": "Rule not found"
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/governance/rule/{rule_id}/toggle
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "enabled"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/governance/rules
+│  Response:
+│  [
+│    {
+│      "rule_id": "bcbea281-9434-4a43-b735-494a1ffa43f5",
+│      "type": "priority_override",
+│      "description": "Safety actions override all other rules",
+│      "priority": 10,
+│      "enabled": true
+│    },
+│    {
+│      "rule_id": "1e32d837-0c2f-4a03-b4ce-1775cca78eff",
+│      "type": "cooldown_enforcement",
+│      "description": "Respect HCP fatigue cooling periods",
+│      "priority": 5,
+│      "enabled": true
+│    },
+│    {
+│      "rule_id": "3599c443-df0f-4d27-ab75-1224b7f5ef21",
+│      "type": "medical_commercial_separation"
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/governance/rules
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "rule_type"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "description"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/governance/summary
+│  Response:
+│  {
+│    "total_rules": 5,
+│    "enabled_rules": 5,
+│    "total_actions_checked": 1,
+│    "total_approved": 1,
+│    "total_violations": 0,
+│    "violation_types": {}
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/governance/violation-types
+│  Response:
+│  {
+│    "no_duplicate_touch": "no_duplicate_touch",
+│    "channel_exclusivity": "channel_exclusivity",
+│    "medical_commercial_separation": "medical_commercial_separation",
+│    "cooldown_enforcement": "cooldown_enforcement",
+│    "priority_override": "priority_override"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/governance/violations
+│  Response:
+│  []
+└─
+
+┌─ DELETE 200 /api/proprietary/governance/violations
+│  Response:
+│  {
+│    "cleared": true
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/governance/{hcp_id}/actions
+│  Response:
+│  [
+│    {
+│      "request_id": "e3edab75-de3b-4ed4-b5c8-fd6a88ddcca8",
+│      "agent_id": "a1",
+│      "agent_type": "rep_agent",
+│      "channel": "in_person",
+│      "action_type": "visit",
+│      "approved": true,
+│      "timestamp": "2026-08-13T22:26:04.612863+00:00"
+│    }
+│  ]
+└─
+
+┌─ GET 422 /api/proprietary/governance/{hcp_id}/can-act
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "agent_type"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ DELETE 200 /api/proprietary/inbox/{rep_id}/clear
+│  Response:
+│  {
+│    "cleared": true
+│  }
+└─
+
+┌─ POST 404 /api/proprietary/inbox/{rep_id}/complete/{item_id}
+│  Response:
+│  {
+│    "detail": "Item not found"
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/inbox/{rep_id}/consolidate
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/inbox/{rep_id}/critical
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/proprietary/inbox/{rep_id}/ingest-email
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "mail_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/inbox/{rep_id}/ingest-intent
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "intent_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/inbox/{rep_id}/ingest-obligation
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "obligation_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/inbox/{rep_id}/pending
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/inbox/{rep_id}/queue
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/inbox/{rep_id}/summary
+│  Response:
+│  {
+│    "rep_id": "r1",
+│    "total_items": 0,
+│    "completed": 0,
+│    "pending": 0,
+│    "critical": 0,
+│    "high": 0,
+│    "medium": 0,
+│    "low": 0,
+│    "consolidated": 0,
+│    "estimated_total_minutes": 0
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/integrate/closed-loop-stats
+│  Response:
+│  {
+│    "closed_loop": {
+│      "total_loops": 2,
+│      "settled": 1,
+│      "in_progress": 1,
+│      "total_verified_value": 5000.0,
+│      "total_economic_settlement": 250.0,
+│      "avg_human_contribution": 0.6,
+│      "avg_ai_contribution": 0.4
+│    },
+│    "governance": {
+│      "total_rules": 5,
+│      "enabled_rules": 5,
+│      "total_actions_checked": 1,
+│      "total_approved": 1,
+│      "total_violations": 0,
+│      "violation_types": {}
+│    },
+│    "trust_portfolio": {
+│      "total_hcps": 1,
+│      "avg_trust": 0.56,
+│      "rising": 0,
+│      "st
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/integrate/dashboard
+│  Response:
+│  {
+│    "rep_agents": 1,
+│    "msl_router": {
+│      "total_routes": 0,
+│      "pending": 0,
+│      "responded": 0,
+│      "delivered": 0,
+│      "rejected": 0,
+│      "compliance_violations": 0
+│    },
+│    "territories": 1,
+│    "defrag": {
+│      "total_fragments": 2,
+│      "processed_fragments": 2,
+│      "knowledge_nodes": 1,
+│      "knowledge_edges": 0,
+│      "node_types": {
+│        "drug": 1
+│      },
+│      "edge_types": {}
+│    },
+│    "trust": {
+│      "total_hcps": 1,
+│      "avg_trust": 0.56,
+│      "rising": 0,
+│      "stable": 1,
+│      "declining": 0,
+│     
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/integrate/full-cycle
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "rep_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/integrate/governance-check-batch
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/integrate/hcp-360/{hcp_id}
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "trust": {
+│      "hcp_id": "h1",
+│      "current_trust": 0.56,
+│      "trend": "stable",
+│      "velocity": 0.0,
+│      "acceleration": 0.0,
+│      "predicted_trust_30d": 0.56,
+│      "predicted_trust_90d": 0.56,
+│      "decline_risk": 0.132,
+│      "intervention_urgency": "low",
+│      "signal_count": 1,
+│      "positive_signals": 1,
+│      "negative_signals": 0,
+│      "recommended_actions": [
+│        "Monitor \u2014 no urgent action needed at this time"
+│      ],
+│      "computed_at": "2026-08-13T22:26:04.607560+00:
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/integrate/ingest-to-all
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "mail_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/integrate/reset
+│  Response:
+│  {
+│    "reset": true
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/integrate/seed-engagement-graph
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/integrate/sync-trust-from-mailos
+│  Response:
+│  {
+│    "synced": 0,
+│    "trajectories": {}
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/measurement/dashboard
+│  Response:
+│  {
+│    "kpis": [
+│      {
+│        "kpi_name": "labor_per_employee",
+│        "display_name": "Labor per Employee",
+│        "unit": "hours/week",
+│        "current_value": 6.5,
+│        "target": 8.0,
+│        "baseline": 0.0,
+│        "trend": "stable",
+│        "progress": 0.812,
+│        "measurements_count": 1,
+│        "on_track": true
+│      },
+│      {
+│        "kpi_name": "defragmentation_completeness",
+│        "display_name": "Defragmentation Completeness",
+│        "unit": "%",
+│        "current_value": 45.0,
+│        "target": 90.0,
+│       
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/measurement/employee-count
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "count"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/measurement/kpi
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "kpi_name"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "value"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/measurement/kpi-definitions
+│  Response:
+│  {
+│    "labor_per_employee": {
+│      "name": "Labor per Employee",
+│      "unit": "hours/week",
+│      "target": 8.0,
+│      "baseline": 0.0
+│    },
+│    "defragmentation_completeness": {
+│      "name": "Defragmentation Completeness",
+│      "unit": "%",
+│      "target": 90.0,
+│      "baseline": 20.0
+│    },
+│    "cost_per_call": {
+│      "name": "Cost per Call/Visit",
+│      "unit": "$/call",
+│      "target": 100.0,
+│      "baseline": 200.0
+│    },
+│    "doctor_cooperation_quality": {
+│      "name": "Doctor Cooperation Quality",
+│      "unit": "NPS",
+│      
+│    ... (truncated)
+└─
+
+┌─ GET 404 /api/proprietary/measurement/kpi/{kpi_name}
+│  Response:
+│  {
+│    "detail": "No measurements for this KPI"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/measurement/kpi/{kpi_name}/history
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/measurement/kpis
+│  Response:
+│  [
+│    {
+│      "kpi_name": "labor_per_employee",
+│      "display_name": "Labor per Employee",
+│      "unit": "hours/week",
+│      "current_value": 6.5,
+│      "target": 8.0,
+│      "baseline": 0.0,
+│      "trend": "stable",
+│      "progress": 0.812,
+│      "measurements_count": 1,
+│      "on_track": true
+│    },
+│    {
+│      "kpi_name": "defragmentation_completeness",
+│      "display_name": "Defragmentation Completeness",
+│      "unit": "%",
+│      "current_value": 45.0,
+│      "target": 90.0,
+│      "baseline": 20.0,
+│      "trend": "stable",
+│      "pro
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/measurement/roi-reports
+│  Response:
+│  [
+│    {
+│      "report_id": "418a9544-672a-4da5-98a2-6c307b573bad",
+│      "system_name": "RepInboxDefrag",
+│      "period": "Q1",
+│      "implementation_cost": 500000.0,
+│      "operating_cost": 240000.0,
+│      "total_cost": 740000.0,
+│      "labor_savings": 115200,
+│      "cost_per_call_reduction": 0,
+│      "revenue_uplift": 0,
+│      "compliance_savings": 0,
+│      "total_benefits": 115200,
+│      "net_benefit": -624800.0,
+│      "roi_percentage": -84.4,
+│      "payback_months": 52.1,
+│      "generated_at": "2026-08-13T22:26:04.622234+0
+│    ... (truncated)
+└─
+
+┌─ POST 200 /api/proprietary/measurement/roi/{system_name}
+│  Response:
+│  {
+│    "report_id": "b1fd3cdf-46f7-4421-b0e7-b6fccf5e0c61",
+│    "system_name": "{system_name}",
+│    "period": "",
+│    "implementation_cost": 0,
+│    "operating_cost": 0,
+│    "total_cost": 0,
+│    "labor_savings": 28800,
+│    "cost_per_call_reduction": 0,
+│    "revenue_uplift": 0,
+│    "compliance_savings": 0,
+│    "total_benefits": 28800,
+│    "net_benefit": 28800,
+│    "roi_percentage": 2880000.0,
+│    "payback_months": 0.0,
+│    "generated_at": "2026-08-13T22:26:34.220095+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/measurement/summary
+│  Response:
+│  {
+│    "total_kpis": 4,
+│    "total_measurements": 4,
+│    "total_roi_reports": 2,
+│    "systems_tracked": 1,
+│    "kpis_on_track": 2
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/measurement/system-cost
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "system_name"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "implementation_cost"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "m
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/measurement/systems-tracked
+│  Response:
+│  {
+│    "systems": [
+│      "RepInboxDefrag"
+│    ],
+│    "count": 1
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/msl-router/detect
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "rep_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/msl-router/evidence/{drug_name}
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/msl-router/pending
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/msl-router/routes
+│  Response:
+│  []
+└─
+
+┌─ GET 200 /api/proprietary/msl-router/summary
+│  Response:
+│  {
+│    "total_routes": 0,
+│    "pending": 0,
+│    "responded": 0,
+│    "delivered": 0,
+│    "rejected": 0,
+│    "compliance_violations": 0
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/msl-router/{route_id}
+│  Response:
+│  {
+│    "detail": "Route not found"
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/msl-router/{route_id}/accept
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "msl_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/msl-router/{route_id}/assign-msl
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "msl_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST ERR /api/proprietary/msl-router/{route_id}/deliver
+│  Exception: 'Route test-route_id not found'
+└─
+
+┌─ POST 422 /api/proprietary/msl-router/{route_id}/reject
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "msl_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "reason"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/msl-router/{route_id}/respond
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "msl_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "response"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST ERR /api/proprietary/msl-router/{route_id}/route
+│  Exception: 'Route test-route_id not found'
+└─
+
+┌─ POST 200 /api/proprietary/rep-agent/create
+│  Response:
+│  {
+│    "rep_id": "r1",
+│    "rep_name": "test",
+│    "territory_id": "",
+│    "ownership": "rep_owned",
+│    "total_actions": 0,
+│    "pending_approval": 0,
+│    "autonomous": 0,
+│    "executed": 0,
+│    "rejected": 0,
+│    "hcps_tracked": 0
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/rep-agent/{rep_id}/actions
+│  Response:
+│  []
+└─
+
+┌─ POST 404 /api/proprietary/rep-agent/{rep_id}/approve/{action_id}
+│  Response:
+│  {
+│    "detail": "Action not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/rep-agent/{rep_id}/autonomous
+│  Response:
+│  []
+└─
+
+┌─ POST 400 /api/proprietary/rep-agent/{rep_id}/execute/{action_id}
+│  Response:
+│  {
+│    "detail": "Action not approved or not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/rep-agent/{rep_id}/hcp/{hcp_id}/history
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/proprietary/rep-agent/{rep_id}/ingest-mail
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "mail_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/rep-agent/{rep_id}/ingest-signals
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/rep-agent/{rep_id}/learned-preferences
+│  Response:
+│  {}
+└─
+
+┌─ POST 422 /api/proprietary/rep-agent/{rep_id}/log-interaction
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/rep-agent/{rep_id}/pending
+│  Response:
+│  []
+└─
+
+┌─ POST 404 /api/proprietary/rep-agent/{rep_id}/reject/{action_id}
+│  Response:
+│  {
+│    "detail": "Action not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/rep-agent/{rep_id}/summary
+│  Response:
+│  {
+│    "rep_id": "r1",
+│    "rep_name": "test",
+│    "territory_id": "",
+│    "ownership": "rep_owned",
+│    "total_actions": 0,
+│    "pending_approval": 0,
+│    "autonomous": 0,
+│    "executed": 0,
+│    "rejected": 0,
+│    "hcps_tracked": 0
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/rep-agent/{rep_id}/update-preferences
+│  Response:
+│  {}
+└─
+
+┌─ GET 200 /api/proprietary/rep-agents
+│  Response:
+│  [
+│    {
+│      "rep_id": "r1",
+│      "rep_name": "test",
+│      "territory_id": "",
+│      "ownership": "rep_owned",
+│      "total_actions": 0,
+│      "pending_approval": 0,
+│      "autonomous": 0,
+│      "executed": 0,
+│      "rejected": 0,
+│      "hcps_tracked": 0
+│    }
+│  ]
+└─
+
+┌─ POST 200 /api/proprietary/simulator/auto-generate
+│  Response:
+│  [
+│    {
+│      "strategy_id": "5ae4f680-916d-4427-89c6-aca295c3cbc5",
+│      "name": "Auto-strategy-1",
+│      "description": "Auto-generated variation 1",
+│      "target_hcp_count": 500,
+│      "channel_mix": {
+│        "in_person": 0.4,
+│        "virtual": 0.3,
+│        "phone": 0.3
+│      },
+│      "touch_frequency_per_month": 4,
+│      "content_type": "mixed",
+│      "msl_involvement": 0.41,
+│      "territory_optimization": true,
+│      "fatigue_awareness": false,
+│      "trust_threshold": 0.65
+│    },
+│    {
+│      "strategy_id": "1ad6d96b-859c-
+│    ... (truncated)
+└─
+
+┌─ POST 200 /api/proprietary/simulator/batch-simulate
+│  Response:
+│  [
+│    {
+│      "result_id": "e5bb45ba-312c-4aee-a582-c289a7beed68",
+│      "strategy_id": "9ef2ceb1-5085-4196-b553-87b59d5bb34f",
+│      "simulated_nps": 10.2,
+│      "simulated_rx_lift": 1.6,
+│      "simulated_access_rate": 1.0,
+│      "simulated_fatigue_rate": 0.0,
+│      "simulated_trust_change": 0.0266,
+│      "simulated_cost_per_call": 334.5,
+│      "simulated_total_cost": 16725.0,
+│      "simulated_roi": 3.77,
+│      "hcp_reached": 50,
+│      "hcp_engaged": 50,
+│      "hcp_fatigued": 0,
+│      "hcp_disengaged": 0,
+│      "composite_sco
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/simulator/best
+│  Response:
+│  {
+│    "result_id": "e5bb45ba-312c-4aee-a582-c289a7beed68",
+│    "strategy_id": "9ef2ceb1-5085-4196-b553-87b59d5bb34f",
+│    "simulated_nps": 10.2,
+│    "simulated_rx_lift": 1.6,
+│    "simulated_access_rate": 1.0,
+│    "simulated_fatigue_rate": 0.0,
+│    "simulated_trust_change": 0.0266,
+│    "simulated_cost_per_call": 334.5,
+│    "simulated_total_cost": 16725.0,
+│    "simulated_roi": 3.77,
+│    "hcp_reached": 50,
+│    "hcp_engaged": 50,
+│    "hcp_fatigued": 0,
+│    "hcp_disengaged": 0,
+│    "composite_score": 0.4918,
+│    "rank": 1,
+│    "simul
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/proprietary/simulator/load-twins
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/simulator/results
+│  Response:
+│  [
+│    {
+│      "result_id": "e5bb45ba-312c-4aee-a582-c289a7beed68",
+│      "strategy_id": "9ef2ceb1-5085-4196-b553-87b59d5bb34f",
+│      "simulated_nps": 10.2,
+│      "simulated_rx_lift": 1.6,
+│      "simulated_access_rate": 1.0,
+│      "simulated_fatigue_rate": 0.0,
+│      "simulated_trust_change": 0.0266,
+│      "simulated_cost_per_call": 334.5,
+│      "simulated_total_cost": 16725.0,
+│      "simulated_roi": 3.77,
+│      "hcp_reached": 50,
+│      "hcp_engaged": 50,
+│      "hcp_fatigued": 0,
+│      "hcp_disengaged": 0,
+│      "composite_sco
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/simulator/score-weights
+│  Response:
+│  {
+│    "nps": 0.3,
+│    "rx_lift": 0.3,
+│    "access_rate": 0.15,
+│    "fatigue_penalty": 0.1,
+│    "trust_change": 0.1,
+│    "roi": 0.05
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/simulator/strategies
+│  Response:
+│  [
+│    {
+│      "strategy_id": "e432f2e8-b25e-45bb-bf85-8e728fe52117",
+│      "name": "Auto-strategy-1",
+│      "description": "Auto-generated variation 1",
+│      "target_hcp_count": 100,
+│      "channel_mix": {
+│        "in_person": 0.6,
+│        "virtual": 0.2,
+│        "approved_email": 0.2
+│      },
+│      "touch_frequency_per_month": 2,
+│      "content_type": "promotional",
+│      "msl_involvement": 0.29,
+│      "territory_optimization": false,
+│      "fatigue_awareness": false,
+│      "trust_threshold": 0.35
+│    },
+│    {
+│      "strategy_id":
+│    ... (truncated)
+└─
+
+┌─ POST 200 /api/proprietary/simulator/strategy
+│  Response:
+│  {
+│    "strategy_id": "9c5933c8-5c2d-4e06-a7fa-e78118fca959",
+│    "name": "test",
+│    "description": "",
+│    "target_hcp_count": 100,
+│    "channel_mix": {},
+│    "touch_frequency_per_month": 2,
+│    "content_type": "clinical",
+│    "msl_involvement": 0.3,
+│    "territory_optimization": false,
+│    "fatigue_awareness": true,
+│    "trust_threshold": 0.5
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/simulator/summary
+│  Response:
+│  {
+│    "total_strategies": 171,
+│    "total_simulations": 60,
+│    "best_composite_score": 0.4918,
+│    "best_nps": 10.2,
+│    "best_rx_lift": 1.6,
+│    "avg_nps": 3.2,
+│    "avg_rx_lift": 0.32,
+│    "avg_fatigue_rate": 0.0,
+│    "twin_panel_size": 50,
+│    "scenarios_run": 2
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/simulator/twin-panel
+│  Response:
+│  {
+│    "panel_size": 50,
+│    "twins": [
+│      {
+│        "hcp_id": "h0",
+│        "specialty": "ID",
+│        "access_preference": "in_person",
+│        "fatigue_sensitivity": 0.5,
+│        "rx_influence": 0.6,
+│        "baseline_trust": 0.5
+│      },
+│      {
+│        "hcp_id": "h1",
+│        "specialty": "ID",
+│        "access_preference": "in_person",
+│        "fatigue_sensitivity": 0.5,
+│        "rx_influence": 0.6,
+│        "baseline_trust": 0.5
+│      },
+│      {
+│        "hcp_id": "h2",
+│        "specialty": "ID",
+│        "access_preference": "in_per
+│    ... (truncated)
+└─
+
+┌─ GET 404 /api/proprietary/simulator/{strategy_id}
+│  Response:
+│  {
+│    "detail": "Strategy not found"
+│  }
+└─
+
+┌─ POST 404 /api/proprietary/simulator/{strategy_id}/simulate
+│  Response:
+│  {
+│    "detail": "Strategy not found"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/systems
+│  Response:
+│  {
+│    "total_systems": 15,
+│    "systems": [
+│      {
+│        "id": 1,
+│        "name": "Rep Personal Agent",
+│        "endpoints": 15,
+│        "built": true
+│      },
+│      {
+│        "id": 2,
+│        "name": "MSL Router",
+│        "endpoints": 12,
+│        "built": true
+│      },
+│      {
+│        "id": 3,
+│        "name": "Territory-as-Code",
+│        "endpoints": 14,
+│        "built": true
+│      },
+│      {
+│        "id": 4,
+│        "name": "Defragmentation Engine",
+│        "endpoints": 10,
+│        "built": true
+│      },
+│      {
+│        "id": 5,
+│        "name": "H
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/territories
+│  Response:
+│  [
+│    {
+│      "territory_id": "t1",
+│      "versions": 1,
+│      "active_version": 1
+│    }
+│  ]
+└─
+
+┌─ POST 422 /api/proprietary/territory/define
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "territory_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/active
+│  Response:
+│  {
+│    "territory_id": "t1",
+│    "rep_id": "r1",
+│    "version": 1,
+│    "parent_version": 0,
+│    "hcp_assignments": [
+│      {
+│        "hcp_id": "h1",
+│        "priority": "high",
+│        "target_visits": 2
+│      }
+│    ],
+│    "constraints": {
+│      "max_visits_per_day": 8,
+│      "min_days_between_visits": 14
+│    },
+│    "created_at": "2026-08-13T22:26:04.603711+00:00",
+│    "created_by": "",
+│    "commit_message": "v1",
+│    "is_active": true
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/territory/{territory_id}/add-hcp
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/constraints
+│  Response:
+│  {
+│    "max_visits_per_day": 8,
+│    "min_days_between_visits": 14
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/territory/{territory_id}/deploy/{version}
+│  Response:
+│  {
+│    "territory_id": "t1",
+│    "rep_id": "r1",
+│    "version": 1,
+│    "parent_version": 0,
+│    "hcp_assignments": [
+│      {
+│        "hcp_id": "h1",
+│        "priority": "high",
+│        "target_visits": 2
+│      }
+│    ],
+│    "constraints": {
+│      "max_visits_per_day": 8,
+│      "min_days_between_visits": 14
+│    },
+│    "created_at": "2026-08-13T22:26:04.603711+00:00",
+│    "created_by": "",
+│    "commit_message": "v1",
+│    "is_active": true
+│  }
+└─
+
+┌─ GET 422 /api/proprietary/territory/{territory_id}/diff
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "v1"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "v2"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/hcps
+│  Response:
+│  [
+│    {
+│      "hcp_id": "h1",
+│      "priority": "high",
+│      "target_visits": 2
+│    }
+│  ]
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/history
+│  Response:
+│  [
+│    {
+│      "version": 1,
+│      "rep_id": "r1",
+│      "commit": "v1",
+│      "active": true,
+│      "hcps": 1,
+│      "created_at": "2026-08-13T22:26:04.603711+00:00"
+│    }
+│  ]
+└─
+
+┌─ POST 422 /api/proprietary/territory/{territory_id}/remove-hcp
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "hcp_id"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/rep
+│  Response:
+│  {
+│    "rep_id": "r1",
+│    "territory_id": "t1"
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/territory/{territory_id}/simulate/{version}
+│  Response:
+│  {
+│    "simulation_id": "bf96be86-25bf-4c67-86cd-98e9110eb9f5",
+│    "territory_id": "t1",
+│    "version": 1,
+│    "total_hcps": 1,
+│    "total_target_visits": 2,
+│    "estimated_visits_per_day": 0.1,
+│    "days_to_cover_all": 0.2,
+│    "high_priority_coverage": 1.0,
+│    "overload_risk": 0,
+│    "hcp_changes": [],
+│    "estimated_impact": {
+│      "visits_per_day": 0.1,
+│      "coverage_days": 0.2,
+│      "hcp_count": 1
+│    },
+│    "warnings": [],
+│    "simulated_at": "2026-08-13T22:26:34.345831+00:00"
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/simulations
+│  Response:
+│  [
+│    {
+│      "simulation_id": "bf96be86-25bf-4c67-86cd-98e9110eb9f5",
+│      "territory_id": "t1",
+│      "version": 1,
+│      "total_hcps": 1,
+│      "total_target_visits": 2,
+│      "estimated_visits_per_day": 0.1,
+│      "days_to_cover_all": 0.2,
+│      "high_priority_coverage": 1.0,
+│      "overload_risk": 0,
+│      "hcp_changes": [],
+│      "estimated_impact": {
+│        "visits_per_day": 0.1,
+│        "coverage_days": 0.2,
+│        "hcp_count": 1
+│      },
+│      "warnings": [],
+│      "simulated_at": "2026-08-13T22:26:34.345831+00:00"
+│    }
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/territory/{territory_id}/version/{version}
+│  Response:
+│  {
+│    "territory_id": "t1",
+│    "rep_id": "r1",
+│    "version": 1,
+│    "parent_version": 0,
+│    "hcp_assignments": [
+│      {
+│        "hcp_id": "h1",
+│        "priority": "high",
+│        "target_visits": 2
+│      }
+│    ],
+│    "constraints": {
+│      "max_visits_per_day": 8,
+│      "min_days_between_visits": 14
+│    },
+│    "created_at": "2026-08-13T22:26:04.603711+00:00",
+│    "created_by": "",
+│    "commit_message": "v1",
+│    "is_active": true
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/trust/critical
+│  Response:
+│  {}
+└─
+
+┌─ GET 200 /api/proprietary/trust/declining
+│  Response:
+│  {}
+└─
+
+┌─ GET 200 /api/proprietary/trust/portfolio
+│  Response:
+│  {
+│    "total_hcps": 1,
+│    "avg_trust": 0.56,
+│    "rising": 0,
+│    "stable": 1,
+│    "declining": 0,
+│    "critical": 0,
+│    "high_urgency": 0,
+│    "avg_decline_risk": 0.132
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/trust/trajectories
+│  Response:
+│  {
+│    "h1": {
+│      "hcp_id": "h1",
+│      "current_trust": 0.56,
+│      "trend": "stable",
+│      "velocity": 0.0,
+│      "acceleration": 0.0,
+│      "predicted_trust_30d": 0.56,
+│      "predicted_trust_90d": 0.56,
+│      "decline_risk": 0.132,
+│      "intervention_urgency": "low",
+│      "signal_count": 1,
+│      "positive_signals": 1,
+│      "negative_signals": 0,
+│      "recommended_actions": [
+│        "Monitor \u2014 no urgent action needed at this time"
+│      ],
+│      "computed_at": "2026-08-13T22:26:04.607560+00:00",
+│      "confidence"
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/proprietary/trust/{hcp_id}
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "current_trust": 0.56,
+│    "trend": "stable",
+│    "velocity": 0.0,
+│    "acceleration": 0.0,
+│    "predicted_trust_30d": 0.56,
+│    "predicted_trust_90d": 0.56,
+│    "decline_risk": 0.132,
+│    "intervention_urgency": "low",
+│    "signal_count": 1,
+│    "positive_signals": 1,
+│    "negative_signals": 0,
+│    "recommended_actions": [
+│      "Monitor \u2014 no urgent action needed at this time"
+│    ],
+│    "computed_at": "2026-08-13T22:26:04.607560+00:00",
+│    "confidence": 0.5
+│  }
+└─
+
+┌─ POST 200 /api/proprietary/trust/{hcp_id}/compute
+│  Response:
+│  {
+│    "hcp_id": "h1",
+│    "current_trust": 0.56,
+│    "trend": "stable",
+│    "velocity": 0.0,
+│    "acceleration": 0.0,
+│    "predicted_trust_30d": 0.56,
+│    "predicted_trust_90d": 0.56,
+│    "decline_risk": 0.132,
+│    "intervention_urgency": "low",
+│    "signal_count": 1,
+│    "positive_signals": 1,
+│    "negative_signals": 0,
+│    "recommended_actions": [
+│      "Monitor \u2014 no urgent action needed at this time"
+│    ],
+│    "computed_at": "2026-08-13T22:26:34.352287+00:00",
+│    "confidence": 0.5
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/trust/{hcp_id}/prediction
+│  Response:
+│  {
+│    "current": 0.56,
+│    "predicted_30d": 0.56,
+│    "predicted_90d": 0.56,
+│    "trend": "stable",
+│    "velocity": 0.0,
+│    "decline_risk": 0.132
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/trust/{hcp_id}/recommendations
+│  Response:
+│  {
+│    "recommendations": [
+│      "Monitor \u2014 no urgent action needed at this time"
+│    ],
+│    "urgency": "low"
+│  }
+└─
+
+┌─ POST 422 /api/proprietary/trust/{hcp_id}/signal
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "signal_type"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/proprietary/trust/{hcp_id}/signals
+│  Response:
+│  [
+│    {
+│      "signal_id": "486ce738-63da-4166-a023-5caa1adf7b02",
+│      "hcp_id": "h1",
+│      "signal_type": "positive_interaction",
+│      "signal_value": 0.06,
+│      "weight": 1.0,
+│      "timestamp": "2026-08-13T22:26:04.606724+00:00",
+│      "source": "",
+│      "description": "Good meeting"
+│    }
+│  ]
+└─
+
+┌─ DELETE 200 /api/proprietary/trust/{hcp_id}/signals
+│  Response:
+│  {
+│    "cleared": true
+│  }
+└─
+
+┌─ GET 404 /api/proprietary/trust/{hcp_id}/summary
+│  Response:
+│  {
+│    "detail": "No trajectory computed"
+│  }
+└─
+
+┌─ GET 200 /api/real/adverse-events/{drug_name}
+│  Response:
+│  [
+│    {
+│      "drug_name": "Biktarvy",
+│      "reaction": "Lipodystrophy acquired",
+│      "seriousness": "serious",
+│      "patient_age": 0.0,
+│      "patient_sex": "M",
+│      "report_date": "20260430",
+│      "country": "JP",
+│      "safety_report_id": "11279569"
+│    },
+│    {
+│      "drug_name": "Biktarvy",
+│      "reaction": "Nausea",
+│      "seriousness": "serious",
+│      "patient_age": 0.0,
+│      "patient_sex": "",
+│      "report_date": "20220624",
+│      "country": "JP",
+│      "safety_report_id": "12010242"
+│    },
+│    {
+│      "drug_name": "Bik
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/real/clinical-trials
+│  Response:
+│  [
+│    {
+│      "nct_id": "NCT05168423",
+│      "title": "CART-EGFR-IL13Ra2 in EGFR Amplified Recurrent GBM",
+│      "phase": "PHASE1",
+│      "status": "ACTIVE_NOT_RECRUITING",
+│      "sponsor": "Gilead",
+│      "conditions": [
+│        "Glioblastoma"
+│      ],
+│      "interventions": [
+│        "CART-EGFR-IL13Ra2 Cells"
+│      ],
+│      "enrollment": 67,
+│      "start_date": "2023-02-24",
+│      "completion_date": "2039-12-19",
+│      "primary_outcome": "Number of Subjects with treatment related adverse events using NCI Common Terminology C
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/real/drug-classes/{drug_name}
+│  Response:
+│  [
+│    {
+│      "class_name": "Tenofovir",
+│      "class_type": "CHEM",
+│      "rela": "has_ingredient"
+│    },
+│    {
+│      "class_name": "Alanine",
+│      "class_type": "CHEM",
+│      "rela": "has_ingredient"
+│    },
+│    {
+│      "class_name": "Hepatitis B, Chronic",
+│      "class_type": "DISEASE",
+│      "rela": "may_treat"
+│    },
+│    {
+│      "class_name": "Decreased Reverse Transcription to DNA",
+│      "class_type": "PE",
+│      "rela": "has_pe"
+│    },
+│    {
+│      "class_name": "Nucleoside Reverse Transcriptase Inhibitors",
+│      "class_type": "MOA"
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/real/drug-labels/{drug_name}
+│  Response:
+│  [
+│    {
+│      "drug_name": "Biktarvy",
+│      "generic_name": "BICTEGRAVIR SODIUM, EMTRICITABINE, AND TENOFOVIR ALAFENAMIDE FUMARATE",
+│      "manufacturer": "A-S Medication Solutions",
+│      "route": "ORAL",
+│      "indications": "1 INDICATIONS AND USAGE BIKTARVY is indicated as a complete regimen for the treatment of human immunodeficiency virus type 1 (HIV-1) infection in adults and pediatric patients weighing at least 14 kg: who have no antiretroviral treatment history or to replace the current antiretrovi
+│    ... (truncated)
+└─
+
+┌─ POST 422 /api/real/enrich/defrag
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "list_type",
+│        "loc": [
+│          "body"
+│        ],
+│        "msg": "Input should be a valid list",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ POST 200 /api/real/enrich/trust/{hcp_id}
+│  Response:
+│  {
+│    "enrichment": {
+│      "total_events": 10,
+│      "serious": 9,
+│      "signals_added": 9
+│    },
+│    "trajectory": {
+│      "hcp_id": "h1",
+│      "current_trust": 0.35,
+│      "trend": "stable",
+│      "velocity": 0.0,
+│      "acceleration": 0.0,
+│      "predicted_trust_30d": 0.35,
+│      "predicted_trust_90d": 0.35,
+│      "decline_risk": 0.195,
+│      "intervention_urgency": "low",
+│      "signal_count": 9,
+│      "positive_signals": 0,
+│      "negative_signals": 9,
+│      "recommended_actions": [
+│        "Ensure AE has been filed and HCP ha
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/real/hcps
+│  Response:
+│  [
+│    {
+│      "npi": "1427430669",
+│      "name": "Dr. MAZIN ABDELGHANY",
+│      "specialty": "Internal Medicine, Critical Care Medicine",
+│      "state": "LA",
+│      "city": "COVINGTON",
+│      "address": "95 JUDGE TANNER BLVD, COVINGTON, LA 704337500",
+│      "credential": "MD",
+│      "taxonomy_code": "207RC0200X"
+│    },
+│    {
+│      "npi": "1902039902",
+│      "name": "Dr. SANAZ ABDERRAHMANE",
+│      "specialty": "Internal Medicine, Infectious Disease",
+│      "state": "CA",
+│      "city": "SACRAMENTO",
+│      "address": "3939 J ST STE 
+│    ... (truncated)
+└─
+
+┌─ GET 422 /api/real/pubmed
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "query",
+│          "query"
+│        ],
+│        "msg": "Field required",
+│        "input": null
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 200 /api/real/sources
+│  Response:
+│  {
+│    "sources": {
+│      "openfda": {
+│        "base": "https://api.fda.gov",
+│        "data": "drug labels + adverse events"
+│      },
+│      "clinicaltrials_gov": {
+│        "base": "https://clinicaltrials.gov/api/v2",
+│        "data": "Gilead clinical trials"
+│      },
+│      "npi_registry": {
+│        "base": "https://npiregistry.cms.hhs.gov/api/",
+│        "data": "real healthcare providers"
+│      },
+│      "pubmed": {
+│        "base": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils",
+│        "data": "published clinical evidence"
+│      
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/supremacy-report
+│  Response:
+│  {
+│    "metric_hierarchy": {
+│      "level_0_delivery": {
+│        "emails_sent": 0,
+│        "emails_opened": 0,
+│        "open_rate": 0.0,
+│        "click_rate": 0.0,
+│        "verdict": "weak signal \u2014 measures arrival, not outcome"
+│      },
+│      "level_1_engagement": {
+│        "replies": 0,
+│        "interactions_triggered": 0,
+│        "verdict": "medium signal \u2014 measures activity, not resolution"
+│      },
+│      "level_2_task_completion": {
+│        "total_tasks": 0,
+│        "completed": 0,
+│        "verified": 0,
+│        "com
+│    ... (truncated)
+└─
+
+┌─ GET 200 /api/tasks
+│  Response:
+│  []
+└─
+
+┌─ POST 422 /api/tasks/define
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "employee_id"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      }
+│    ]
+│  }
+└─
+
+┌─ GET 404 /api/tasks/{task_id}
+│  Response:
+│  {
+│    "detail": "Task test-task_id not found"
+│  }
+└─
+
+┌─ POST 404 /api/tasks/{task_id}/complete
+│  Response:
+│  {
+│    "detail": "Task test-task_id not found"
+│  }
+└─
+
+┌─ POST 404 /api/tasks/{task_id}/delivery
+│  Response:
+│  {
+│    "detail": "Task test-task_id not found"
+│  }
+└─
+
+┌─ POST 404 /api/tasks/{task_id}/verify
+│  Response:
+│  {
+│    "detail": "Task test-task_id not found"
+│  }
+└─
+
+┌─ POST 422 /api/value-experiment
+│  Response:
+│  {
+│    "detail": [
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "cost"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│        "loc": [
+│          "body",
+│          "success_upside"
+│        ],
+│        "msg": "Field required",
+│        "input": {
+│          "name": "test",
+│          "hcp_id": "h1",
+│          "rep_id": "r1"
+│        }
+│      },
+│      {
+│        "type": "missing",
+│     
+│    ... (truncated)
+└─

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+rxreserve.db
+tests/
+.git/
+.gitignore
+Dockerfile
+fly.toml
+.dockerignore
