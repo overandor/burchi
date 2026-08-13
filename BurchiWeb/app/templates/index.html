@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BurchiWeb — Semantic Browser for LLMs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .spinner {
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-200 min-h-screen">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+            <div class="p-5 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xl">
+                        B</div>
+                    <div>
+                        <h1 class="text-lg font-bold text-white">BurchiWeb</h1>
+                        <p class="text-xs text-slate-500">Semantic Browser v4</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 p-3 space-y-1">
+                <button onclick="switchTab('digest')" data-tab="digest"
+                    class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Digest
+                </button>
+                <button onclick="switchTab('markdown')" data-tab="markdown"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                    Markdown
+                </button>
+                <button onclick="switchTab('find')" data-tab="find"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Semantic Find
+                </button>
+                <button onclick="switchTab('smart')" data-tab="smart"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Smart Extract
+                </button>
+                <button onclick="switchTab('ask')" data-tab="ask"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    Ask
+                </button>
+                <button onclick="switchTab('script')" data-tab="script"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    Script
+                </button>
+                <button onclick="switchTab('site')" data-tab="site"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Site Crawl
+                </button>
+                <button onclick="switchTab('sitemap')" data-tab="sitemap"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z M4 10h16 M4 14h16 M4 18h16" />
+                    </svg>
+                    Sitemap
+                </button>
+                <button onclick="switchTab('links')" data-tab="links"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Links
+                </button>
+                <button onclick="switchTab('metadata')" data-tab="metadata"
+                    class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Metadata
+                </button>
+            </nav>
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span>Powered by Nyx Engine</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-2">TF-IDF + Cosine Similarity<br>Zero LLM calls · Self-healing</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="max-w-5xl mx-auto p-8">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h2 id="page-title" class="text-3xl font-bold text-white mb-1">Digest</h2>
+                    <p id="page-subtitle" class="text-slate-500">Clean semantic page representation — no divs, no
+                        classes, just meaningful elements</p>
+                </div>
+
+                <!-- URL Input (shared) -->
+                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 mb-6">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">Target URL</label>
+                    <div class="flex gap-3">
+                        <input id="url-input" type="url" placeholder="https://example.com"
+                            class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                            value="https://example.com">
+                        <button id="go-btn" onclick="executeAction()"
+                            class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            Run
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Extra params per tab -->
+                <div id="extra-params" class="mb-6"></div>
+
+                <!-- Loading -->
+                <div id="loading" class="hidden flex flex-col items-center justify-center py-20">
+                    <div class="spinner mb-4"></div>
+                    <p class="text-slate-500 text-sm">Fetching and analyzing page...</p>
+                </div>
+
+                <!-- Error -->
+                <div id="error-display" class="hidden bg-red-950 border border-red-800 rounded-xl p-4 mb-6 fade-in">
+                    <div class="flex items-center gap-2 text-red-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="error-msg" class="font-medium"></span>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="results" class="space-y-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const TABS = {
+            digest: { title: 'Digest', subtitle: 'Clean semantic page representation — no divs, no classes, just meaningful elements', endpoint: '/api/digest', needsIntent: false },
+            markdown: { title: 'Markdown', subtitle: 'Convert any web page to clean markdown for LLM consumption', endpoint: '/api/markdown', needsIntent: false },
+            find: { title: 'Semantic Find', subtitle: 'Find elements by meaning using TF-IDF + cosine similarity — zero LLM calls', endpoint: '/api/find', needsIntent: true, intentLabel: 'Search intent (natural language)', intentPlaceholder: 'find the login button' },
+            smart: { title: 'Smart Extract', subtitle: 'Auto-detect page type and extract all structured data', endpoint: '/api/smart', needsIntent: false },
+            ask: { title: 'Ask', subtitle: 'Ask a structured question about the page and get JSON back', endpoint: '/api/ask', needsIntent: true, intentLabel: 'Question', intentPlaceholder: 'what links are on this page?' },
+            script: { title: 'Script', subtitle: 'Execute a JSON action pipeline of semantic browser actions', endpoint: '/api/script', needsIntent: false, isScript: true },
+            site: { title: 'Site Crawl', subtitle: 'Recursive site crawl with depth control, robots.txt respect, and content dedup', endpoint: '/api/site', needsIntent: false, isSite: true },
+            sitemap: { title: 'Sitemap', subtitle: 'Parse sitemap.xml to discover all URLs on a site', endpoint: '/api/sitemap', needsIntent: false },
+            links: { title: 'Links', subtitle: 'Extract all links from the page', endpoint: '/api/links', needsIntent: false },
+            metadata: { title: 'Metadata', subtitle: 'Extract meta tags, title, canonical URL, and other metadata', endpoint: '/api/metadata', needsIntent: false },
+        };
+
+        let currentTab = 'digest';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            const cfg = TABS[tab];
+            document.getElementById('page-title').textContent = cfg.title;
+            document.getElementById('page-subtitle').textContent = cfg.subtitle;
+            renderExtraParams(cfg);
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('error-display').classList.add('hidden');
+        }
+
+        function renderExtraParams(cfg) {
+            const container = document.getElementById('extra-params');
+            let html = '';
+
+            if (cfg.needsIntent) {
+                html += `
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 mb-6">
+                        <label class="block text-sm font-medium text-slate-400 mb-2">${cfg.intentLabel}</label>
+                        <input id="intent-input" type="text" placeholder="${cfg.intentPlaceholder}"
+                               class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                               onkeydown="if(event.key==='Enter')executeAction()">
+                    </div>`;
+            }
+
+            if (cfg.isSite) {
+                html += `
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 mb-6 grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Max Depth</label>
+                            <input id="depth-input" type="number" value="2" min="1" max="10"
+                                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Max Pages</label>
+                            <input id="max-pages-input" type="number" value="20" min="1" max="200"
+                                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Format</label>
+                            <select id="format-input" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="markdown">Markdown</option>
+                                <option value="digest">Digest</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                    </div>`;
+            }
+
+            if (cfg.isScript) {
+                const defaultScript = JSON.stringify([
+                    { action: "goto", intent: "https://example.com" },
+                    { action: "digest" },
+                    { action: "find", intent: "more information link" },
+                    { action: "markdown" }
+                ], null, 2);
+                html += `
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 mb-6">
+                        <label class="block text-sm font-medium text-slate-400 mb-2">JSON Action Script</label>
+                        <textarea id="script-input" rows="12"
+                               class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 mono text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500">${defaultScript}</textarea>
+                        <p class="text-xs text-slate-500 mt-2">Actions: goto, find, click, type, extract, digest, markdown, snapshot, screenshot, links, metadata, scroll, wait, press, a11y, ask, smart</p>
+                    </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function executeAction() {
+            const url = document.getElementById('url-input').value.trim();
+            if (!url) return;
+
+            const cfg = TABS[currentTab];
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error-display').classList.add('hidden');
+            document.getElementById('results').innerHTML = '';
+
+            try {
+                let apiUrl = cfg.endpoint + '?url=' + encodeURIComponent(url);
+                const options = {};
+
+                if (cfg.needsIntent) {
+                    const intent = document.getElementById('intent-input')?.value.trim();
+                    if (!intent) {
+                        throw new Error('Please enter a search intent');
+                    }
+                    apiUrl += '&intent=' + encodeURIComponent(intent);
+                }
+
+                if (cfg.isSite) {
+                    apiUrl += '&depth=' + (document.getElementById('depth-input')?.value || '2');
+                    apiUrl += '&max=' + (document.getElementById('max-pages-input')?.value || '20');
+                    apiUrl += '&format=' + (document.getElementById('format-input')?.value || 'markdown');
+                }
+
+                if (cfg.isScript) {
+                    const scriptText = document.getElementById('script-input')?.value;
+                    options.method = 'POST';
+                    options.headers = { 'Content-Type': 'application/json' };
+                    options.body = scriptText;
+                }
+
+                const resp = await fetch(apiUrl, options);
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    throw new Error(data.error || `HTTP ${resp.status}`);
+                }
+
+                renderResults(data, currentTab);
+            } catch (err) {
+                document.getElementById('error-msg').textContent = err.message;
+                document.getElementById('error-display').classList.remove('hidden');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        function renderResults(data, tab) {
+            const container = document.getElementById('results');
+            container.innerHTML = '';
+
+            if (tab === 'digest') {
+                container.innerHTML = renderDigest(data);
+            } else if (tab === 'markdown') {
+                container.innerHTML = renderMarkdown(data);
+            } else if (tab === 'find') {
+                container.innerHTML = renderFind(data);
+            } else if (tab === 'smart') {
+                container.innerHTML = renderSmart(data);
+            } else if (tab === 'ask') {
+                container.innerHTML = renderJson(data);
+            } else if (tab === 'script') {
+                container.innerHTML = renderScript(data);
+            } else if (tab === 'site') {
+                container.innerHTML = renderSiteCrawl(data);
+            } else if (tab === 'sitemap') {
+                container.innerHTML = renderSitemap(data);
+            } else if (tab === 'links') {
+                container.innerHTML = renderLinks(data);
+            } else if (tab === 'metadata') {
+                container.innerHTML = renderMetadata(data);
+            }
+        }
+
+        function card(title, content, extraClass = '') {
+            return `<div class="bg-slate-900 rounded-xl border border-slate-800 p-5 fade-in ${extraClass}">
+                ${title ? `<h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">${title}</h3>` : ''}
+                ${content}
+            </div>`;
+        }
+
+        function renderDigest(data) {
+            const lines = (data.digest || '').split('\n');
+            let html = card('Page Info', `
+                <div class="space-y-1 text-sm">
+                    <p><span class="text-slate-500">Title:</span> <span class="text-white">${esc(data.title)}</span></p>
+                    <p><span class="text-slate-500">URL:</span> <a href="${esc(data.url)}" target="_blank" class="text-brand-400 hover:underline">${esc(data.url)}</a></p>
+                </div>`);
+            const digestHtml = lines.map(l => {
+                if (l.startsWith('#')) return `<div class="text-brand-400 font-semibold mt-3 mb-1">${esc(l)}</div>`;
+                if (l.startsWith('URL:')) return `<div class="text-slate-500 text-sm">${esc(l)}</div>`;
+                if (l.startsWith('Elements:')) return `<div class="text-slate-500 text-sm mb-3">${esc(l)}</div>`;
+                if (!l.trim()) return '<div class="h-2"></div>';
+                const m = l.match(/\[(\w+)\]\s*"?(.*?)"?\s*(←\s*e\d+)?/);
+                if (m) {
+                    const tag = m[1], text = m[2] || '', ref = m[3] || '';
+                    const isInteractive = ref.includes('←');
+                    return `<div class="flex items-start gap-2 py-0.5 mono text-sm">
+                        <span class="text-${isInteractive ? 'brand' : 'slate'}-400 font-semibold">[${tag}]</span>
+                        <span class="text-slate-300">${esc(text)}</span>
+                        <span class="text-green-400 text-xs ml-auto">${esc(ref)}</span>
+                    </div>`;
+                }
+                return `<div class="text-slate-400 text-sm">${esc(l)}</div>`;
+            }).join('');
+            html += card('Semantic Digest', `<div class="space-y-0">${digestHtml}</div>`);
+            return html;
+        }
+
+        function renderMarkdown(data) {
+            const md = data.markdown || '';
+            return card('Markdown Output', `
+                <div class="flex justify-between items-center mb-3">
+                    <div class="text-sm text-slate-500">${esc(data.title)} · ${md.length.toLocaleString()} chars</div>
+                    <button onclick="copyText(${JSON.stringify(md).replace(/</g, '&lt;')})" class="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 transition">Copy</button>
+                </div>
+                <pre class="mono text-sm text-slate-300 bg-slate-950 rounded-lg p-4 max-h-[600px] overflow-y-auto">${esc(md)}</pre>`);
+        }
+
+        function renderFind(data) {
+            if (!Array.isArray(data) || data.length === 0) {
+                return card('', '<p class="text-slate-500 text-center py-8">No matches found</p>');
+            }
+            const items = data.map(m => `
+                <div class="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-brand-400 font-bold text-sm">#${m.rank}</span>
+                            <span class="px-2 py-0.5 bg-slate-800 rounded text-xs mono text-slate-300">&lt;${esc(m.tag)}&gt;</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-24 bg-slate-800 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-brand-500 to-brand-400 h-2 rounded-full" style="width:${m.score}%"></div>
+                            </div>
+                            <span class="text-xs text-slate-400 mono w-10 text-right">${m.score}%</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-200 text-sm mb-2">${esc(m.text || '(no text)')}</p>
+                    ${m.matchedTerms && m.matchedTerms.length ? `<div class="flex flex-wrap gap-1 mt-2">${m.matchedTerms.map(t => `<span class="px-2 py-0.5 bg-brand-950 text-brand-300 rounded text-xs mono">${esc(t)}</span>`).join('')}</div>` : ''}
+                    ${m.attrs && Object.keys(m.attrs).length ? `<div class="mt-2 text-xs text-slate-500 mono">${Object.entries(m.attrs).slice(0, 4).map(([k, v]) => `<span class="mr-3">${esc(k)}="${esc(v)}"</span>`).join('')}</div>` : ''}
+                </div>
+            `).join('');
+            return card(`Semantic Matches (${data.length})`, `<div class="space-y-3">${items}</div>`);
+        }
+
+        function renderSmart(data) {
+            let sections = [];
+            sections.push(card('Page Type',
+                '<div class="flex items-center gap-3">' +
+                '<span class="px-3 py-1 bg-brand-600 text-white rounded-lg text-sm font-medium capitalize">' + esc(data.type || 'unknown') + '</span>' +
+                '<span class="text-slate-500 text-sm">' + esc(data.title) + '</span>' +
+                '</div>'));
+            if (data.headings) sections.push(card('Headings (' + data.headings.length + ')',
+                renderList(data.headings.map(function (h) { return '<span class="mono text-xs text-slate-500">&lt;' + esc(h.level) + '&gt;</span> ' + esc(h.text); }))));
+            if (data.buttons) sections.push(card('Buttons (' + data.buttons.length + ')',
+                renderList(data.buttons.map(function (b) { return esc(b); }))));
+            if (data.links) sections.push(card('Links (' + data.links.length + ')',
+                renderList(data.links.map(function (l) { return esc(l.text) + ' <span class="text-slate-600 text-xs mono">' + esc(l.ref) + '</span>'; }))));
+            if (data.inputs) sections.push(card('Inputs (' + data.inputs.length + ')',
+                renderList(data.inputs.map(function (i) { return esc(i.name || '(unnamed)') + ' <span class="text-slate-600 text-xs mono">' + esc(i.ref) + '</span>'; }))));
+            if (data.images) sections.push(card('Images (' + data.images.length + ')',
+                renderList(data.images.map(function (i) { return esc(i.alt || '(no alt)') + ' <span class="text-slate-600 text-xs mono">' + esc(i.ref) + '</span>'; }))));
+            if (data.regions) sections.push(card('Content Regions',
+                renderList(data.regions.map(function (r) { return '<span class="capitalize font-medium text-slate-300">' + esc(r.region) + '</span> <span class="text-slate-600">(' + r.elements + ' elements)</span>'; }))));
+            return sections.join('');
+        }
+
+        function renderScript(data) {
+            if (!Array.isArray(data)) return renderJson(data);
+            const items = data.map((r, i) => `
+                <div class="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-slate-500 text-xs mono">Step ${i + 1}</span>
+                        <span class="px-2 py-0.5 rounded text-xs mono ${r.success ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}">${esc(r.action)}</span>
+                        <span class="text-xs ${r.success ? 'text-green-400' : 'text-red-400'}">${r.success ? '✓' : '✗'}</span>
+                    </div>
+                    ${r.data ? `<pre class="mono text-xs text-slate-400 bg-slate-900 rounded p-3 max-h-48 overflow-y-auto mt-2">${esc(r.data.substring(0, 500))}${r.data.length > 500 ? '...' : ''}</pre>` : ''}
+                    ${r.url ? `<p class="text-xs text-slate-600 mt-1">→ ${esc(r.url)}</p>` : ''}
+                </div>
+            `).join('');
+            return card(`Script Results (${data.length} steps)`, `<div class="space-y-3">${items}</div>`);
+        }
+
+        function renderSiteCrawl(data) {
+            if (!Array.isArray(data)) return renderJson(data);
+            const pages = data.map(p => `
+                <div class="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-xs mono text-slate-500">depth ${p.depth}</span>
+                        ${p.success ? '<span class="text-green-400 text-xs">✓</span>' : '<span class="text-red-400 text-xs">✗</span>'}
+                        <a href="${esc(p.url)}" target="_blank" class="text-brand-400 hover:underline text-sm flex-1 truncate">${esc(p.title || p.url)}</a>
+                        ${p.content ? `<span class="text-xs text-slate-600">${p.content.length.toLocaleString()} chars</span>` : ''}
+                    </div>
+                    ${p.error ? `<p class="text-red-400 text-xs">${esc(p.error)}</p>` : ''}
+                    ${p.links ? `<p class="text-xs text-slate-600 mt-1">${p.links.length} links found</p>` : ''}
+                </div>
+            `).join('');
+            return card(`Crawled Pages (${data.length})`, `<div class="space-y-2">${pages}</div>`);
+        }
+
+        function renderSitemap(data) {
+            const urls = data.urls || [];
+            let html = card('Sitemap Summary', `<p class="text-slate-300"><span class="text-3xl font-bold text-white">${data.count}</span> URLs discovered</p>`);
+            if (urls.length) {
+                html += card('URLs', `<div class="space-y-1 max-h-96 overflow-y-auto">${urls.map(u => `<div class="mono text-xs text-slate-400 py-1 border-b border-slate-800/50"><a href="${esc(u)}" target="_blank" class="hover:text-brand-400">${esc(u)}</a></div>`).join('')}</div>`);
+            }
+            return html;
+        }
+
+        function renderLinks(data) {
+            const links = data.links || [];
+            if (!links.length) return card('', '<p class="text-slate-500 text-center py-8">No links found</p>');
+            const items = links.map(l => `<div class="flex items-center gap-3 py-2 border-b border-slate-800/50">
+                <span class="text-slate-300 text-sm flex-1 truncate">${esc(l.text || '(no text)')}</span>
+                <a href="${esc(l.href)}" target="_blank" class="text-xs text-brand-400 hover:underline mono truncate max-w-xs">${esc(l.href)}</a>
+            </div>`).join('');
+            return card(`Links (${links.length})`, `<div>${items}</div>`);
+        }
+
+        function renderMetadata(data) {
+            const meta = data.metadata || {};
+            const items = Object.entries(meta).map(([k, v]) => `<div class="flex gap-3 py-2 border-b border-slate-800/50">
+                <span class="text-slate-400 text-sm mono whitespace-nowrap min-w-[140px]">${esc(k)}</span>
+                <span class="text-slate-300 text-sm break-all">${esc(v)}</span>
+            </div>`).join('');
+            return card(`Metadata (${Object.keys(meta).length} entries)`, `<div>${items}</div>`);
+        }
+
+        function renderJson(data) {
+            return card('JSON Response', `<pre class="mono text-sm text-slate-300 bg-slate-950 rounded-lg p-4 max-h-[600px] overflow-y-auto">${esc(JSON.stringify(data, null, 2))}</pre>`);
+        }
+
+        function renderList(items) {
+            if (!items || !items.length) return '<p class="text-slate-500 text-sm">None found</p>';
+            return `<div class="space-y-1">${items.map(i => `<div class="text-sm text-slate-300 py-1 border-b border-slate-800/50">${i}</div>`).join('')}</div>`;
+        }
+
+        function esc(s) {
+            if (s === null || s === undefined) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+
+        document.getElementById('url-input').addEventListener('keydown', e => { if (e.key === 'Enter') executeAction(); });
+    </script>
+</body>
+
+</html>

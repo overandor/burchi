@@ -1,0 +1,18 @@
+[build]
+command = "pip install beautifulsoup4 requests numpy"
+publish = "netlify/static"
+functions = "netlify/functions"
+
+[functions]
+# Python runtime for serverless functions
+node_bundler = "esbuild"
+
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/api/:splat"
+status = 200
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8700:8700"
+    environment:
+      - BURCHI_HOST=0.0.0.0
+      - BURCHI_PORT=8700
+      - BURCHI_THREADS=4
+    restart: unless-stopped
