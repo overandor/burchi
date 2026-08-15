@@ -26,9 +26,10 @@ export interface EmailAttachment {
 }
 
 export interface ParsedAttachmentData {
-  type: 'csv' | 'excel' | 'pdf' | 'text' | 'unknown';
+  type: 'csv' | 'excel' | 'pdf' | 'pdf_ocr' | 'text' | 'docx' | 'pptx' | 'json' | 'unknown';
   rows?: Record<string, unknown>[];
   text?: string;
+  slides?: { slideNumber: number; title?: string; text: string; tables?: Record<string, unknown>[][] }[];
   metadata?: Record<string, unknown>;
 }
 
@@ -1117,6 +1118,7 @@ export type HypothesisState =
   | "executing"
   | "observed"
   | "attributed"
+  | "finalized"
   | "branched"
   | "candidate"
   | "validated"
@@ -1248,6 +1250,80 @@ export interface HypothesisAssignment {
   innovationWindow: InnovationDimension[];
   /** Linked process-ownership mission, if this is a builder hypothesis. */
   processOwnershipId?: string;
+
+  // ─── Workflow evidence chain ────────────────────────────────────
+  // Each stage produces evidence that feeds the next. Skipping a stage
+  // is allowed but degrades downstream attribution confidence.
+
+  /** Stage 2 (Intel): research findings, confounders, adversarial challenge */
+  intel?: WorkflowIntel;
+  /** Stage 3 (Execution): the plan committed before field action */
+  executionPlan?: WorkflowExecutionPlan;
+  /** Stage 4 (Observation): what actually happened in the field */
+  observationId?: string;
+  /** Stage 5 (Attribution): causal analysis result */
+  attributionId?: string;
+  /** Timestamps for each stage transition — used for pacing analytics */
+  stageTimestamps?: {
+    accepted?: string;
+    intelComplete?: string;
+    executionStarted?: string;
+    observed?: string;
+    attributed?: string;
+    finalized?: string;
+  };
+}
+
+/** Intel gathered before execution. Each piece is evidence that shapes
+ *  downstream attribution. More intel = higher confidence ceiling. */
+export interface WorkflowIntel {
+  /** Prior-art research findings (from /api/golden/llm action=research) */
+  research?: {
+    summary: string;
+    sourceDomains: string[];
+    adjacentSupport: string;
+    runAt?: string;
+  };
+  /** Confounders identified (from /api/llm/infer confounder prompt) */
+  confounders?: {
+    items: string[];
+    runAt?: string;
+  };
+  /** Adversarial challenge (from /api/llm/infer challenge prompt) */
+  challenge?: {
+    text: string;
+    weakestPoint: string;
+    falsificationCondition: string;
+    runAt?: string;
+  };
+  /** How many intel steps were completed (0-3). Affects attribution confidence. */
+  stepsCompleted: number;
+  /** Whether the employee skipped intel to go straight to execution */
+  skipped: boolean;
+}
+
+/** The plan committed before field execution. This is the "bet" —
+ *  what you predict will happen, so observation can compare against it. */
+export interface WorkflowExecutionPlan {
+  /** Which accounts you'll test on */
+  accountIds: string[];
+  /** What modification you're making (if any) */
+  modification?: {
+    dimension: InnovationDimension;
+    rationale: string;
+  };
+  /** What you predict will happen — the pre-registration */
+  prediction: {
+    metric: string;
+    expectedDirection: "increase" | "decrease" | "no_change";
+    expectedMagnitude: string;
+    unit: string;
+  };
+  /** What would falsify this — your exit condition */
+  falsificationCriteria: string;
+  /** How many days you'll run before observing */
+  evaluationDays: number;
+  committedAt: string;
 }
 
 /** A measured outcome from executing a hypothesis assignment. */
@@ -2322,18 +2398,18 @@ export interface VoiceAuditEvent {
   eventId: string;
   sessionId: string;
   eventType:
-    | "voice.session_created"
-    | "voice.permission_requested"
-    | "voice.recording_started"
-    | "voice.recording_paused"
-    | "voice.recording_stopped"
-    | "voice.transcript_received"
-    | "voice.transcript_corrected"
-    | "voice.artifacts_extracted"
-    | "voice.artifacts_confirmed"
-    | "voice.compliance_flagged"
-    | "voice.session_completed"
-    | "voice.session_cancelled";
+  | "voice.session_created"
+  | "voice.permission_requested"
+  | "voice.recording_started"
+  | "voice.recording_paused"
+  | "voice.recording_stopped"
+  | "voice.transcript_received"
+  | "voice.transcript_corrected"
+  | "voice.artifacts_extracted"
+  | "voice.artifacts_confirmed"
+  | "voice.compliance_flagged"
+  | "voice.session_completed"
+  | "voice.session_cancelled";
   actor: string;
   experimentRef?: string;
   missionVersion?: string;
@@ -2363,9 +2439,9 @@ export interface InterviewQuestion {
   questionId: string;
   prompt: string;
   category: "what_happened" | "what_observed" | "protocol_change" | "who_acted" |
-            "when_occurred" | "outcome_recorded" | "evidence_supports" |
-            "alternative_explanations" | "safety_events" | "confidence" |
-            "artifact_classification";
+  "when_occurred" | "outcome_recorded" | "evidence_supports" |
+  "alternative_explanations" | "safety_events" | "confidence" |
+  "artifact_classification";
   required: boolean;
   asked: boolean;
   answered: boolean;
@@ -2817,3 +2893,135 @@ export interface ExecutionClassDefinition {
 
 export * from "./city";
 export * from "./membra";
+
+// ─── Signal Intelligence ───────────────────────────────────────────
+
+/** A unified communication event from any channel (email, phone, image). */
+export interface SignalEvent {
+  id: string;
+  timestamp: string;
+  channel: "email" | "phone" | "sms" | "image" | "meeting" | "document";
+  direction: "inbound" | "outbound";
+  actor: string;
+  actorIdentifier: string;
+  subject: string;
+  content: string;
+  durationSec?: number;
+  metadata: Record<string, unknown>;
+  /** ID of the source record this event was derived from */
+  sourceId: string;
+}
+
+/** A correlation link between two events across channels. */
+export interface SignalCorrelation {
+  id: string;
+  eventAId: string;
+  eventBId: string;
+  confidence: number;
+  correlationType: "semantic" | "temporal" | "actor" | "subject" | "causal";
+  explanation: string;
+  /** LLM-generated reasoning for why these events are linked */
+  reasoning?: string;
+}
+
+/** A unified timeline of correlated events across all channels. */
+export interface UnifiedTimeline {
+  actor: string;
+  events: (SignalEvent & { correlations?: SignalCorrelation[] })[];
+  totalEvents: number;
+  channelsUsed: string[];
+  spanStart: string;
+  spanEnd: string;
+}
+
+/** Adversarial pattern detection result. */
+export interface AdversarialPattern {
+  id: string;
+  type:
+  | "social_engineering"
+  | "phishing_cross_channel"
+  | "manipulation_escalation"
+  | "coordinated_pressure"
+  | "impersonation"
+  | "urgency_manipulation"
+  | "authority_fabrication"
+  | "information_harvesting";
+  severity: "critical" | "high" | "medium" | "low";
+  channels: string[];
+  actor: string;
+  description: string;
+  evidence: string[];
+  firstSeen: string;
+  lastSeen: string;
+  eventCount: number;
+  recommendedAction: string;
+}
+
+/** Communication DNA profile for a contact/actor. */
+export interface CommunicationDNA {
+  actor: string;
+  actorIdentifier: string;
+  totalInteractions: number;
+  channels: string[];
+  // Behavioral metrics
+  avgResponseTimeHours: number;
+  responseTimeVariance: number;
+  preferredChannel: string;
+  channelSwitchFrequency: number;
+  // Sentiment & tone
+  sentimentTrend: "improving" | "stable" | "declining" | "volatile";
+  sentimentScore: number;
+  aggressionScore: number;
+  cooperationScore: number;
+  // Patterns
+  escalationTriggers: string[];
+  topicPreferences: string[];
+  communicationStyle: "direct" | "indirect" | "formal" | "casual" | "evasive" | "assertive";
+  // Predictive
+  predictedNextAction: string;
+  predictedNextActionConfidence: number;
+  predictedChannel: string;
+  predictedResponseTimeHours: number;
+  // Risk
+  manipulationRiskScore: number;
+  // Timeline
+  lastInteraction: string;
+  interactionFrequency: number;
+  // LLM-generated narrative
+  profileNarrative?: string;
+}
+
+/** Autonomous response negotiation result. */
+export interface NegotiationResponse {
+  id: string;
+  contextEventId: string;
+  channel: "email" | "sms" | "phone";
+  proposedResponse: string;
+  tone: "diplomatic" | "firm" | "collaborative" | "deflecting" | "assertive";
+  objectives: string[];
+  guardrails: string[];
+  riskAssessment: string;
+  confidence: number;
+  requiresApproval: boolean;
+  alternatives: { response: string; tone: string; rationale: string }[];
+  generatedAt: string;
+  model: string;
+}
+
+/** Full Signal Intelligence report combining all four engines. */
+export interface SignalIntelligenceReport {
+  generatedAt: string;
+  // Cross-Channel Correlation
+  correlations: SignalCorrelation[];
+  timelines: UnifiedTimeline[];
+  correlationCount: number;
+  // Adversarial Pattern Detection
+  adversarialPatterns: AdversarialPattern[];
+  criticalThreats: number;
+  // Communication DNA
+  dnaProfiles: CommunicationDNA[];
+  // Negotiator (responses are generated on-demand, not in the report)
+  totalEvents: number;
+  totalActors: number;
+  channelsCovered: string[];
+}
