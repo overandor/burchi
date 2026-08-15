@@ -387,8 +387,32 @@ export default function InboxPage() {
       });
 
       if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status}${errText ? `: ${errText.slice(0, 200)}` : ""}`);
+        // LLM unavailable — fall back to local deterministic analysis
+        const localRes = await fetch("/api/emails/local-analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            emails: emails.slice(0, 25).map(e => ({
+              id: e.id,
+              from: e.from,
+              subject: e.subject,
+              preview: e.preview,
+              date: e.date,
+              attachmentCount: e.attachmentCount || 0,
+            })),
+          }),
+        });
+        if (!localRes.ok) {
+          const errText = await res.text().catch(() => "");
+          throw new Error(`HTTP ${res.status}${errText ? `: ${errText.slice(0, 200)}` : ""}`);
+        }
+        const localData = await localRes.json();
+        if (localData.content) {
+          setAnalysis(localData.content);
+          setLlmUsed(false);
+          return;
+        }
+        throw new Error("Both LLM and local analysis returned empty.");
       }
       const data = await res.json();
       const content =
