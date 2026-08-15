@@ -206,6 +206,26 @@ export async function runAgent(req: AgentRequest): Promise<AgentResponse> {
   // Log the user's input
   logVoiceTurn(conversationId, "user", req.text, context);
 
+  // ─── Deterministic first-pass ──────────────────────────────────
+  // Try to handle simple commands without LLM to avoid latency,
+  // rate limits, and failures. Only fall through to LLM for complex
+  // or novel commands.
+  const direct = await tryDeterministicCommand(req.text, context, employeeId);
+  if (direct) {
+    if (direct.actionsTaken) {
+      for (const a of direct.actionsTaken) {
+        actionsTaken.push(a);
+      }
+    }
+    logVoiceTurn(conversationId, "assistant", direct.speech, context, actionsTaken);
+    return {
+      ...direct,
+      actionsTaken,
+      llmUsed: false,
+      conversationId,
+    };
+  }
+
   const systemPrompt = `You are Foundry, a voice agent for a pharma field platform. You can call tools to get data and take actions.
 
 Employee: ${employeeId}
@@ -584,6 +604,155 @@ function parseAgentResponse(content: string): {
 }
 
 // ─── Deterministic Fallback ─────────────────────────────────────
+
+/**
+ * Deterministic command interpreter.
+ * Handles common commands without LLM — navigation, data queries,
+ * and simple actions. Returns null if the command is complex/novel
+ * and needs LLM interpretation.
+ */
+async function tryDeterministicCommand(
+  text: string,
+  context: string,
+  employeeId: string,
+): Promise<AgentResponse | null> {
+  const lower = text.toLowerCase().trim();
+
+  // ─── Navigation ───────────────────────────────────────────
+  const navMap: Record<string, string> = {
+    "today": "/today", "inbox": "/inbox", "frontrunner": "/frontrunner",
+    "leaders": "/leaders", "foundry": "/foundry", "experiment": "/experiment",
+    "process lab": "/process-lab", "email lab": "/email-lab",
+    "spin lifecycle": "/spin-lifecycle", "spinor-rl": "/spinor-rl",
+    "golden nodes": "/golden-nodes", "golden": "/golden-nodes",
+    "results": "/results", "autopilot": "/autopilot",
+    "diary": "/diary", "history": "/history",
+    "learnings": "/learnings", "settings": "/settings",
+    "phones": "/phones", "territory": "/territory",
+    "telemetry": "/telemetry", "spinor": "/spinor",
+    "world": "/world", "gilead": "/gilead", "sheets": "/sheets",
+    "workteleport": "/workteleport", "pitch": "/pitch",
+    "registrar": "/registrar", "voice demo": "/voice-demo",
+  };
+
+  for (const [key, route] of Object.entries(navMap)) {
+    if (lower === `go to ${key}` || lower === `open ${key}` || lower === `show ${key}` ||
+        lower === `go to the ${key}` || lower === key) {
+      return { speech: `Navigating to ${key}.`, navigateTo: route, actionsTaken: [], conversationId: "", llmUsed: false };
+    }
+  }
+
+  // ─── Help ─────────────────────────────────────────────────
+  if (lower === "help" || lower === "what can you do" || lower === "commands") {
+    return {
+      speech: "I can: list assignments, hypotheses, golden nodes, outcomes, strategies, commitments; record outcomes; accept/reject assignments; sync Gmail/Microsoft; search email; check mailbox status; run competitive intelligence; check system health, telemetry, audit; navigate to any page; analyze inbox. Just speak naturally.",
+      actionsTaken: [],
+      conversationId: "", llmUsed: false,
+    };
+  }
+
+  // ─── Data queries (execute directly) ──────────────────────
+  const queryMap: { match: RegExp; tool: string; args?: Record<string, unknown> }[] = [
+    { match: /\b(my )?assignment/i, tool: "list_assignments", args: {} },
+    { match: /\b(my )?mission/i, tool: "list_assignments", args: {} },
+    { match: /\bwhat am i working on/i, tool: "list_assignments", args: {} },
+    { match: /\bhypothes/i, tool: "list_hypotheses", args: {} },
+    { match: /\bgolden node/i, tool: "list_golden_nodes", args: {} },
+    { match: /\bgolden overview/i, tool: "golden_overview", args: {} },
+    { match: /\btelemetry\b|\bmetrics\b/i, tool: "telemetry", args: {} },
+    { match: /\bhealth\b|\bsystem status\b/i, tool: "health", args: {} },
+    { match: /\baudit\b/i, tool: "system_audit", args: {} },
+    { match: /\bcommitment/i, tool: "list_commitments", args: {} },
+    { match: /\bstrateg/i, tool: "list_strategies", args: {} },
+    { match: /\bspin dashboard/i, tool: "spin_dashboard", args: {} },
+    { match: /\bspin list/i, tool: "spin_list", args: {} },
+    { match: /\bspinor.?rl\b|\breinforcement/i, tool: "spinor_rl_state", args: {} },
+    { match: /\bcompetitive.*score/i, tool: "competitive_score", args: {} },
+    { match: /\bcompetitive.*plan/i, tool: "competitive_plan", args: {} },
+    { match: /\bcompetitive.*action/i, tool: "competitive_actions", args: {} },
+    { match: /\bfrontrunner\b|\bopportunit/i, tool: "frontrunner_opportunities", args: {} },
+    { match: /\bphone.*record/i, tool: "phone_records", args: {} },
+    { match: /\bterritory.*account/i, tool: "territory_accounts", args: {} },
+    { match: /\bterritory.*route/i, tool: "territory_routes", args: {} },
+    { match: /\bcrm\b|\bsync status\b/i, tool: "crm_status", args: {} },
+    { match: /\bemail credential|\bconnected email|\bmy email/i, tool: "email_credentials", args: {} },
+    { match: /\bmailbox|\bemail status|\bmail status/i, tool: "mailbox_status", args: {} },
+    { match: /\bworkteleport|\bskill/i, tool: "workteleport_skills", args: {} },
+    { match: /\bvoice diary|\bdiary\b/i, tool: "voice_diary", args: {} },
+    { match: /\bllm.*status/i, tool: "llm_fallback_status", args: {} },
+    { match: /\badmissib/i, tool: "assess_admissibility", args: {} },
+  ];
+
+  for (const { match, tool, args } of queryMap) {
+    if (match.test(lower)) {
+      const result = await executeTool(tool, args || {}, employeeId, context);
+      return {
+        speech: result.success ? result.summary.slice(0, 500) : `Failed to ${tool}: ${result.summary}`,
+        actionsTaken: [{ tool, args: args || {}, result: result.summary, success: result.success }],
+        conversationId: "", llmUsed: false,
+      };
+    }
+  }
+
+  // ─── Action commands ──────────────────────────────────────
+  if (lower.includes("accept") && lower.includes("assignment")) {
+    const idMatch = text.match(/asg_\w+/i);
+    const result = await executeTool("accept_assignment", { assignmentId: idMatch?.[0] || "" }, employeeId, context);
+    return {
+      speech: result.success ? "Assignment accepted." : `Failed: ${result.summary}`,
+      actionsTaken: [{ tool: "accept_assignment", args: { assignmentId: idMatch?.[0] || "" }, result: result.summary, success: result.success }],
+      conversationId: "", llmUsed: false,
+    };
+  }
+  if (lower.includes("reject") && lower.includes("assignment")) {
+    const idMatch = text.match(/asg_\w+/i);
+    const result = await executeTool("reject_assignment", { assignmentId: idMatch?.[0] || "", note: "" }, employeeId, context);
+    return {
+      speech: result.success ? "Assignment rejected." : `Failed: ${result.summary}`,
+      actionsTaken: [{ tool: "reject_assignment", args: { assignmentId: idMatch?.[0] || "" }, result: result.summary, success: result.success }],
+      conversationId: "", llmUsed: false,
+    };
+  }
+
+  // ─── Gmail/Microsoft sync ─────────────────────────────────
+  if (lower.includes("gmail") && lower.includes("sync")) {
+    const result = await executeTool("gmail_sync", { maxResults: 50 }, employeeId, context);
+    return {
+      speech: result.success ? result.summary.slice(0, 500) : `Gmail sync failed: ${result.summary}`,
+      actionsTaken: [{ tool: "gmail_sync", args: { maxResults: 50 }, result: result.summary, success: result.success }],
+      conversationId: "", llmUsed: false,
+    };
+  }
+  if (lower.includes("microsoft") && lower.includes("sync")) {
+    const result = await executeTool("microsoft_sync", {}, employeeId, context);
+    return {
+      speech: result.success ? result.summary.slice(0, 500) : `Microsoft sync failed: ${result.summary}`,
+      actionsTaken: [{ tool: "microsoft_sync", args: {}, result: result.summary, success: result.success }],
+      conversationId: "", llmUsed: false,
+    };
+  }
+
+  // ─── Analyze inbox ────────────────────────────────────────
+  if (lower.includes("analyze") && lower.includes("inbox")) {
+    return {
+      speech: "I'll analyze your inbox. Navigate to the Inbox page and click Analyze, or I can sync your email first.",
+      navigateTo: "/inbox",
+      actionsTaken: [],
+      conversationId: "", llmUsed: false,
+    };
+  }
+
+  // ─── Run research ─────────────────────────────────────────
+  if (lower.includes("run research") || lower.includes("open foundry")) {
+    return { speech: "Opening the Foundry.", navigateTo: "/foundry", actionsTaken: [], conversationId: "", llmUsed: false };
+  }
+  if (lower.includes("record outcome")) {
+    return { speech: "Opening experiments to record an outcome.", navigateTo: "/experiment", actionsTaken: [], conversationId: "", llmUsed: false };
+  }
+
+  // Not a simple command — needs LLM
+  return null;
+}
 
 function deterministicFallback(
   text: string,
