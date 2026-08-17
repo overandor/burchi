@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 import os
 import re
 import sys
@@ -16,6 +18,7 @@ import aiosqlite
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from config import CORS_ORIGINS, HOST, PORT, LOG_LEVEL, MAX_PAGE_LIMIT, DEFAULT_PAGE_LIMIT, SYNC_TIMEOUT_SECONDS, API_KEY
 from db import (
     DB_PATH,
     init_db,
@@ -24,6 +27,16 @@ from db import (
     search_messages,
     delete_conversation,
     get_sync_groups,
+    upsert_heartbeat,
+    get_heartbeats,
+    delete_heartbeat,
+    HEARTBEAT_DEFAULT_TTL,
+    create_derived_path,
+    get_derived_paths,
+    delete_derived_path,
+    extract_tool,
+    get_extracted_tools,
+    delete_extracted_tool,
 )
 from sync_engine import SyncEngine
 from context_store import ContextStore
@@ -31,17 +44,77 @@ from models import Source
 from adapters.live_adapter import live_adapter, build_message
 from db import upsert_conversation
 
-app = FastAPI(title="ChatSync", version="1.0.0")
+# ─── Logging ───────────────────────────────────────────────────────
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("chatsync")
+
+app = FastAPI(
+    title="ChatSync",
+    version="1.0.0",
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 sync_engine = SyncEngine(str(DB_PATH))
 context_store = ContextStore(str(DB_PATH))
+logger.info("ChatSync backend starting | DB: %s | CORS: %s", DB_PATH, CORS_ORIGINS)
+
+# ─── Basic rate limiting ───────────────────────────────────────────
+_RATE_LIMIT = int(os.environ.get("CHATSYNC_RATE_LIMIT", "0"))  # 0 = disabled
+_rate_buckets: dict[str, list[float]] = {}
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if _RATE_LIMIT > 0:
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        window = 60.0
+        hits = _rate_buckets.get(client_ip, [])
+        hits = [t for t in hits if now - t < window]
+        if len(hits) >= _RATE_LIMIT:
+            return Response(
+                content=json.dumps({"detail": "Rate limit exceeded"}),
+                media_type="application/json",
+                status_code=429,
+            )
+        hits.append(now)
+        _rate_buckets[client_ip] = hits
+    return await call_next(request)
+
+
+# ─── API key auth ───────────────────────────────────────────────────
+# If CHATSYNC_API_KEY is set, all /api/* requests must include
+# X-API-Key: <key> header. Health check and docs are exempt.
+_PUBLIC_PATHS = {"/api/health", "/api/docs", "/api/openapi.json", "/"}
+
+@app.middleware("http")
+async def api_key_auth(request: Request, call_next):
+    if API_KEY and request.url.path.startswith("/api/") and request.url.path not in _PUBLIC_PATHS:
+        provided = request.headers.get("X-API-Key", "")
+        if provided != API_KEY:
+            return Response(
+                content=json.dumps({"detail": "Invalid or missing API key"}),
+                media_type="application/json",
+                status_code=401,
+            )
+    return await call_next(request)
+
+
+def _clamp_limit(limit: int) -> int:
+    if limit < 1:
+        return DEFAULT_PAGE_LIMIT
+    return min(limit, MAX_PAGE_LIMIT)
+
 
 # Pydantic models for request bodies
 class ContextRequest(BaseModel):
@@ -87,21 +160,39 @@ async def ensure_db():
         _db_initialized = True
 
 
+@app.middleware("http")
+async def error_handler(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return Response(
+            content=json.dumps({"detail": "Internal server error"}),
+            media_type="application/json",
+            status_code=500,
+        )
+
+
 @app.get("/api/health")
 async def health():
     await ensure_db()
-    return {"status": "ok", "timestamp": time.time()}
+    return {"status": "ok", "timestamp": time.time(), "version": app.version}
 
 
 @app.get("/api/conversations")
 async def list_conversations(
     source: Optional[str] = None,
-    limit: int = 100,
+    limit: int = DEFAULT_PAGE_LIMIT,
     offset: int = 0,
     include_messages: bool = False,
 ):
     await ensure_db()
+    limit = _clamp_limit(limit)
+    offset = max(offset, 0)
     async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.execute("PRAGMA foreign_keys=ON")
         return await get_conversations(db, source=source, limit=limit, offset=offset, include_messages=include_messages)
 
 
@@ -127,6 +218,9 @@ async def delete_conv(conv_id: str):
 @app.get("/api/search")
 async def search(q: str, limit: int = 50):
     await ensure_db()
+    if not q or not q.strip():
+        raise HTTPException(400, "Query parameter 'q' is required")
+    limit = _clamp_limit(limit)
     async with aiosqlite.connect(str(DB_PATH)) as db:
         return await search_messages(db, q, limit)
 
@@ -134,7 +228,14 @@ async def search(q: str, limit: int = 50):
 @app.post("/api/sync")
 async def sync():
     await ensure_db()
-    return await sync_engine.sync_all()
+    logger.info("Starting full sync")
+    try:
+        result = await asyncio.wait_for(sync_engine.sync_all(), timeout=SYNC_TIMEOUT_SECONDS)
+        logger.info("Sync complete: %d synced, %d errors", result.get("synced", 0), len(result.get("errors", [])))
+        return result
+    except asyncio.TimeoutError:
+        logger.error("Sync timed out after %ds", SYNC_TIMEOUT_SECONDS)
+        raise HTTPException(504, "Sync timed out")
 
 
 @app.get("/api/sync/status")
@@ -246,8 +347,9 @@ async def list_recommendations():
     if not DEFAULT_PIPELINE_LEDGER.exists():
         return []
     import json as _json
+    raw = await asyncio.to_thread(DEFAULT_PIPELINE_LEDGER.read_text, "utf-8")
     records = []
-    for line in DEFAULT_PIPELINE_LEDGER.read_text(encoding="utf-8").splitlines():
+    for line in raw.splitlines():
         if line.strip():
             try:
                 records.append(_json.loads(line))
@@ -289,6 +391,171 @@ async def live_ingest(req: LiveIngestRequest):
     return conv.to_dict()
 
 
+# ─── Heartbeat protocol ──────────────────────────────────────────────
+class HeartbeatRequest(BaseModel):
+    session_id: str
+    agent: str = "unknown"
+    active_task: str = ""
+    status: str = "running"
+    task_status: str = "IN_PROGRESS"
+    blockers: list[str] = []
+    next_action: str = ""
+    commit_sha: str = ""
+    heartbeat_sequence: int = 0
+    payload: dict = {}
+
+
+@app.post("/api/heartbeat")
+async def post_heartbeat(req: HeartbeatRequest):
+    """Post a chat heartbeat. Other chats read /api/heartbeats to coordinate.
+
+    Each chat should post every few minutes. Stale heartbeats (older than TTL)
+    are automatically pruned on read. Send the full current state each call —
+    it's an upsert, not an append.
+    """
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        return await upsert_heartbeat(
+            db,
+            session_id=req.session_id,
+            agent=req.agent,
+            active_task=req.active_task,
+            status=req.status,
+            task_status=req.task_status,
+            blockers=req.blockers,
+            next_action=req.next_action,
+            commit_sha=req.commit_sha,
+            heartbeat_sequence=req.heartbeat_sequence,
+            payload=req.payload,
+        )
+
+
+@app.get("/api/heartbeats")
+async def list_heartbeats(active_only: bool = True, ttl: int = HEARTBEAT_DEFAULT_TTL):
+    """List all sibling chat heartbeats. Stale ones are auto-pruned.
+
+    Any chat can read this to see what its siblings are working on,
+    their blockers, and next actions — enabling cohesive correspondence
+    without mixing chat contexts.
+    """
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        beats = await get_heartbeats(db, active_only=active_only, ttl=ttl)
+        return {
+            "heartbeats": beats,
+            "count": len(beats),
+            "ttl_seconds": ttl,
+        }
+
+
+@app.delete("/api/heartbeat/{session_id}")
+async def remove_heartbeat(session_id: str):
+    """Manually remove a chat's heartbeat (e.g. on clean exit)."""
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        if not await delete_heartbeat(db, session_id):
+            raise HTTPException(404, "Heartbeat not found")
+        return {"deleted": True}
+
+
+# ─── Derived paths (antagonistic branches) ──────────────────────────
+class DerivedPathRequest(BaseModel):
+    parent_conversation_id: str
+    child_conversation_id: str
+    label: str = ""
+    antagonism: str = "neutral"
+
+
+@app.post("/api/paths/derive")
+async def derive_path(req: DerivedPathRequest):
+    """Derive an antagonistic path from one chat to another.
+
+    antagonism values: 'neutral', 'opposing', 'complementary', 'divergent'
+    The label describes the angle (e.g. "security audit angle", "performance angle").
+    """
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        return await create_derived_path(
+            db,
+            parent_conversation_id=req.parent_conversation_id,
+            child_conversation_id=req.child_conversation_id,
+            label=req.label,
+            antagonism=req.antagonism,
+        )
+
+
+@app.get("/api/paths")
+async def list_paths(conversation_id: str | None = None, direction: str = "children"):
+    """List derived paths. Filter by conversation_id as parent (children) or child (parents)."""
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        paths = await get_derived_paths(db, conversation_id=conversation_id, direction=direction)
+        return {"paths": paths, "count": len(paths)}
+
+
+@app.delete("/api/paths/{path_id}")
+async def remove_path(path_id: str):
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        if not await delete_derived_path(db, path_id):
+            raise HTTPException(404, "Path not found")
+        return {"deleted": True}
+
+
+# ─── Extracted tools (reusable artifacts from chats) ────────────────
+class ExtractToolRequest(BaseModel):
+    source_conversation_id: str
+    tool_type: str = "snippet"
+    name: str = ""
+    language: str = ""
+    content: str = ""
+    summary: str = ""
+    tags: list[str] = []
+
+
+@app.post("/api/tools/extract")
+async def extract_tool_endpoint(req: ExtractToolRequest):
+    """Extract a reusable tool/artifact from a chat without importing the full conversation.
+
+    tool_type: 'snippet', 'function', 'pattern', 'decision', 'config', 'prompt'
+    The tool is stored independently and can be referenced by any other path.
+    """
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        return await extract_tool(
+            db,
+            source_conversation_id=req.source_conversation_id,
+            tool_type=req.tool_type,
+            name=req.name,
+            language=req.language,
+            content=req.content,
+            summary=req.summary,
+            tags=req.tags,
+        )
+
+
+@app.get("/api/tools")
+async def list_tools(
+    conversation_id: str | None = None,
+    tool_type: str | None = None,
+    tag: str | None = None,
+):
+    """List extracted tools. Filter by source conversation, type, or tag."""
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        tools = await get_extracted_tools(db, conversation_id=conversation_id, tool_type=tool_type, tag=tag)
+        return {"tools": tools, "count": len(tools)}
+
+
+@app.delete("/api/tools/{tool_id}")
+async def remove_tool(tool_id: str):
+    await ensure_db()
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        if not await delete_extracted_tool(db, tool_id):
+            raise HTTPException(404, "Tool not found")
+        return {"deleted": True}
+
+
 # ─── Crawler seed API ──────────────────────────────────────────────
 def _parse_since_window(since: str) -> float:
     import re
@@ -311,6 +578,7 @@ async def crawl_seed(limit: int = 50, source: Optional[str] = None, since: str =
     and a frequency score.
     """
     await ensure_db()
+    limit = _clamp_limit(limit)
     from pipeline.disassembly import _extract_keywords
     since_ts = _parse_since_window(since)
     async with aiosqlite.connect(str(DB_PATH)) as db:
@@ -582,6 +850,204 @@ def _script_to_srt(script) -> str:
     return "\n".join(entries)
 
 
+# ─── YouTube upload + maintenance ETL pipeline ──────────────────────
+class YouTubeAccountRequest(BaseModel):
+    label: str
+    credentials_path: str
+
+
+class YouTubeUploadRequest(BaseModel):
+    conversation_id: str
+    account_id: str
+    privacy: str = "private"
+    voice: str = "Alex"
+
+
+@app.post("/api/youtube/accounts")
+async def add_youtube_account(req: YouTubeAccountRequest):
+    """Register a YouTube account (multi-account support).
+
+    credentials_path must point to a client_secrets.json downloaded from
+    Google Cloud Console (YouTube Data API v3 enabled).
+    """
+    await ensure_db()
+    from youtube_db import add_account, YOUTUBE_SCHEMA
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        account = await add_account(db, label=req.label, credentials_path=req.credentials_path)
+    return account
+
+
+@app.get("/api/youtube/accounts")
+async def list_youtube_accounts():
+    """List all registered YouTube accounts."""
+    await ensure_db()
+    from youtube_db import get_accounts, YOUTUBE_SCHEMA
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        accounts = await get_accounts(db)
+    return {"accounts": accounts, "count": len(accounts)}
+
+
+@app.delete("/api/youtube/accounts/{account_id}")
+async def remove_youtube_account(account_id: str):
+    await ensure_db()
+    from youtube_db import delete_account, get_account, YOUTUBE_SCHEMA
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        if not await get_account(db, account_id):
+            raise HTTPException(404, "Account not found")
+        await delete_account(db, account_id)
+    return {"deleted": True}
+
+
+@app.post("/api/youtube/accounts/{account_id}/verify")
+async def verify_youtube_account(account_id: str):
+    """Verify account credentials by fetching channel info from YouTube.
+
+    This triggers the OAuth flow on first run (browser prompt).
+    Updates the account with channel_id and channel_title on success.
+    """
+    await ensure_db()
+    from youtube_db import get_account, update_account_status, YOUTUBE_SCHEMA
+    from youtube_client import get_channel_info, YouTubeClientError
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        acct = await get_account(db, account_id)
+        if not acct:
+            raise HTTPException(404, "Account not found")
+    try:
+        info = await asyncio.to_thread(get_channel_info, acct["credentials_path"])
+    except YouTubeClientError as e:
+        async with aiosqlite.connect(str(DB_PATH)) as db:
+            await update_account_status(db, account_id, status="error", last_error=str(e))
+        raise HTTPException(502, str(e))
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await update_account_status(
+            db, account_id, status="active",
+            channel_id=info["channel_id"], channel_title=info["channel_title"],
+        )
+    return {"verified": True, **info}
+
+
+@app.post("/api/youtube/upload")
+async def youtube_upload(req: YouTubeUploadRequest):
+    """One-click: conversation -> video -> YouTube upload -> warehouse lineage.
+
+    Generates an MP4 from the conversation (TTS + slides), uploads it to
+    YouTube via the real Data API, and records the provenance lineage in
+    the warehouse (conversation_id -> video_id -> youtube_video_id).
+    """
+    await ensure_db()
+    from youtube_pipeline import upload_conversation
+    valid_privacy = {"private", "unlisted", "public"}
+    if req.privacy not in valid_privacy:
+        raise HTTPException(422, f"privacy must be one of: {sorted(valid_privacy)}")
+    try:
+        result = await upload_conversation(
+            conversation_id=req.conversation_id,
+            account_id=req.account_id,
+            privacy=req.privacy,
+            voice=req.voice,
+        )
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+    except RuntimeError as e:
+        raise HTTPException(500, str(e))
+    return result
+
+
+@app.get("/api/youtube/videos")
+async def list_youtube_videos(
+    account_id: Optional[str] = None,
+    conversation_id: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """List YouTube video records from the warehouse.
+
+    Filter by account, source conversation, or upload status.
+    Each record includes provenance (conversation_id) and YouTube video id.
+    """
+    await ensure_db()
+    from youtube_db import get_video_records, get_videos_by_conversation, get_videos_by_status, YOUTUBE_SCHEMA
+    limit = _clamp_limit(limit)
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        if conversation_id:
+            videos = await get_videos_by_conversation(db, conversation_id)
+        elif status:
+            videos = await get_videos_by_status(db, status)
+        else:
+            videos = await get_video_records(db, account_id=account_id, limit=limit, offset=offset)
+    return {"videos": videos, "count": len(videos)}
+
+
+@app.get("/api/youtube/videos/{video_id}")
+async def get_youtube_video(video_id: str):
+    """Get a single YouTube video record with its analytics history."""
+    await ensure_db()
+    from youtube_db import get_video_record, get_analytics_snapshots, YOUTUBE_SCHEMA
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        video = await get_video_record(db, video_id)
+        if not video:
+            raise HTTPException(404, "Video record not found")
+        analytics = await get_analytics_snapshots(db, video_id)
+    return {**video, "analytics_history": analytics}
+
+
+@app.get("/api/youtube/videos/{video_id}/analytics")
+async def get_youtube_video_analytics(video_id: str):
+    """Get the analytics time-series for a video."""
+    await ensure_db()
+    from youtube_db import get_analytics_snapshots, get_latest_analytics, YOUTUBE_SCHEMA
+    async with aiosqlite.connect(str(DB_PATH)) as db:
+        await db.executescript(YOUTUBE_SCHEMA)
+        await db.commit()
+        history = await get_analytics_snapshots(db, video_id)
+        latest = await get_latest_analytics(db, video_id)
+    return {"snapshots": history, "count": len(history), "latest": latest}
+
+
+@app.post("/api/youtube/maintenance")
+async def youtube_maintenance():
+    """Run the maintenance job: poll YouTube for video processing statuses.
+
+    Transitions videos through the lifecycle:
+    uploaded -> processing -> public/unlisted/private (or failed).
+    """
+    await ensure_db()
+    from youtube_pipeline import run_maintenance
+    return await run_maintenance()
+
+
+@app.post("/api/youtube/etl")
+async def youtube_etl(days_back: int = 30):
+    """Run the ETL job: pull analytics for all uploaded videos into the warehouse.
+
+    Stores append-only time-series snapshots in youtube_analytics.
+    """
+    await ensure_db()
+    from youtube_pipeline import run_etl_analytics
+    return await run_etl_analytics(days_back=days_back)
+
+
+@app.get("/api/youtube/warehouse")
+async def youtube_warehouse_overview():
+    """Get the warehouse summary: accounts, videos by status, total analytics."""
+    await ensure_db()
+    from youtube_pipeline import get_pipeline_overview
+    return await get_pipeline_overview()
+
+
 # Serve frontend (static files)
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend" / "dist"
 
@@ -591,10 +1057,12 @@ async def serve_frontend(path: str):
         raise HTTPException(404, "Not found")
     file_path = FRONTEND_DIR / path
     if file_path.exists() and file_path.is_file():
-        return Response(content=file_path.read_bytes(), media_type=_guess_mime(path))
+        content = await asyncio.to_thread(file_path.read_bytes)
+        return Response(content=content, media_type=_guess_mime(path))
     index = FRONTEND_DIR / "index.html"
     if index.exists():
-        return HTMLResponse(index.read_text(encoding="utf-8"))
+        html = await asyncio.to_thread(index.read_text, "utf-8")
+        return HTMLResponse(html)
     return HTMLResponse("<h1>ChatSync API</h1><p>Frontend not built. Run <code>npm run build</code> in frontend/</p>")
 
 
@@ -613,4 +1081,5 @@ def _guess_mime(path: str) -> str:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8765)
+    logger.info("Starting ChatSync on %s:%d", HOST, PORT)
+    uvicorn.run(app, host=HOST, port=PORT, log_level=LOG_LEVEL)
