@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Bank — Aggregated LLM History</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'SF Pro', system-ui, sans-serif; background: #0d1117; color: #c9d1d9; height: 100vh; display: flex; flex-direction: column; }
+  header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 20px; }
+  header h1 { font-size: 18px; color: #58a6ff; }
+  header .stats { font-size: 13px; color: #8b949e; }
+  nav { display: flex; gap: 12px; }
+  nav button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  nav button:hover { background: #30363d; }
+  nav button.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+  .search-bar { flex: 1; max-width: 400px; }
+  .search-bar input { width: 100%; padding: 6px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 13px; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 320px; background: #161b22; border-right: 1px solid #30363d; overflow-y: auto; }
+  .sidebar .conv-item { padding: 10px 16px; border-bottom: 1px solid #21262d; cursor: pointer; }
+  .sidebar .conv-item:hover { background: #1c2128; }
+  .sidebar .conv-item.active { background: #1f6feb33; border-left: 3px solid #1f6feb; }
+  .sidebar .conv-source { font-size: 11px; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 4px; }
+  .source-devin { background: #f7816633; color: #f78166; }
+  .source-claude-code { background: #d9775733; color: #d97757; }
+  .source-codex { background: #58a6ff33; color: #58a6ff; }
+  .source-cursor { background: #3fb95033; color: #3fb950; }
+  .sidebar .conv-title { font-size: 13px; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar .conv-meta { font-size: 11px; color: #8b949e; margin-top: 2px; }
+  .content { flex: 1; overflow-y: auto; padding: 20px; }
+  .message { margin-bottom: 16px; max-width: 900px; }
+  .message .role { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .message .role.user { color: #58a6ff; }
+  .message .role.assistant { color: #3fb950; }
+  .message .role.tool { color: #d29922; }
+  .message .role.system { color: #8b949e; }
+  .message .body { background: #161b22; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .message.user .body { border-left: 3px solid #58a6ff; }
+  .message.assistant .body { border-left: 3px solid #3fb950; }
+  .message.tool .body { border-left: 3px solid #d29922; }
+  .filter-bar { padding: 8px 16px; background: #161b22; border-bottom: 1px solid #30363d; }
+  .filter-bar select { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+  .empty { text-align: center; padding: 60px; color: #8b949e; }
+  .search-results { max-width: 900px; }
+  .search-result { background: #161b22; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+  .search-result:hover { background: #1c2128; }
+  .search-result .meta { font-size: 11px; color: #8b949e; margin-bottom: 4px; }
+  .search-result .snippet { font-size: 13px; color: #c9d1d9; }
+  .search-result mark { background: #58a6ff33; color: #58a6ff; padding: 1px 3px; border-radius: 2px; }
+  .stats-view { max-width: 700px; }
+  .stats-view table { width: 100%; border-collapse: collapse; }
+  .stats-view th, .stats-view td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #30363d; }
+  .stats-view th { color: #8b949e; font-size: 12px; text-transform: uppercase; }
+  .stats-view td { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Chat Bank</h1>
+  <div class="stats" id="header-stats">Loading...</div>
+  <nav>
+    <button class="active" onclick="showView('conversations')">Conversations</button>
+    <button onclick="showView('search')">Search</button>
+    <button onclick="showView('stats')">Stats</button>
+  </nav>
+  <div class="search-bar">
+    <input id="search-input" placeholder="Search all chats..." onkeydown="if(event.key==='Enter')doSearch()">
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <div class="filter-bar">
+      <select id="source-filter" onchange="loadConversations()">
+        <option value="">All sources</option>
+        <option value="devin">Devin</option>
+        <option value="claude-code">Claude Code</option>
+        <option value="codex">Codex</option>
+        <option value="cursor">Cursor</option>
+      </select>
+    </div>
+    <div id="conv-list"></div>
+  </div>
+  <div class="content" id="content">
+    <div class="empty">Select a conversation from the sidebar</div>
+  </div>
+</div>
+
+<script>
+let currentView = 'conversations';
+let currentConvId = null;
+
+async function loadStats() {
+  const res = await fetch('/api/stats');
+  const data = await res.json();
+  document.getElementById('header-stats').textContent =
+    `${data.total_conversations} conversations · ${data.total_messages} messages · ${data.total_user_prompts} prompts`;
+}
+
+async function loadConversations() {
+  const source = document.getElementById('source-filter').value;
+  const res = await fetch(`/api/conversations?source=${source}&limit=200`);
+  const data = await res.json();
+  const list = document.getElementById('conv-list');
+  list.innerHTML = data.conversations.map(c => `
+    <div class="conv-item" onclick="loadConversation('${c.id}')">
+      <span class="conv-source source-${c.source}">${c.source}</span>
+      <div class="conv-title">${escapeHtml(c.title)}</div>
+      <div class="conv-meta">${c.message_count} msgs · ${c.user_prompt_count} prompts</div>
+    </div>
+  `).join('');
+}
+
+async function loadConversation(id) {
+  currentConvId = id;
+  showView('conversations');
+  const res = await fetch(`/api/conversation/${id}`);
+  const conv = await res.json();
+  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div style="margin-bottom: 16px;">
+      <span class="conv-source source-${conv.source}">${conv.source}</span>
+      <h2 style="color:#c9d1d9; margin-top:8px;">${escapeHtml(conv.title)}</h2>
+      <div style="color:#8b949e; font-size:12px; margin-top:4px;">${conv.messages.length} messages</div>
+    </div>
+    ${conv.messages.map(m => `
+      <div class="message ${m.role}">
+        <div class="role ${m.role}">${m.role}</div>
+        <div class="body">${escapeHtml(m.content)}</div>
+      </div>
+    `).join('')}
+  `;
+  // Highlight active in sidebar
+  const items = document.querySelectorAll('.conv-item');
+  // Re-load to get fresh items then highlight
+}
+
+async function doSearch() {
+  const q = document.getElementById('search-input').value;
+  if (q.length < 2) return;
+  showView('search');
+  const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50`);
+  const data = await res.json();
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="search-results">
+      <h2 style="color:#c9d1d9; margin-bottom:16px;">${data.count} results for "${escapeHtml(q)}"</h2>
+      ${data.results.map(r => `
+        <div class="search-result" onclick="loadConversation('${r.conversation_id}')">
+          <div class="meta">
+            <span class="conv-source source-${r.source}">${r.source}</span>
+            ${escapeHtml(r.conversation_title)} · ${r.role}
+          </div>
+          <div class="snippet">${highlightSnippet(r.snippet, q)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function showStats() {
+  const [statsRes, sourcesRes] = await Promise.all([
+    fetch('/api/stats'), fetch('/api/sources')
+  ]);
+  const stats = await statsRes.json();
+  const sources = await sourcesRes.json();
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="stats-view">
+      <h2 style="color:#c9d1d9; margin-bottom:20px;">Statistics</h2>
+      <table>
+        <tr><th>Source</th><th>Conversations</th><th>Messages</th><th>User Prompts</th></tr>
+        ${Object.entries(sources.sources).map(([src, info]) => `
+          <tr>
+            <td><span class="conv-source source-${src}">${src}</span></td>
+            <td>${info.conversations}</td>
+            <td>${info.messages}</td>
+            <td>${info.prompts}</td>
+          </tr>
+        `).join('')}
+        <tr style="font-weight:bold; border-top:2px solid #30363d;">
+          <td>Total</td>
+          <td>${stats.total_conversations}</td>
+          <td>${stats.total_messages}</td>
+          <td>${stats.total_user_prompts}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+}
+
+function showView(view) {
+  currentView = view;
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  if (view === 'conversations') {
+    document.querySelectorAll('nav button')[0].classList.add('active');
+    if (!currentConvId) document.getElementById('content').innerHTML = '<div class="empty">Select a conversation from the sidebar</div>';
+  } else if (view === 'search') {
+    document.querySelectorAll('nav button')[1].classList.add('active');
+  } else if (view === 'stats') {
+    document.querySelectorAll('nav button')[2].classList.add('active');
+    showStats();
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+function highlightSnippet(text, query) {
+  const escaped = escapeHtml(text);
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return escaped.replace(regex, '<mark>$1</mark>');
+}
+
+// Init
+loadStats();
+loadConversations();
+</script>
+
+</body>
+</html>
